@@ -55,7 +55,7 @@
      </rect>
     </property>
     <property name="title">
-     <string>采集参数</string>
+     <string>采集设备</string>
     </property>
     <widget class="QLabel" name="label_3">
      <property name="geometry">
