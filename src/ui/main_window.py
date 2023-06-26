@@ -1,4 +1,3 @@
-
 from PySide6 import QtWidgets
 from datatype.device import AudioDevice
 from PySide6.QtCore import Slot,Qt,QEvent,QTimer
@@ -11,11 +10,26 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
         Ui_MainWindow.__init__(self)
+        self._m_audioSink = None
+        self._audio_input = None
+        self._mute_flag = False
 
     def setupUi(self):
         Ui_MainWindow.setupUi(self,self)
         self.search_cameras()
         self.search_audios()
+        self.destroyed.connect(self.on_destroy)
+        self.cbxAudioList.currentIndexChanged.connect(self.on_audio_changed)
+        self.chkMute.stateChanged.connect(self.on_mute_changed)
+
+    def on_mute_changed(self):
+        if self.chkMute.isChecked():
+            self._mute_flag = True
+        else:
+            self._mute_flag = False
+    
+    def on_audio_changed(self):
+        self.play_audio()
 
     def search_cameras(self):
         cameras = []
@@ -31,12 +45,9 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             audios.append(audio_info.description())
         self.cbxAudioList.addItems(audios)
 
-    @Slot()
-    def button_click(self):
-        None
-
     def play_audio(self):
-        if not self._audio_device:
+        self.stop_audio()
+        if self.cbxAudioList.currentIndex == 0:
             return
         format_audio = QAudioFormat()
         format_audio.setSampleRate(44100)
@@ -44,7 +55,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         format_audio.setSampleFormat(QAudioFormat.Int16)
 
         for dev in QMediaDevices.audioInputs():
-            if dev.description() == self._audio_device.name:
+            if dev.description() == self.cbxAudioList.currentText():
                 self._audio_input = QAudioSource(dev, format_audio, self)
                 self._io_device = self._audio_input.start()
                 self._io_device.readyRead.connect(self._readyRead)
@@ -54,33 +65,21 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self._m_audioSink = QAudioSink(self._output_device, format_audio)
         self._m_output= self._m_audioSink.start()
 
-    @Slot(QImage)
-    def setImage1(self, image):
-        self.label.setPixmap(QPixmap.fromImage(image))
-
-    @Slot(QImage)
-    def setImage2(self, image):
-        pixmap = QPixmap.fromImage(image).scaled(self.label_2.size(), aspectMode=Qt.KeepAspectRatio)
-        self.label_2.setPixmap(pixmap)
-
-    @Slot(str)
-    def setLog(self, log):
-        self.textBrowser.append(log)
-        
-    @Slot()
-    def on_destroy(self):
-        self.timer.stop()
-        self.th_log.terminate()
-        self.th_video.terminate()
-        self.th_processed.terminate()
+    def stop_audio(self):
         if self._audio_input != None:
             self._audio_input.stop()
-        self._m_audioSink.stop()
-        self._frame_queue.close()
-    
-
+            self._audio_input = None
+        if self._m_audioSink != None:
+            self._m_audioSink.stop()
+            self._m_audioSink = None
+        
     @Slot()
     def _readyRead(self):
+        if self._mute_flag:
+            return
         data = self._io_device.readAll()
         self._m_output.write(data)
-        
+
+    @Slot()
+    def on_destroy(self):
+        self.stop_audio()
