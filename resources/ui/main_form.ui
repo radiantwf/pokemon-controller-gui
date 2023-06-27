@@ -104,7 +104,7 @@
       </size>
      </property>
     </widget>
-    <widget class="QPushButton" name="btnCameraOpt">
+    <widget class="QPushButton" name="btnCapture">
      <property name="geometry">
       <rect>
        <x>290</x>
@@ -126,7 +126,7 @@
       </size>
      </property>
      <property name="text">
-      <string>停止</string>
+      <string>截图</string>
      </property>
     </widget>
     <widget class="QPushButton" name="btnRescan">
@@ -135,7 +135,7 @@
        <x>550</x>
        <y>25</y>
        <width>80</width>
-       <height>51</height>
+       <height>50</height>
       </rect>
      </property>
      <property name="minimumSize">

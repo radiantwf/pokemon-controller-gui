@@ -1,3 +1,4 @@
+import os
 import multiprocessing
 from datatype.frame import Frame
 import cv2
@@ -12,9 +13,10 @@ class Video():
         pass
         
     def run(self,control_queue:multiprocessing.Queue,pipe:multiprocessing.Pipe):
+        frame = None
         while True:
             try:
-                dev = control_queue.get_nowait()
+                control = control_queue.get_nowait()
             except:
                 if self._cap == None:
                     time.sleep(0.01)
@@ -26,12 +28,25 @@ class Video():
                             send_frame = Frame(dev.width,dev.height,3,cv2.CAP_PVAPI_PIXELFORMAT_BGR24,frame.tobytes())
                             pipe.send(send_frame)
                 continue
-            if dev == None:
+            if control == None:
+                frame = None
                 if self._cap != None:
                     self._cap.release()
                     self._cap = None
                 continue
+            elif control == "camera":
+                try:
+                    if frame.any():
+                        if not os.path.exists("./Captures"):
+                            os.mkdir("./Captures")
+                        
+                        time_str = time.strftime("%Y%m%d%H%M%S", time.localtime())
+                        cv2.imwrite("./Captures/"+time_str+".jpg",frame)
+                except:
+                    None
+                continue
             else:
+                dev = control
                 id = -1
                 cameras = QMediaDevices.videoInputs()
                 for i,camera_info in enumerate(cameras):
@@ -51,7 +66,7 @@ class Video():
                 self._cap.set(cv2.CAP_PROP_POS_FRAMES,dev.fps)
                 # self._cap.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc(*'MJPG'))
 
-    # def capture(self,pipe,dev:device.VideoDevice,display_width,display_height,display_fps:int):
+    # def camera(self,pipe,dev:device.VideoDevice,display_width,display_height,display_fps:int):
     #     cap = cv2.VideoCapture(dev.index,cv2.CAP_DSHOW)
     #     cap.set(cv2.CAP_PROP_FRAME_WIDTH,dev.width)
     #     cap.set(cv2.CAP_PROP_FRAME_HEIGHT,dev.height)

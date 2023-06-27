@@ -1,4 +1,4 @@
-from capture import video
+from camera import video
 import datatype.frame as frame
 import multiprocessing
 

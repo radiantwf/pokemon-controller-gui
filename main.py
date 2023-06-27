@@ -2,7 +2,7 @@ import sys
 
 import numpy
 sys.path.append('./src')
-import capture
+import camera
 from datatype.frame import Frame
 import ui
 import cv2
@@ -22,7 +22,7 @@ def main():
     camera_control_queue = multiprocessing.Queue()
     ui_process = multiprocessing.Process(target=ui.run, args=(camera_control_queue,frame_queues,))
     ui_process.start()
-    video_process = multiprocessing.Process(target=capture.capture_video, args=(camera_control_queue,capture_video_frame,))
+    video_process = multiprocessing.Process(target=camera.capture_video, args=(camera_control_queue,capture_video_frame,))
     video_process.start()
     try:
         while True:
@@ -65,7 +65,7 @@ def main():
     # ui_process.start()
     # recognize_process = multiprocessing.Process(target=recognize.run, args=(frame_queues,control_queues,_Display_Width,_Display_Height,_Recognize_FPS,))
     # recognize_process.start()
-    # video_process = multiprocessing.Process(target=capture.capture_video, args=(capture_video_frame,dev_video,_Display_Width,_Display_Height,_Display_FPS,))
+    # video_process = multiprocessing.Process(target=camera.capture_video, args=(capture_video_frame,dev_video,_Display_Width,_Display_Height,_Display_FPS,))
     # video_process.start()
     # try:
     #     while True:

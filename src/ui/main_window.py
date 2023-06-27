@@ -1,6 +1,6 @@
 import multiprocessing
 from PySide6 import QtWidgets
-from capture.device import VideoDevice
+from camera.device import VideoDevice
 from PySide6.QtCore import Slot,Qt,QEvent,QTimer
 from PySide6.QtGui import QImage, QPixmap,QPainter
 from PySide6.QtMultimedia import QAudioFormat,QAudioSource,QAudioSink,QMediaDevices
@@ -34,6 +34,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.destroyed.connect(self.on_destroy)
         self.cbxAudioList.currentIndexChanged.connect(self.on_audio_changed)
         self.chkMute.stateChanged.connect(self.on_mute_changed)
+        self.btnCapture.clicked.connect(self.on_capture_clicked)
 
         self.th_processed = VideoThread(self)
         self.th_processed.set_input(self._frame_queue)
@@ -143,6 +144,9 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
     
     def on_audio_changed(self):
         self.play_audio()
+
+    def on_capture_clicked(self):
+        self._camera_control_queue.put_nowait("camera")
 
     @Slot()
     def _readyRead(self):
