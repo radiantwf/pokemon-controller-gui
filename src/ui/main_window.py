@@ -1,4 +1,6 @@
+import multiprocessing
 from PySide6 import QtWidgets
+from capture.device import VideoDevice
 from datatype.device import AudioDevice
 from PySide6.QtCore import Slot,Qt,QEvent,QTimer
 from PySide6.QtGui import QImage, QPixmap
@@ -7,36 +9,72 @@ from PySide6.QtUiTools import loadUiType
 Ui_MainWindow, QMainWindowBase = loadUiType("./resources/ui/main_form.ui")
 
 class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
-    def __init__(self):
+    def __init__(self,camera_control_queue:multiprocessing.Queue):
         QtWidgets.QMainWindow.__init__(self)
         Ui_MainWindow.__init__(self)
+        self._camera_control_queue = camera_control_queue
         self._m_audioSink = None
         self._audio_input = None
         self._mute_flag = False
+        self._cameras = []
+        self._current_camera = None
 
     def setupUi(self):
         Ui_MainWindow.setupUi(self,self)
-        self.search_cameras()
+        self.build_camera_list_comboBox()
         self.search_audios()
         self.destroyed.connect(self.on_destroy)
         self.cbxAudioList.currentIndexChanged.connect(self.on_audio_changed)
         self.chkMute.stateChanged.connect(self.on_mute_changed)
 
-    def on_mute_changed(self):
-        if self.chkMute.isChecked():
-            self._mute_flag = True
-        else:
-            self._mute_flag = False
-    
-    def on_audio_changed(self):
-        self.play_audio()
-
-    def search_cameras(self):
+    def build_camera_list_comboBox(self):
+        try:
+            self.cbxCameraList.currentIndexChanged.disconnect(self.on_camera_changed)
+        except:
+            None
+        self.cbxCameraList.clear()
+        self._cameras = VideoDevice.list_device()
         cameras = []
         cameras.append("无设备")
-        for camera_info in QMediaDevices.videoInputs():
-            cameras.append(camera_info.description())
+        for camera_info in self._cameras:
+            cameras.append(camera_info.name)
         self.cbxCameraList.addItems(cameras)
+        self.cbxCameraList.setCurrentIndex(0)
+        self.cbxCameraList.currentIndexChanged.connect(self.on_camera_changed)
+        self.on_camera_changed()
+
+    def build_fps_comboBox(self):
+        try:
+            self.cbxFps.currentIndexChanged.disconnect(self.on_fps_changed)
+        except:
+            None
+        self.cbxFps.clear()
+        if self._current_camera == None:
+            minFps = 0
+            maxFps = 0
+        else:
+            minFps = round(self._current_camera.min_fps)
+            maxFps = round(self._current_camera.max_fps)
+        fps = []
+        cbxText = ""
+        for f in [5,10,15,30,60]:
+            if f < minFps:
+                continue
+            if f == maxFps:
+                cbxText = str(f)
+                fps.append(cbxText)
+                break
+            if f > maxFps: 
+                cbxText = str(maxFps)
+                fps.append(str(maxFps))
+                break
+            if f < maxFps: 
+                cbxText = str(f)
+                fps.append(cbxText)
+        self.cbxFps.addItems(fps)
+        self.cbxFps.setCurrentText(cbxText)
+        self.cbxFps.currentIndexChanged.connect(self.on_fps_changed)
+        self.on_fps_changed()
 
     def search_audios(self):
         audios = []
@@ -73,6 +111,27 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             self._m_audioSink.stop()
             self._m_audioSink = None
         
+    def on_camera_changed(self):
+        if self.cbxCameraList.currentIndex() == 0:
+            self._current_camera = None
+        else:
+            self._current_camera = self._cameras[self.cbxCameraList.currentIndex() - 1]
+        self.build_fps_comboBox()
+
+    def on_fps_changed(self):
+        if self._current_camera != None:
+            self._current_camera.setFps(int(self.cbxFps.currentText()))
+        self._camera_control_queue.put_nowait(self._current_camera)
+
+    def on_mute_changed(self):
+        if self.chkMute.isChecked():
+            self._mute_flag = True
+        else:
+            self._mute_flag = False
+    
+    def on_audio_changed(self):
+        self.play_audio()
+
     @Slot()
     def _readyRead(self):
         if self._mute_flag:

@@ -8,27 +8,9 @@ import ui
 import multiprocessing
 import time
 
-_Camera_Name = "USB Video"
-_Camera_Width = 1280
-_Camera_Height = 720
-_Camera_FPS = 60
-
-_Audio_Device_Name = "数字音频接口 ({})".format("USB Digital Audio")
-
-_Display_Width = 960
-_Display_Height = 540
-_Display_FPS = 60
-_Recognize_FPS = 30
-
-# _Camera_Name = "FaceTime高清摄像头（内建）"
-# _Camera_FPS = 30
-# _Audio_Device_Name = "内建麦克风"
-
-# _Camera_Name = "Game Capture HD60 S+"
-# _Audio_Device_Name = "Digital Audio Interface ({})".format( "Game Capture HD60 S+")
-
 def main():
-    ui_process = multiprocessing.Process(target=ui.run, args=())
+    camera_control_queue = multiprocessing.Queue()
+    ui_process = multiprocessing.Process(target=ui.run, args=(camera_control_queue,))
     ui_process.start()
 
     while True:

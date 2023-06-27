@@ -194,39 +194,6 @@
        <height>40</height>
       </size>
      </property>
-     <property name="currentText">
-      <string>10</string>
-     </property>
-     <item>
-      <property name="text">
-       <string>10</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>15</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>20</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>30</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>45</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>60</string>
-      </property>
-     </item>
     </widget>
     <widget class="QLabel" name="label_6">
      <property name="geometry">
