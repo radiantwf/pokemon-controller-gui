@@ -275,7 +275,7 @@
       </size>
      </property>
     </widget>
-    <widget class="QCheckBox" name="chbMute">
+    <widget class="QCheckBox" name="chkMute">
      <property name="geometry">
       <rect>
        <x>290</x>
