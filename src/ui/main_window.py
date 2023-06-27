@@ -6,18 +6,27 @@ from PySide6.QtCore import Slot,Qt,QEvent,QTimer
 from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtMultimedia import QAudioFormat,QAudioSource,QAudioSink,QMediaDevices
 from PySide6.QtUiTools import loadUiType
+
+from ui.video import VideoThread
 Ui_MainWindow, QMainWindowBase = loadUiType("./resources/ui/main_form.ui")
 
 class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
-    def __init__(self,camera_control_queue:multiprocessing.Queue):
+    def __init__(self,camera_control_queue:multiprocessing.Queue,frame_queues):
         QtWidgets.QMainWindow.__init__(self)
         Ui_MainWindow.__init__(self)
+        
+        # 摄像头控制命令队列
         self._camera_control_queue = camera_control_queue
+
+        # 图像采集桢管道集合
+        self._frame_queue = frame_queues[1]
+        # self._processed_frame_queue = frame_queues[2]
+
         self._m_audioSink = None
         self._audio_input = None
-        self._mute_flag = False
         self._cameras = []
         self._current_camera = None
+        self.th_processed = None
 
     def setupUi(self):
         Ui_MainWindow.setupUi(self,self)
@@ -26,6 +35,11 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.destroyed.connect(self.on_destroy)
         self.cbxAudioList.currentIndexChanged.connect(self.on_audio_changed)
         self.chkMute.stateChanged.connect(self.on_mute_changed)
+
+        self.th_processed = VideoThread(self)
+        self.th_processed.set_input(1920,1080,3,QImage.Format_BGR888,self._frame_queue)
+        self.th_processed.video_frame.connect(self.setImage)
+        self.th_processed.start()
 
     def build_camera_list_comboBox(self):
         try:
@@ -87,6 +101,8 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.stop_audio()
         if self.cbxAudioList.currentIndex == 0:
             return
+        if self.chkMute.isChecked():
+            return
         format_audio = QAudioFormat()
         format_audio.setSampleRate(44100)
         format_audio.setChannelCount(2)
@@ -124,21 +140,23 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self._camera_control_queue.put_nowait(self._current_camera)
 
     def on_mute_changed(self):
-        if self.chkMute.isChecked():
-            self._mute_flag = True
-        else:
-            self._mute_flag = False
+        self.play_audio()
     
     def on_audio_changed(self):
         self.play_audio()
 
     @Slot()
     def _readyRead(self):
-        if self._mute_flag:
-            return
         data = self._io_device.readAll()
         self._m_output.write(data)
 
     @Slot()
     def on_destroy(self):
         self.stop_audio()
+        if self.th_processed != None:
+            self.th_processed.terminate()
+
+    @Slot(QImage)
+    def setImage(self, image):
+        pixmap = QPixmap.fromImage(image).scaled(self.lblCameraFrame.size(), aspectMode=Qt.KeepAspectRatio)
+        self.lblCameraFrame.setPixmap(pixmap)

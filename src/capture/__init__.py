@@ -1,5 +1,6 @@
 from capture import video
 import datatype.device as device
+import multiprocessing
 
-def capture_video(pipe,dev:device.VideoDevice,display_width,display_height,display_fps):
-	video.Video().run(pipe,dev,display_width,display_height,display_fps)
+def capture_video(control_queue:multiprocessing.Queue,pipe:multiprocessing.Pipe):
+	video.Video().run(control_queue,pipe)
