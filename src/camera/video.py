@@ -46,6 +46,11 @@ class Video():
                     None
                 continue
             else:
+                frame = None
+                if self._cap != None:
+                    self._cap.release()
+                    self._cap = None
+
                 dev = control
                 id = -1
                 cameras = QMediaDevices.videoInputs()
