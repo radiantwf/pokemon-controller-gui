@@ -30,11 +30,12 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
     def setupUi(self):
         Ui_MainWindow.setupUi(self,self)
         self.build_camera_list_comboBox()
-        self.search_audios()
+        self.build_audio_list()
         self.destroyed.connect(self.on_destroy)
         self.cbxAudioList.currentIndexChanged.connect(self.on_audio_changed)
         self.chkMute.stateChanged.connect(self.on_mute_changed)
         self.btnCapture.clicked.connect(self.on_capture_clicked)
+        self.btnRescan.clicked.connect(self.on_rescan_clicked)
 
         self.th_processed = VideoThread(self)
         self.th_processed.set_input(self._frame_queue)
@@ -90,12 +91,20 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.cbxFps.currentIndexChanged.connect(self.on_fps_changed)
         self.on_fps_changed()
 
-    def search_audios(self):
+    def build_audio_list(self):
+        try:
+            self.cbxAudioList.currentIndexChanged.disconnect(self.on_fps_changed)
+        except:
+            None
+        self.cbxAudioList.clear()
         audios = []
         audios.append("无设备")
         for audio_info in QMediaDevices.audioInputs():
             audios.append(audio_info.description())
         self.cbxAudioList.addItems(audios)
+        self.cbxAudioList.setCurrentIndex(0)
+        self.cbxAudioList.currentIndexChanged.connect(self.on_fps_changed)
+        self.on_audio_changed()
 
     def play_audio(self):
         self.stop_audio()
@@ -148,6 +157,11 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
     def on_capture_clicked(self):
         self._camera_control_queue.put_nowait("camera")
 
+    def on_rescan_clicked(self):
+        self.build_camera_list_comboBox()
+        self.build_audio_list()
+
+
     @Slot()
     def _readyRead(self):
         data = self._io_device.readAll()
@@ -161,5 +175,8 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
 
     @Slot(QImage)
     def setImage(self, image):
-        pixmap = QPixmap.fromImage(image)#.scaled(self.lblCameraFrame.size(), aspectMode=Qt.KeepAspectRatio)
-        self.lblCameraFrame.setPixmap(pixmap)
+        if self._current_camera != None:
+            pixmap = QPixmap.fromImage(image)#.scaled(self.lblCameraFrame.size(), aspectMode=Qt.KeepAspectRatio)
+            self.lblCameraFrame.setPixmap(pixmap)
+        else:
+            self.lblCameraFrame.clear()
