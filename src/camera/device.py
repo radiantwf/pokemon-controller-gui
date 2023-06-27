@@ -45,7 +45,9 @@ class VideoDevice(object):
     @staticmethod
     def list_device():
         cameras = []
-        for camera_info in QMediaDevices.videoInputs():
+        inputs = QMediaDevices.videoInputs()
+        inputs.sort(key=lambda x: x.id().data())
+        for camera_info in inputs:
             name = camera_info.description()
             id = camera_info.id().data().decode()
             # 获取最适合的分辨率与帧数

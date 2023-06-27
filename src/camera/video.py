@@ -54,6 +54,7 @@ class Video():
                 dev = control
                 id = -1
                 cameras = QMediaDevices.videoInputs()
+                cameras.sort(key=lambda x: x.id().data())
                 for i,camera_info in enumerate(cameras):
                     if camera_info.id().data().decode() == dev.id:
                         id = i

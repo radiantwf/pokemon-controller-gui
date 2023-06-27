@@ -50,7 +50,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.cbxCameraList.clear()
         self._cameras = VideoDevice.list_device()
         cameras = []
-        cameras.append("无设备")
+        cameras.append("选择视频输入设备")
         for camera_info in self._cameras:
             cameras.append(camera_info.name)
         self.cbxCameraList.addItems(cameras)
@@ -98,7 +98,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             None
         self.cbxAudioList.clear()
         audios = []
-        audios.append("无设备")
+        audios.append("选择音频输入设备")
         for audio_info in QMediaDevices.audioInputs():
             audios.append(audio_info.description())
         self.cbxAudioList.addItems(audios)
