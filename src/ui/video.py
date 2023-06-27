@@ -8,11 +8,7 @@ class VideoThread(QThread):
     def __init__(self, parent=None):
         QThread.__init__(self, parent)
 
-    def set_input(self,width,height,channels,format,queue):
-        self._width = width
-        self._height = height
-        self._channels = channels
-        self._format = format
+    def set_input(self,queue):
         self._queue = queue
         
     def run(self):
@@ -25,5 +21,5 @@ class VideoThread(QThread):
                     break
             if frame == None:
                 continue
-            img = QImage(frame, self._width, self._height, self._channels*self._width,self._format)
+            img = QImage(frame.bytes(), frame.width, frame.height, frame.channels*frame.width,QImage.Format_BGR888)
             self.video_frame.emit(img)

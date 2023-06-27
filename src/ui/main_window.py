@@ -1,9 +1,8 @@
 import multiprocessing
 from PySide6 import QtWidgets
 from capture.device import VideoDevice
-from datatype.device import AudioDevice
 from PySide6.QtCore import Slot,Qt,QEvent,QTimer
-from PySide6.QtGui import QImage, QPixmap
+from PySide6.QtGui import QImage, QPixmap,QPainter
 from PySide6.QtMultimedia import QAudioFormat,QAudioSource,QAudioSink,QMediaDevices
 from PySide6.QtUiTools import loadUiType
 
@@ -37,7 +36,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.chkMute.stateChanged.connect(self.on_mute_changed)
 
         self.th_processed = VideoThread(self)
-        self.th_processed.set_input(1920,1080,3,QImage.Format_BGR888,self._frame_queue)
+        self.th_processed.set_input(self._frame_queue)
         self.th_processed.video_frame.connect(self.setImage)
         self.th_processed.start()
 
@@ -158,5 +157,5 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
 
     @Slot(QImage)
     def setImage(self, image):
-        pixmap = QPixmap.fromImage(image).scaled(self.lblCameraFrame.size(), aspectMode=Qt.KeepAspectRatio)
+        pixmap = QPixmap.fromImage(image)#.scaled(self.lblCameraFrame.size(), aspectMode=Qt.KeepAspectRatio)
         self.lblCameraFrame.setPixmap(pixmap)

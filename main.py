@@ -1,13 +1,18 @@
 import sys
+
+import numpy
 sys.path.append('./src')
 import capture
-import controller
-import datatype.device as device
-import recognize
+from datatype.frame import Frame
 import ui
+import cv2
 import multiprocessing
 import time
+from const import DisplayCameraHeight, DisplayCameraWidth
+from PySide6.QtGui import QImage
 
+# import controller
+# import recognize
 def main():
     main_video_frame,capture_video_frame = multiprocessing.Pipe(False)
     ui_display_video_frame = multiprocessing.Queue()
@@ -25,7 +30,10 @@ def main():
                 break
             video_frame = main_video_frame.recv()
             try:
-                ui_display_video_frame.put(video_frame,False,0)
+                np_array = numpy.frombuffer(video_frame.bytes(), dtype=numpy.uint8)
+                mat = np_array.reshape((video_frame.height, video_frame.width, video_frame.channels))
+                display_mat = cv2.resize(mat, (DisplayCameraWidth,DisplayCameraHeight), interpolation=cv2.INTER_AREA)
+                ui_display_video_frame.put(Frame(DisplayCameraWidth,DisplayCameraHeight,video_frame.channels,video_frame.format,display_mat),False,0)
             except:
                 pass
             # try:

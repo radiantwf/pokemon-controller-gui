@@ -1,13 +1,13 @@
 import asyncio
 import multiprocessing
 import socket
-import datatype.device as device
+import datatype.frame as frame
 
 from controller.send_order import OrderSender
 
 _log_udp_port = 41001
 
-def run(dev:device.JoystickDevice,control_queues,log_udp_port=41001):
+def run(dev:frame.JoystickDevice,control_queues,log_udp_port=41001):
 	global _log_udp_port
 	_log_udp_port = log_udp_port
 	sender = OrderSender(dev)

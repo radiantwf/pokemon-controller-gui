@@ -1,5 +1,5 @@
 import multiprocessing
-import datatype.device as device
+from datatype.frame import Frame
 import cv2
 import time
 import platform
@@ -23,7 +23,8 @@ class Video():
                     ret, frame = self._cap.read()
                     if ret:
                         if pipe.writable:
-                            pipe.send(frame.tobytes())
+                            send_frame = Frame(dev.width,dev.height,3,cv2.CAP_PVAPI_PIXELFORMAT_BGR24,frame.tobytes())
+                            pipe.send(send_frame)
                 continue
             if dev == None:
                 if self._cap != None:

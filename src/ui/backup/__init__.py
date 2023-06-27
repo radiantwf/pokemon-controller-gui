@@ -1,7 +1,7 @@
 
 import sys
 from PySide6 import QtWidgets
-from datatype.device import AudioDevice
+from datatype.frame import AudioDevice
 from ui.user_window import UserWindows
 def run(frame_queues,control_queues,dev:AudioDevice,video_with,video_height):
     _show(frame_queues,control_queues,dev,video_with,video_height)

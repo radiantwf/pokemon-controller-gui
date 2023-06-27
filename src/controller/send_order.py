@@ -1,9 +1,9 @@
 import asyncio
 from io import BytesIO
-import datatype.device as device
+import datatype.frame as frame
 
 class OrderSender(object):
-    def __init__(self,dev:device.JoystickDevice):
+    def __init__(self,dev:frame.JoystickDevice):
         self._queue = asyncio.Queue(100)
         self._queue_output = asyncio.Queue(100)
 
