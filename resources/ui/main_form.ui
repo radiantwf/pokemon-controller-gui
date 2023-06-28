@@ -260,7 +260,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>460</y>
+      <y>465</y>
       <width>641</width>
       <height>55</height>
      </rect>
@@ -345,9 +345,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>520</y>
+      <y>530</y>
       <width>641</width>
-      <height>231</height>
+      <height>222</height>
      </rect>
     </property>
     <property name="currentIndex">
@@ -361,7 +361,7 @@
       <property name="geometry">
        <rect>
         <x>180</x>
-        <y>65</y>
+        <y>60</y>
         <width>25</width>
         <height>25</height>
        </rect>
@@ -370,10 +370,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>(d)</string>
+       <string>d</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -383,7 +383,7 @@
       <property name="geometry">
        <rect>
         <x>60</x>
-        <y>40</y>
+        <y>35</y>
         <width>60</width>
         <height>25</height>
        </rect>
@@ -392,10 +392,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>L(e)</string>
+       <string>L e</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -405,7 +405,7 @@
       <property name="geometry">
        <rect>
         <x>255</x>
-        <y>58</y>
+        <y>53</y>
         <width>25</width>
         <height>25</height>
        </rect>
@@ -414,10 +414,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>C(g)</string>
+       <string>C g</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -427,7 +427,7 @@
       <property name="geometry">
        <rect>
         <x>205</x>
-        <y>115</y>
+        <y>110</y>
         <width>25</width>
         <height>25</height>
        </rect>
@@ -436,10 +436,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>左(c)</string>
+       <string>左 c</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -449,7 +449,7 @@
       <property name="geometry">
        <rect>
         <x>230</x>
-        <y>90</y>
+        <y>85</y>
         <width>25</width>
         <height>25</height>
        </rect>
@@ -458,10 +458,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>上(f)</string>
+       <string>上 f</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -471,7 +471,7 @@
       <property name="geometry">
        <rect>
         <x>340</x>
-        <y>115</y>
+        <y>110</y>
         <width>25</width>
         <height>25</height>
        </rect>
@@ -480,10 +480,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>(,)</string>
+       <string>,</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -493,7 +493,7 @@
       <property name="geometry">
        <rect>
         <x>255</x>
-        <y>115</y>
+        <y>110</y>
         <width>25</width>
         <height>25</height>
        </rect>
@@ -502,10 +502,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>右(b)</string>
+       <string>右 b</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -515,7 +515,7 @@
       <property name="geometry">
        <rect>
         <x>50</x>
-        <y>13</y>
+        <y>8</y>
         <width>71</width>
         <height>25</height>
        </rect>
@@ -524,10 +524,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>ZL(q)</string>
+       <string>ZL q</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -537,7 +537,7 @@
       <property name="geometry">
        <rect>
         <x>230</x>
-        <y>140</y>
+        <y>135</y>
         <width>25</width>
         <height>25</height>
        </rect>
@@ -546,10 +546,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>下(v)</string>
+       <string>下 v</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -559,7 +559,7 @@
       <property name="geometry">
        <rect>
         <x>155</x>
-        <y>40</y>
+        <y>35</y>
         <width>25</width>
         <height>25</height>
        </rect>
@@ -568,10 +568,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>(w)</string>
+       <string>w</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -581,7 +581,7 @@
       <property name="geometry">
        <rect>
         <x>465</x>
-        <y>65</y>
+        <y>60</y>
         <width>25</width>
         <height>25</height>
        </rect>
@@ -590,10 +590,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>A(l)</string>
+       <string>A l</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -603,7 +603,7 @@
       <property name="geometry">
        <rect>
         <x>230</x>
-        <y>33</y>
+        <y>28</y>
         <width>25</width>
         <height>25</height>
        </rect>
@@ -612,10 +612,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>-(r)</string>
+       <string>- r</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -625,7 +625,7 @@
       <property name="geometry">
        <rect>
         <x>440</x>
-        <y>40</y>
+        <y>35</y>
         <width>25</width>
         <height>25</height>
        </rect>
@@ -634,10 +634,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>X(i)</string>
+       <string>X i</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -647,7 +647,7 @@
       <property name="geometry">
        <rect>
         <x>440</x>
-        <y>90</y>
+        <y>85</y>
         <width>25</width>
         <height>25</height>
        </rect>
@@ -656,10 +656,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>B(k)</string>
+       <string>B k</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -669,7 +669,7 @@
       <property name="geometry">
        <rect>
         <x>500</x>
-        <y>13</y>
+        <y>8</y>
         <width>71</width>
         <height>25</height>
        </rect>
@@ -678,10 +678,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>ZR(o)</string>
+       <string>ZR o</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -691,7 +691,7 @@
       <property name="geometry">
        <rect>
         <x>158</x>
-        <y>68</y>
+        <y>63</y>
         <width>19</width>
         <height>19</height>
        </rect>
@@ -700,10 +700,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>(x)</string>
+       <string>x</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -713,7 +713,7 @@
       <property name="geometry">
        <rect>
         <x>130</x>
-        <y>65</y>
+        <y>60</y>
         <width>25</width>
         <height>25</height>
        </rect>
@@ -722,10 +722,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>(a)</string>
+       <string>a</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -735,7 +735,7 @@
       <property name="geometry">
        <rect>
         <x>365</x>
-        <y>140</y>
+        <y>135</y>
         <width>25</width>
         <height>25</height>
        </rect>
@@ -744,10 +744,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>(.)</string>
+       <string>.</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -757,7 +757,7 @@
       <property name="geometry">
        <rect>
         <x>390</x>
-        <y>115</y>
+        <y>110</y>
         <width>25</width>
         <height>25</height>
        </rect>
@@ -766,10 +766,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>(/)</string>
+       <string>/</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -779,7 +779,7 @@
       <property name="geometry">
        <rect>
         <x>368</x>
-        <y>118</y>
+        <y>113</y>
         <width>19</width>
         <height>19</height>
        </rect>
@@ -788,10 +788,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>(')</string>
+       <string>'</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -801,7 +801,7 @@
       <property name="geometry">
        <rect>
         <x>365</x>
-        <y>90</y>
+        <y>85</y>
         <width>25</width>
         <height>25</height>
        </rect>
@@ -810,10 +810,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>(;)</string>
+       <string>;</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -823,7 +823,7 @@
       <property name="geometry">
        <rect>
         <x>365</x>
-        <y>33</y>
+        <y>28</y>
         <width>25</width>
         <height>25</height>
        </rect>
@@ -832,10 +832,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>+(y)</string>
+       <string>+ y</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -845,7 +845,7 @@
       <property name="geometry">
        <rect>
         <x>500</x>
-        <y>40</y>
+        <y>35</y>
         <width>60</width>
         <height>25</height>
        </rect>
@@ -854,10 +854,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>R(u)</string>
+       <string>R u</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -867,7 +867,7 @@
       <property name="geometry">
        <rect>
         <x>340</x>
-        <y>58</y>
+        <y>53</y>
         <width>25</width>
         <height>25</height>
        </rect>
@@ -876,10 +876,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>H(h)</string>
+       <string>H h</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -889,7 +889,7 @@
       <property name="geometry">
        <rect>
         <x>415</x>
-        <y>65</y>
+        <y>60</y>
         <width>25</width>
         <height>25</height>
        </rect>
@@ -898,10 +898,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>Y(j)</string>
+       <string>Y j</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -911,7 +911,7 @@
       <property name="geometry">
        <rect>
         <x>155</x>
-        <y>90</y>
+        <y>85</y>
         <width>25</width>
         <height>25</height>
        </rect>
@@ -920,10 +920,10 @@
        <bool>false</bool>
       </property>
       <property name="styleSheet">
-       <string notr="true">background-color:rgb(209, 209, 209)</string>
+       <string notr="true">background-color:rgb(170, 170, 170)</string>
       </property>
       <property name="text">
-       <string>(s)</string>
+       <string>s</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -933,7 +933,7 @@
       <property name="geometry">
        <rect>
         <x>50</x>
-        <y>175</y>
+        <y>170</y>
         <width>521</width>
         <height>20</height>
        </rect>
