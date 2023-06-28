@@ -153,7 +153,7 @@ class UserWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         if self._key_press_map.get(key) != None:
             label.setStyleSheet(u"background-color:rgb(0, 0, 255)")
         else:
-            label.setStyleSheet(u"background-color:rgb(209, 209, 209)")
+            label.setStyleSheet(u"background-color:rgb(170, 170, 170)")
     
     def _get_action_line(self)->str:
         sio = StringIO()
