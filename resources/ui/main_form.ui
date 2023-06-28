@@ -7,23 +7,23 @@
     <x>0</x>
     <y>0</y>
     <width>960</width>
-    <height>700</height>
+    <height>780</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>960</width>
-    <height>700</height>
+    <height>780</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>960</width>
-    <height>700</height>
+    <height>780</height>
    </size>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>NS控制台</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QLabel" name="lblCameraFrame">
@@ -339,6 +339,614 @@
      <property name="text">
       <string>重新检索</string>
      </property>
+    </widget>
+   </widget>
+   <widget class="QTabWidget" name="tabWidget">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>520</y>
+      <width>641</width>
+      <height>231</height>
+     </rect>
+    </property>
+    <property name="currentIndex">
+     <number>0</number>
+    </property>
+    <widget class="QWidget" name="tab">
+     <attribute name="title">
+      <string>实时控制</string>
+     </attribute>
+     <widget class="QLabel" name="label_d">
+      <property name="geometry">
+       <rect>
+        <x>180</x>
+        <y>65</y>
+        <width>25</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>(d)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_e">
+      <property name="geometry">
+       <rect>
+        <x>60</x>
+        <y>40</y>
+        <width>60</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>L(e)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_g">
+      <property name="geometry">
+       <rect>
+        <x>255</x>
+        <y>58</y>
+        <width>25</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>C(g)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_c">
+      <property name="geometry">
+       <rect>
+        <x>205</x>
+        <y>115</y>
+        <width>25</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>左(c)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_f">
+      <property name="geometry">
+       <rect>
+        <x>230</x>
+        <y>90</y>
+        <width>25</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>上(f)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_rl">
+      <property name="geometry">
+       <rect>
+        <x>340</x>
+        <y>115</y>
+        <width>25</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>(,)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_b">
+      <property name="geometry">
+       <rect>
+        <x>255</x>
+        <y>115</y>
+        <width>25</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>右(b)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_q">
+      <property name="geometry">
+       <rect>
+        <x>50</x>
+        <y>13</y>
+        <width>71</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>ZL(q)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_v">
+      <property name="geometry">
+       <rect>
+        <x>230</x>
+        <y>140</y>
+        <width>25</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>下(v)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_w">
+      <property name="geometry">
+       <rect>
+        <x>155</x>
+        <y>40</y>
+        <width>25</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>(w)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_l">
+      <property name="geometry">
+       <rect>
+        <x>465</x>
+        <y>65</y>
+        <width>25</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>A(l)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_r">
+      <property name="geometry">
+       <rect>
+        <x>230</x>
+        <y>33</y>
+        <width>25</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>-(r)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_i">
+      <property name="geometry">
+       <rect>
+        <x>440</x>
+        <y>40</y>
+        <width>25</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>X(i)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_k">
+      <property name="geometry">
+       <rect>
+        <x>440</x>
+        <y>90</y>
+        <width>25</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>B(k)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_o">
+      <property name="geometry">
+       <rect>
+        <x>500</x>
+        <y>13</y>
+        <width>71</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>ZR(o)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_x">
+      <property name="geometry">
+       <rect>
+        <x>158</x>
+        <y>68</y>
+        <width>19</width>
+        <height>19</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>(x)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_a">
+      <property name="geometry">
+       <rect>
+        <x>130</x>
+        <y>65</y>
+        <width>25</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>(a)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_rb">
+      <property name="geometry">
+       <rect>
+        <x>365</x>
+        <y>140</y>
+        <width>25</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>(.)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_rr">
+      <property name="geometry">
+       <rect>
+        <x>390</x>
+        <y>115</y>
+        <width>25</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>(/)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_rc">
+      <property name="geometry">
+       <rect>
+        <x>368</x>
+        <y>118</y>
+        <width>19</width>
+        <height>19</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>(')</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_rt">
+      <property name="geometry">
+       <rect>
+        <x>365</x>
+        <y>90</y>
+        <width>25</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>(;)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_y">
+      <property name="geometry">
+       <rect>
+        <x>365</x>
+        <y>33</y>
+        <width>25</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>+(y)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_u">
+      <property name="geometry">
+       <rect>
+        <x>500</x>
+        <y>40</y>
+        <width>60</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>R(u)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_h">
+      <property name="geometry">
+       <rect>
+        <x>340</x>
+        <y>58</y>
+        <width>25</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>H(h)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_j">
+      <property name="geometry">
+       <rect>
+        <x>415</x>
+        <y>65</y>
+        <width>25</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>Y(j)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_s">
+      <property name="geometry">
+       <rect>
+        <x>155</x>
+        <y>90</y>
+        <width>25</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:rgb(209, 209, 209)</string>
+      </property>
+      <property name="text">
+       <string>(s)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_action">
+      <property name="geometry">
+       <rect>
+        <x>50</x>
+        <y>175</y>
+        <width>521</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>实时命令：</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_2">
+     <attribute name="title">
+      <string>脚本控制</string>
+     </attribute>
     </widget>
    </widget>
   </widget>
