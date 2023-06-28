@@ -32,7 +32,6 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.build_camera_list_comboBox()
         self.build_audio_list()
         self.destroyed.connect(self.on_destroy)
-        self.cbxAudioList.currentIndexChanged.connect(self.on_audio_changed)
         self.chkMute.stateChanged.connect(self.on_mute_changed)
         self.btnCapture.clicked.connect(self.on_capture_clicked)
         self.btnRescan.clicked.connect(self.on_rescan_clicked)
@@ -93,7 +92,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
 
     def build_audio_list(self):
         try:
-            self.cbxAudioList.currentIndexChanged.disconnect(self.on_fps_changed)
+            self.cbxAudioList.currentIndexChanged.disconnect(self.on_audio_changed)
         except:
             None
         self.cbxAudioList.clear()
@@ -103,7 +102,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             audios.append(audio_info.description())
         self.cbxAudioList.addItems(audios)
         self.cbxAudioList.setCurrentIndex(0)
-        self.cbxAudioList.currentIndexChanged.connect(self.on_fps_changed)
+        self.cbxAudioList.currentIndexChanged.connect(self.on_audio_changed)
         self.on_audio_changed()
 
     def play_audio(self):
