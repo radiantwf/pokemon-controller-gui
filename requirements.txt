@@ -1,3 +1,4 @@
 opencv-python-headless
 pillow
 PySide6
+pyserial

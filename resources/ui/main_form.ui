@@ -256,6 +256,91 @@
      </property>
     </widget>
    </widget>
+   <widget class="QGroupBox" name="groupBox_2">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>460</y>
+      <width>641</width>
+      <height>55</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>控制设备</string>
+    </property>
+    <widget class="QLabel" name="label_4">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>25</y>
+       <width>30</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>30</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>30</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>设备:</string>
+     </property>
+    </widget>
+    <widget class="QComboBox" name="cbxSerialList">
+     <property name="geometry">
+      <rect>
+       <x>50</x>
+       <y>25</y>
+       <width>240</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>240</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>240</width>
+       <height>16777215</height>
+      </size>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="btnSerialRescan">
+     <property name="geometry">
+      <rect>
+       <x>550</x>
+       <y>20</y>
+       <width>80</width>
+       <height>35</height>
+      </rect>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>80</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>60</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>重新检索</string>
+     </property>
+    </widget>
+   </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionCOM1">

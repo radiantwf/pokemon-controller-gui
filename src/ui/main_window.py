@@ -5,6 +5,7 @@ from PySide6.QtCore import Slot,Qt,QEvent,QTimer
 from PySide6.QtGui import QImage, QPixmap,QPainter
 from PySide6.QtMultimedia import QAudioFormat,QAudioSource,QAudioSink,QMediaDevices
 from PySide6.QtUiTools import loadUiType
+from controller.device import SerialDevice
 
 from ui.video import VideoThread
 Ui_MainWindow, QMainWindowBase = loadUiType("./resources/ui/main_form.ui")
@@ -30,16 +31,36 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
     def setupUi(self):
         Ui_MainWindow.setupUi(self,self)
         self.build_camera_list_comboBox()
-        self.build_audio_list()
+        self.build_audio_list_comboBox()
+        self.build_serial_device_list_comboBox()
         self.destroyed.connect(self.on_destroy)
         self.chkMute.stateChanged.connect(self.on_mute_changed)
         self.btnCapture.clicked.connect(self.on_capture_clicked)
         self.btnRescan.clicked.connect(self.on_rescan_clicked)
+        self.btnSerialRescan.clicked.connect(self.on_serial_rescan_clicked)
 
         self.th_processed = VideoThread(self)
         self.th_processed.set_input(self._frame_queue)
         self.th_processed.video_frame.connect(self.setImage)
         self.th_processed.start()
+
+    def build_serial_device_list_comboBox(self):
+        try:
+            self.cbxSerialList.currentIndexChanged.disconnect(self.on_serial_changed)
+        except:
+            None
+        self.cbxSerialList.clear()
+
+        serials = SerialDevice.list_device()
+        devices = []
+        devices.append("选择NS控制设备")
+        for device in serials:
+            devices.append(device.name)
+
+        self.cbxSerialList.addItems(devices)
+        self.cbxSerialList.setCurrentIndex(0)
+        self.cbxSerialList.currentIndexChanged.connect(self.on_serial_changed)
+        self.on_serial_changed()
 
     def build_camera_list_comboBox(self):
         try:
@@ -90,7 +111,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.cbxFps.currentIndexChanged.connect(self.on_fps_changed)
         self.on_fps_changed()
 
-    def build_audio_list(self):
+    def build_audio_list_comboBox(self):
         try:
             self.cbxAudioList.currentIndexChanged.disconnect(self.on_audio_changed)
         except:
@@ -152,13 +173,19 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
     
     def on_audio_changed(self):
         self.play_audio()
+    
+    def on_serial_changed(self):
+        None
 
     def on_capture_clicked(self):
         self._camera_control_queue.put_nowait("camera")
 
     def on_rescan_clicked(self):
         self.build_camera_list_comboBox()
-        self.build_audio_list()
+        self.build_audio_list_comboBox()
+
+    def on_serial_rescan_clicked(self):
+        self.build_serial_device_list_comboBox()
 
 
     @Slot()

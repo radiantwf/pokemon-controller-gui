@@ -10,5 +10,8 @@
 		"/Users/wangfeng/Library/Application Support/Code/User/globalStorage/joedevivo.vscode-circuitpython/bundle/20230626/adafruit-circuitpython-bundle-py-20230626/lib",
 		"./src"
 	],
-	"circuitpython.board.version": null
+	"circuitpython.board.version": null,
+	"cSpell.words": [
+		"baudrate"
+	]
 }
