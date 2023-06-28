@@ -2,12 +2,14 @@ from io import StringIO
 import multiprocessing
 import time
 from PySide6 import QtWidgets
+from PySide6.QtWidgets import QMessageBox
 from camera.device import VideoDevice
 from PySide6.QtCore import Slot,Qt,QEvent,QTimer
 from PySide6.QtGui import QImage, QPixmap,QPainter
 from PySide6.QtMultimedia import QAudioFormat,QAudioSource,QAudioSink,QMediaDevices
 from PySide6.QtUiTools import loadUiType
 from controller.device import SerialDevice
+from controller.switch_pro import SwitchProControll
 
 from ui.video import VideoThread
 Ui_MainWindow, QMainWindowBase = loadUiType("./resources/ui/main_form.ui")
@@ -28,7 +30,9 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self._m_audioSink = None
         self._audio_input = None
         self._cameras = []
+        self._serial_devices = []
         self._current_camera = None
+        self._current_controller = SwitchProControll()
         self.th_processed = None
         self._key_press_map = dict()
         self._last_sent_action = ""
@@ -61,10 +65,10 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             None
         self.cbxSerialList.clear()
 
-        serials = SerialDevice.list_device()
+        self._serial_devices = SerialDevice.list_device()
         devices = []
         devices.append("选择NS控制设备")
-        for device in serials:
+        for device in self._serial_devices:
             devices.append(device.name)
 
         self.cbxSerialList.addItems(devices)
@@ -185,7 +189,29 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.play_audio()
     
     def on_serial_changed(self):
-        None
+        self._current_controller.close()
+        if self.cbxSerialList.currentIndex() == 0:
+            return
+        ret = self._current_controller.open(self._serial_devices[self.cbxSerialList.currentIndex() - 1])
+        if not ret:
+            self.pop_switch_pro_controller_err_dialog()
+        
+    def pop_switch_pro_controller_err_dialog(self):
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Icon.Critical)
+        msg_box.setText("NS控制设备连接错误")
+        msg_box.setInformativeText("请检查设备连接或选择其他设备")
+        msg_box.setWindowTitle("错误")
+        msg_box.exec_()
+        self.cbxSerialList.setCurrentIndex(0)
+
+    def controller_send_action(self,action:str):
+        try:
+            self._current_controller.send_action(action+"\n")
+        except:
+            self.pop_switch_pro_controller_err_dialog()
+
+        
 
     def on_capture_clicked(self):
         self._camera_control_queue.put_nowait("camera")
@@ -205,6 +231,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
 
     @Slot()
     def on_destroy(self):
+        self._current_controller.close()
         if self._timer != None:
             self._timer.stop()
         self.stop_audio()
@@ -292,7 +319,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         return QtWidgets.QMainWindow.eventFilter(self, obj, event)
 
     def key_send(self):
-        if self.tabWidget.currentIndex() != 0:
+        if self.tabWidget.currentIndex() != 0 or self.cbxSerialList.currentIndex() == 0:
             self._key_press_map.clear()
             self.label_action.setText("")
 
@@ -328,12 +355,13 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self._set_joystick_label(Qt.Key_L,self.label_l)
         self._set_joystick_label(Qt.Key_K,self.label_k)
 
-        if self.tabWidget.currentIndex() == 0:
+        if self.tabWidget.currentIndex() == 0 and self.cbxSerialList.currentIndex() > 0:
             action = self._get_action_line()
             if action != self._last_sent_action or time.monotonic() - self._last_sent_ts > 5:
                 self._last_sent_action = action
                 self._last_sent_ts = time.monotonic()
                 self.label_action.setText("实时命令：{}".format(action))
+                self.controller_send_action(action)
                     # self._controller_action_queue.put_nowait(macro.Realtime(action))
         self.repaint()
     
