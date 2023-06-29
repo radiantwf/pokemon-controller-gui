@@ -319,7 +319,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         return QtWidgets.QMainWindow.eventFilter(self, obj, event)
 
     def key_send(self):
-        if self.tabWidget.currentIndex() != 0 or self.cbxSerialList.currentIndex() == 0:
+        if self.cbxSerialList.currentIndex() == 0:
             self._key_press_map.clear()
             self.label_action.setText("")
 
@@ -355,7 +355,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self._set_joystick_label(Qt.Key_L,self.label_l)
         self._set_joystick_label(Qt.Key_K,self.label_k)
 
-        if self.tabWidget.currentIndex() == 0 and self.cbxSerialList.currentIndex() > 0:
+        if self.cbxSerialList.currentIndex() > 0:
             action = self._get_action_line()
             if action != self._last_sent_action or time.monotonic() - self._last_sent_ts > 5:
                 self._last_sent_action = action
