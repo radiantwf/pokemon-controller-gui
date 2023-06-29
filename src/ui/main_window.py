@@ -56,7 +56,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.th_processed.start()
         self._timer = QTimer()
         self._timer.timeout.connect(self.key_send)
-        self._timer.start(5)
+        self._timer.start(1)
 
     def build_serial_device_list_comboBox(self):
         try:
