@@ -241,7 +241,7 @@ class UserWindows(QtWidgets.QMainWindow,Ui_MainWindow):
 
         self.th_video = VideoThread(self)
         self.th_video.set_input(self._video_with,self._video_height,3,QImage.Format_BGR888,self._frame_queue)
-        self.th_video.video_frame.connect(self.setImage2)
+        self.th_video.on_recv_frame.connect(self.setImage2)
         self.th_video.start()
 
         self.th_log = LogThread(self)
@@ -251,7 +251,7 @@ class UserWindows(QtWidgets.QMainWindow,Ui_MainWindow):
         
         self.th_processed = VideoThread(self)
         self.th_processed.set_input(self._video_with,self._video_height,3,QImage.Format_BGR888,self._processed_frame_queue)
-        self.th_processed.video_frame.connect(self.setImage1)
+        self.th_processed.on_recv_frame.connect(self.setImage1)
         self.th_processed.start()
         self.play_audio()
         self.timer = QTimer()

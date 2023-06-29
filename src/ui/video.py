@@ -4,15 +4,16 @@ from PySide6.QtGui import QImage
 
 
 class VideoThread(QThread):
-    video_frame = Signal(QImage)
-    def __init__(self, parent=None):
+    on_recv_frame = Signal(QImage)
+    def __init__(self, parent=None,queue=None):
         QThread.__init__(self, parent)
-
-    def set_input(self,queue):
         self._queue = queue
+        self._stop_signal = False
         
     def run(self):
-        while True:
+        while True:       
+            if self._stop_signal:
+                break
             frame = None
             while True:
                 try:
@@ -22,4 +23,11 @@ class VideoThread(QThread):
             if frame == None:
                 continue
             img = QImage(frame.bytes(), frame.width, frame.height, frame.channels*frame.width,QImage.Format_BGR888)
-            self.video_frame.emit(img)
+            self.on_recv_frame.emit(img)
+
+    def stop(self):
+        self._stop_signal = True
+
+    def __del__(self):
+        self.stop()
+        self.wait()

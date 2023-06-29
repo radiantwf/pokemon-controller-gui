@@ -1,6 +1,7 @@
 from io import StringIO
 import multiprocessing
 import time
+import socket
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QMessageBox
 from camera.device import VideoDevice
@@ -10,6 +11,7 @@ from PySide6.QtMultimedia import QAudioFormat,QAudioSource,QAudioSink,QMediaDevi
 from PySide6.QtUiTools import loadUiType
 from controller.device import SerialDevice
 from controller.switch_pro import SwitchProControll
+from ui.controller import ControllerThread
 
 from ui.video import VideoThread
 Ui_MainWindow, QMainWindowBase = loadUiType("./resources/ui/main_form.ui")
@@ -33,11 +35,13 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self._serial_devices = []
         self._current_camera = None
         self._current_controller = SwitchProControll()
-        self.th_processed = None
+        self.th_controller = None
+        self.th_video = None
         self._key_press_map = dict()
         self._last_sent_action = ""
         self._last_sent_ts = time.monotonic()
         self._current_tag = None
+        self._realtime_controller_socket_port = 0
 
     def setupUi(self):
         Ui_MainWindow.setupUi(self,self)
@@ -50,10 +54,17 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.btnRescan.clicked.connect(self.on_rescan_clicked)
         self.btnSerialRescan.clicked.connect(self.on_serial_rescan_clicked)
 
-        self.th_processed = VideoThread(self)
-        self.th_processed.set_input(self._frame_queue)
-        self.th_processed.video_frame.connect(self.setImage)
-        self.th_processed.start()
+        self.th_video = VideoThread(self,self._frame_queue)
+        self.th_video.on_recv_frame.connect(self.setImage)
+        self.th_video.start()
+
+        self.th_controller = ControllerThread(self)
+        self.th_controller.push_action.connect(self.push_action)
+        self.th_controller.start()
+
+        self.toolBox.setCurrentIndex(0)
+        self.refresh_controller_server()
+
         self._timer = QTimer()
         self._timer.timeout.connect(self.key_send)
         self._timer.start(1)
@@ -211,8 +222,6 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         except:
             self.pop_switch_pro_controller_err_dialog()
 
-        
-
     def on_capture_clicked(self):
         self._camera_control_queue.put_nowait("camera")
 
@@ -229,14 +238,21 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         data = self._io_device.readAll()
         self._m_output.write(data)
 
-    @Slot()
-    def on_destroy(self):
+
+    def closeEvent(self, event):
         self._current_controller.close()
-        if self._timer != None:
+        if self._timer:
             self._timer.stop()
         self.stop_audio()
-        if self.th_processed != None:
-            self.th_processed.terminate()
+        if self.th_video:
+            self.th_video.stop()
+        if self.th_controller:
+            self.th_controller.stop()
+        event.accept()
+
+    @Slot()
+    def on_destroy(self):
+        pass
 
     @Slot(QImage)
     def setImage(self, image):
@@ -245,6 +261,21 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             self.lblCameraFrame.setPixmap(pixmap)
         else:
             self.lblCameraFrame.clear()
+
+    def refresh_controller_server(self):
+        self._realtime_controller_socket_port = 0
+        port = self.th_controller.refresh_service()
+        if self.toolBox.currentIndex() == 0:
+            self._realtime_controller_socket_port = port
+
+
+    def send_realtime_action_queue(self,action):
+        pass
+
+    @Slot(str)
+    def push_action(self, action:str):
+        self.controller_send_action(action)
+        self.label_action.setText("实时命令：{}".format(action))
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.Type.KeyPress:
@@ -360,9 +391,10 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             if action != self._last_sent_action or time.monotonic() - self._last_sent_ts > 5:
                 self._last_sent_action = action
                 self._last_sent_ts = time.monotonic()
-                self.label_action.setText("实时命令：{}".format(action))
-                self.controller_send_action(action)
-                    # self._controller_action_queue.put_nowait(macro.Realtime(action))
+                if self._realtime_controller_socket_port > 0:
+                    client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                    client.sendto(action.encode("utf-8"), ("127.0.0.1", self._realtime_controller_socket_port))
+                    client.close()
         self.repaint()
     
     def _set_joystick_label(self,key,label):

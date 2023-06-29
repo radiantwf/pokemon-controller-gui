@@ -16,7 +16,7 @@ from PySide6.QtGui import QImage
 # import controller
 # import recognize
 def main():
-    print(test())
+    # print(test())
     main_video_frame,capture_video_frame = multiprocessing.Pipe(False)
     ui_display_video_frame = multiprocessing.Queue()
     opencv_processed_video_frame = multiprocessing.Queue()
