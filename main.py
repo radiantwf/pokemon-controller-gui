@@ -1,7 +1,9 @@
 import sys
 
 import numpy
+
 sys.path.append('./src')
+from macro import test
 import camera
 from datatype.frame import Frame
 import ui
@@ -14,6 +16,7 @@ from PySide6.QtGui import QImage
 # import controller
 # import recognize
 def main():
+    print(test())
     main_video_frame,capture_video_frame = multiprocessing.Pipe(False)
     ui_display_video_frame = multiprocessing.Queue()
     opencv_processed_video_frame = multiprocessing.Queue()
