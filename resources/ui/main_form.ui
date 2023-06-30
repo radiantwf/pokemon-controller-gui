@@ -958,7 +958,7 @@
       </rect>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="page">
       <property name="geometry">
@@ -1044,6 +1044,41 @@
         <string>搜索设备</string>
        </property>
       </widget>
+      <widget class="QCheckBox" name="chkJoystickButtonSwitch">
+       <property name="geometry">
+        <rect>
+         <x>50</x>
+         <y>80</y>
+         <width>201</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>交换A与B，X与Y按键</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label">
+       <property name="geometry">
+        <rect>
+         <x>70</x>
+         <y>100</y>
+         <width>171</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+         <italic>true</italic>
+        </font>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">color:rgb(140, 140, 140)</string>
+       </property>
+       <property name="text">
+        <string>适配Switch Pro以外手柄布局</string>
+       </property>
+      </widget>
      </widget>
      <widget class="QWidget" name="page_2">
       <property name="geometry">
@@ -1082,6 +1117,14 @@
       </widget>
      </widget>
      <widget class="QWidget" name="page_3">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>271</width>
+        <height>223</height>
+       </rect>
+      </property>
       <attribute name="label">
        <string>外部脚本</string>
       </attribute>
