@@ -2,18 +2,19 @@ from io import StringIO
 import multiprocessing
 import time
 import socket
+import struct
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QMessageBox
 from camera.device import VideoDevice
-from PySide6.QtCore import Slot,Qt,QEvent,QTimer
+from PySide6.QtCore import Slot,Qt,QEvent,QTimer,QCoreApplication
 from PySide6.QtGui import QImage, QPixmap,QPainter
 from PySide6.QtMultimedia import QAudioFormat,QAudioSource,QAudioSink,QMediaDevices
 from PySide6.QtUiTools import loadUiType
-from controller.device import SerialDevice
-from controller.switch_pro import SwitchProControll
-from ui.controller import ControllerThread
+from ui.controller.switch_pro import SwitchProControll
+from ui.controller.device import SerialDevice
+from ui.qthread.controller import ControllerThread
 
-from ui.video import VideoThread
+from ui.qthread.video import VideoThread
 Ui_MainWindow, QMainWindowBase = loadUiType("./resources/ui/main_form.ui")
 
 class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
@@ -248,11 +249,16 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             self.th_video.stop()
         if self.th_controller:
             self.th_controller.stop()
+        if self.th_video:
+            self.th_video.wait()
+        if self.th_controller:
+            self.th_controller.wait()
         event.accept()
+        QCoreApplication.instance().aboutToQuit.emit()
 
     @Slot()
     def on_destroy(self):
-        pass
+        print('on_destroy')
 
     @Slot(QImage)
     def setImage(self, image):
@@ -275,7 +281,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
     @Slot(str)
     def push_action(self, action:str):
         self.controller_send_action(action)
-        self.label_action.setText("实时命令：{}".format(action))
+        self._set_joystick_labels(action)
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.Type.KeyPress:
@@ -354,38 +360,6 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             self._key_press_map.clear()
             self.label_action.setText("")
 
-        self._set_joystick_label(Qt.Key_A,self.label_a)
-        self._set_joystick_label(Qt.Key_W,self.label_w)
-        self._set_joystick_label(Qt.Key_S,self.label_s)
-        self._set_joystick_label(Qt.Key_D,self.label_d)
-        self._set_joystick_label(Qt.Key_X,self.label_x)
-
-        self._set_joystick_label(Qt.Key_Semicolon,self.label_rt)
-        self._set_joystick_label(Qt.Key_Comma,self.label_rl)
-        self._set_joystick_label(Qt.Key_Period,self.label_rb)
-        self._set_joystick_label(Qt.Key_Slash,self.label_rr)
-        self._set_joystick_label(Qt.Key_Apostrophe,self.label_rc)
-
-        self._set_joystick_label(Qt.Key_F,self.label_f)
-        self._set_joystick_label(Qt.Key_C,self.label_c)
-        self._set_joystick_label(Qt.Key_B,self.label_b)
-        self._set_joystick_label(Qt.Key_V,self.label_v)
-
-        self._set_joystick_label(Qt.Key_R,self.label_r)
-        self._set_joystick_label(Qt.Key_Y,self.label_y)
-        self._set_joystick_label(Qt.Key_G,self.label_g)
-        self._set_joystick_label(Qt.Key_H,self.label_h)
-
-        self._set_joystick_label(Qt.Key_Q,self.label_q)
-        self._set_joystick_label(Qt.Key_E,self.label_e)
-        self._set_joystick_label(Qt.Key_O,self.label_o)
-        self._set_joystick_label(Qt.Key_U,self.label_u)
-
-        self._set_joystick_label(Qt.Key_I,self.label_i)
-        self._set_joystick_label(Qt.Key_J,self.label_j)
-        self._set_joystick_label(Qt.Key_L,self.label_l)
-        self._set_joystick_label(Qt.Key_K,self.label_k)
-
         if self.cbxSerialList.currentIndex() > 0:
             action = self._get_action_line()
             if action != self._last_sent_action or time.monotonic() - self._last_sent_ts > 5:
@@ -395,13 +369,133 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
                     client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                     client.sendto(action.encode("utf-8"), ("127.0.0.1", self._realtime_controller_socket_port))
                     client.close()
-        self.repaint()
     
-    def _set_joystick_label(self,key,label):
-        if self._key_press_map.get(key) != None:
+    def _set_joystick_labels(self,action):
+        splits = action.upper().split("|", -1)
+        buffer = bytearray(7)
+        buffer[3] = 0x80
+        buffer[4] = 0x80
+        buffer[5] = 0x80
+        buffer[6] = 0x80
+        for s in splits:
+            s = s.strip()
+            if s == "Y":
+                buffer[0] |= 0b1
+            elif s == "B":
+                buffer[0] |= 0b10
+            elif s == "X":
+                buffer[0] |= 0b100
+            elif s == "A":
+                buffer[0] |= 0b1000
+            elif s == "L":
+                buffer[0] |= 0b10000
+            elif s == "R":
+                buffer[0] |= 0b100000
+            elif s == "ZL":
+                buffer[0] |= 0b1000000
+            elif s == "ZR":
+                buffer[0] |= 0b10000000
+            elif s == "MINUS":
+                buffer[1] |= 0b1
+            elif s == "PLUS":
+                buffer[1] |= 0b10
+            elif s == "LPRESS":
+                buffer[1] |= 0b100
+            elif s == "RPRESS":
+                buffer[1] |= 0b1000
+            elif s == "HOME":
+                buffer[1] |= 0b10000
+            elif s == "CAPTURE":
+                buffer[1] |= 0b100000
+            elif s == "TOP":
+                buffer[2] |= 0b1
+            elif s == "RIGHT":
+                buffer[2] |= 0b10
+            elif s == "BOTTOM":
+                buffer[2] |= 0b100
+            elif s == "LEFT":
+                buffer[2] |= 0b1000
+            elif s == "TOPRIGHT":
+                buffer[2] |= 0b0011
+            elif s == "BOTTOMRIGHT":
+                buffer[2] |= 0b0110
+            elif s == "BOTTOMLEFT":
+                buffer[2] |= 0b1100
+            elif s == "TOPLEFT":
+                buffer[2] |= 0b1001
+            else:
+                stick = s.split("@", -1)
+                if len(stick) == 2:
+                    x = 0x80
+                    y = 0x80
+                    coordinate = stick[1].split(",", -1)
+                    if len(coordinate) == 2:
+                        x = self._coordinate_str_convert_byte(coordinate[0])
+                        y = self._coordinate_str_convert_byte(coordinate[1])
+                    if stick[0] == "LSTICK":
+                            buffer[3] = x
+                            buffer[4] = y
+                    elif stick[0] == "RSTICK":
+                            buffer[5] = x
+                            buffer[6] = y
+
+        self._set_label_style(self.label_y,(buffer[0] & 0b1) != 0)
+        self._set_label_style(self.label_b,(buffer[0] & 0b10) != 0)
+        self._set_label_style(self.label_x,(buffer[0] & 0b100) != 0)
+        self._set_label_style(self.label_a,(buffer[0] & 0b1000) != 0)
+        self._set_label_style(self.label_l,(buffer[0] & 0b10000) != 0)
+        self._set_label_style(self.label_r,(buffer[0] & 0b100000) != 0)
+        self._set_label_style(self.label_zl,(buffer[0] & 0b1000000) != 0)
+        self._set_label_style(self.label_zr,(buffer[0] & 0b10000000) != 0)
+
+        self._set_label_style(self.label_minus,(buffer[1] & 0b1) != 0)
+        self._set_label_style(self.label_plus,(buffer[1] & 0b10) != 0)
+        self._set_label_style(self.label_lstick_press,(buffer[1] & 0b100) != 0)
+        self._set_label_style(self.label_rstick_press,(buffer[1] & 0b1000) != 0)
+        self._set_label_style(self.label_home,(buffer[1] & 0b10000) != 0)
+        self._set_label_style(self.label_capture,(buffer[1] & 0b100000) != 0)
+        self._set_label_style(self.label_dpad_t,(buffer[2] & 0b1) != 0)
+        self._set_label_style(self.label_dpad_r,(buffer[2] & 0b10) != 0)
+        self._set_label_style(self.label_dpad_b,(buffer[2] & 0b100) != 0)
+        self._set_label_style(self.label_dpad_l,(buffer[2] & 0b1000) != 0)
+        self._set_stick_label_style(self.label_lstick_l,(buffer[3] - 0x80) * (-1))
+        self._set_stick_label_style(self.label_lstick_r,(buffer[3] - 0x80))
+        self._set_stick_label_style(self.label_lstick_t,(buffer[4] - 0x80) * (-1))
+        self._set_stick_label_style(self.label_lstick_b,(buffer[4] - 0x80))
+        self._set_stick_label_style(self.label_rstick_l,(buffer[5] - 0x80) * (-1))
+        self._set_stick_label_style(self.label_rstick_r,(buffer[5] - 0x80))
+        self._set_stick_label_style(self.label_rstick_t,(buffer[5] - 0x80) * (-1))
+        self._set_stick_label_style(self.label_rstick_b,(buffer[5] - 0x80))
+        self.label_action.setText("实时命令：{}".format(action))
+
+
+    def _coordinate_str_convert_byte(self, str):
+        v = 0
+        try:
+            v = int(float(str))
+        except:
+            pass
+        if v < -128:
+            v = -128
+        elif v > 127:
+            v = 127
+        return v + 0x80
+    
+    def _set_label_style(self,label,pushed):
+        if pushed:
             label.setStyleSheet(u"background-color:rgb(0, 0, 255)")
         else:
             label.setStyleSheet(u"background-color:rgb(170, 170, 170)")
+
+    def _set_stick_label_style(self,label,v:int):
+        if v>80:
+            label.setStyleSheet(u"background-color:rgb(0,0,255)")
+        elif v>30:
+            label.setStyleSheet(u"background-color:rgb(80,80,255)")
+        elif v>2:
+            label.setStyleSheet(u"background-color:rgb(140,140,200)")
+        else:
+            label.setStyleSheet(u"background-color:rgb(170,170,170)")
     
     def _get_action_line(self)->str:
         sio = StringIO()

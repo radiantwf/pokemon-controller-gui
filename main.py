@@ -31,27 +31,27 @@ def main():
         while True:
             if not ui_process.is_alive():
                 break
-            video_frame = main_video_frame.recv()
-            try:
-                np_array = numpy.frombuffer(video_frame.bytes(), dtype=numpy.uint8)
-                mat = np_array.reshape((video_frame.height, video_frame.width, video_frame.channels))
-                display_mat = cv2.resize(mat, (DisplayCameraWidth,DisplayCameraHeight), interpolation=cv2.INTER_AREA)
-                ui_display_video_frame.put(Frame(DisplayCameraWidth,DisplayCameraHeight,video_frame.channels,video_frame.format,display_mat),False,0)
-            except:
-                pass
+            if main_video_frame.poll():
+                video_frame = main_video_frame.recv()
+                try:
+                    np_array = numpy.frombuffer(video_frame.bytes(), dtype=numpy.uint8)
+                    mat = np_array.reshape((video_frame.height, video_frame.width, video_frame.channels))
+                    display_mat = cv2.resize(mat, (DisplayCameraWidth,DisplayCameraHeight), interpolation=cv2.INTER_AREA)
+                    ui_display_video_frame.put(Frame(DisplayCameraWidth,DisplayCameraHeight,video_frame.channels,video_frame.format,display_mat),False,0)
+                except:
+                    pass
             # try:
             #     recognize_video_frame.put(video_frame,False,0)
             # except:
             #     pass
-            time.sleep(0.001)
-        sys.exit(0)
+            else:
+                time.sleep(0.001)
     except:
         pass
-    finally:
-        # controller_process.kill()
-        # recognize_process.kill()
-        video_process.kill()
-        ui_process.kill()
+    # recognize_process.kill()
+    video_process.kill()
+    ui_process.kill()
+    sys.exit(0)
     # dev_video = device.VideoDevice(name=_Camera_Name,width=_Camera_Width,height=_Camera_Height,fps=_Camera_FPS,index=0,pix_fmt=None)
     # # dev_video = device.VideoDevice(name=_Camera_Name,width=_Camera_Width,height=_Camera_Height,fps=_Camera_FPS,index=0,pix_fmt=None,vcodec="mjpeg")
     # # dev_video = device.VideoDevice(name=_Camera_Name,width=_Camera_Width,height=_Camera_Height,fps=_Camera_FPS,index=1,pix_fmt="bgr0")

@@ -340,7 +340,7 @@
       <string>搜索设备</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_u">
+    <widget class="QLabel" name="label_r">
      <property name="geometry">
       <rect>
        <x>470</x>
@@ -362,7 +362,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_x">
+    <widget class="QLabel" name="label_lstick_press">
      <property name="geometry">
       <rect>
        <x>128</x>
@@ -397,7 +397,7 @@
       <string>实时命令：</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_v">
+    <widget class="QLabel" name="label_dpad_b">
      <property name="geometry">
       <rect>
        <x>200</x>
@@ -419,7 +419,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_q">
+    <widget class="QLabel" name="label_zl">
      <property name="geometry">
       <rect>
        <x>20</x>
@@ -441,7 +441,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_h">
+    <widget class="QLabel" name="label_home">
      <property name="geometry">
       <rect>
        <x>310</x>
@@ -463,7 +463,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_s">
+    <widget class="QLabel" name="label_lstick_b">
      <property name="geometry">
       <rect>
        <x>125</x>
@@ -485,7 +485,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_o">
+    <widget class="QLabel" name="label_zr">
      <property name="geometry">
       <rect>
        <x>470</x>
@@ -507,7 +507,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_rb">
+    <widget class="QLabel" name="label_rstick_b">
      <property name="geometry">
       <rect>
        <x>335</x>
@@ -529,7 +529,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_rl">
+    <widget class="QLabel" name="label_rstick_l">
      <property name="geometry">
       <rect>
        <x>310</x>
@@ -551,7 +551,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_w">
+    <widget class="QLabel" name="label_lstick_t">
      <property name="geometry">
       <rect>
        <x>125</x>
@@ -573,7 +573,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_j">
+    <widget class="QLabel" name="label_y">
      <property name="geometry">
       <rect>
        <x>385</x>
@@ -595,7 +595,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_k">
+    <widget class="QLabel" name="label_b">
      <property name="geometry">
       <rect>
        <x>410</x>
@@ -617,7 +617,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_rr">
+    <widget class="QLabel" name="label_rstick_r">
      <property name="geometry">
       <rect>
        <x>360</x>
@@ -639,7 +639,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_rc">
+    <widget class="QLabel" name="label_rstick_press">
      <property name="geometry">
       <rect>
        <x>338</x>
@@ -661,7 +661,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_d">
+    <widget class="QLabel" name="label_lstick_r">
      <property name="geometry">
       <rect>
        <x>150</x>
@@ -683,7 +683,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_c">
+    <widget class="QLabel" name="label_dpad_l">
      <property name="geometry">
       <rect>
        <x>175</x>
@@ -705,7 +705,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_y">
+    <widget class="QLabel" name="label_plus">
      <property name="geometry">
       <rect>
        <x>335</x>
@@ -727,7 +727,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_r">
+    <widget class="QLabel" name="label_minus">
      <property name="geometry">
       <rect>
        <x>200</x>
@@ -749,7 +749,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_i">
+    <widget class="QLabel" name="label_x">
      <property name="geometry">
       <rect>
        <x>410</x>
@@ -771,7 +771,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_a">
+    <widget class="QLabel" name="label_lstick_l">
      <property name="geometry">
       <rect>
        <x>100</x>
@@ -793,7 +793,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_b">
+    <widget class="QLabel" name="label_dpad_r">
      <property name="geometry">
       <rect>
        <x>225</x>
@@ -815,7 +815,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_rt">
+    <widget class="QLabel" name="label_rstick_t">
      <property name="geometry">
       <rect>
        <x>335</x>
@@ -837,7 +837,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_g">
+    <widget class="QLabel" name="label_capture">
      <property name="geometry">
       <rect>
        <x>225</x>
@@ -859,7 +859,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_l">
+    <widget class="QLabel" name="label_a">
      <property name="geometry">
       <rect>
        <x>435</x>
@@ -881,7 +881,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_f">
+    <widget class="QLabel" name="label_dpad_t">
      <property name="geometry">
       <rect>
        <x>200</x>
@@ -903,7 +903,7 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_e">
+    <widget class="QLabel" name="label_l">
      <property name="geometry">
       <rect>
        <x>30</x>

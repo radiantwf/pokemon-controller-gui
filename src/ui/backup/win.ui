@@ -75,7 +75,7 @@
      <string/>
     </property>
    </widget>
-   <widget class="QLabel" name="label_w">
+   <widget class="QLabel" name="label_lstick_t">
     <property name="geometry">
      <rect>
       <x>180</x>
@@ -97,7 +97,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_s">
+   <widget class="QLabel" name="label_lstick_b">
     <property name="geometry">
      <rect>
       <x>180</x>
@@ -119,7 +119,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_a">
+   <widget class="QLabel" name="label_lstick_l">
     <property name="geometry">
      <rect>
       <x>150</x>
@@ -141,7 +141,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_d">
+   <widget class="QLabel" name="label_lstick_r">
     <property name="geometry">
      <rect>
       <x>210</x>
@@ -163,7 +163,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_f">
+   <widget class="QLabel" name="label_dpad_t">
     <property name="geometry">
      <rect>
       <x>250</x>
@@ -185,7 +185,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_c">
+   <widget class="QLabel" name="label_dpad_l">
     <property name="geometry">
      <rect>
       <x>220</x>
@@ -207,7 +207,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_b">
+   <widget class="QLabel" name="label_dpad_r">
     <property name="geometry">
      <rect>
       <x>280</x>
@@ -229,7 +229,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_v">
+   <widget class="QLabel" name="label_dpad_b">
     <property name="geometry">
      <rect>
       <x>250</x>
@@ -251,7 +251,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_rl">
+   <widget class="QLabel" name="label_rstick_l">
     <property name="geometry">
      <rect>
       <x>360</x>
@@ -273,7 +273,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_rr">
+   <widget class="QLabel" name="label_rstick_r">
     <property name="geometry">
      <rect>
       <x>420</x>
@@ -295,7 +295,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_rt">
+   <widget class="QLabel" name="label_rstick_t">
     <property name="geometry">
      <rect>
       <x>390</x>
@@ -317,7 +317,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_rb">
+   <widget class="QLabel" name="label_rstick_b">
     <property name="geometry">
      <rect>
       <x>390</x>
@@ -339,7 +339,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_j">
+   <widget class="QLabel" name="label_y">
     <property name="geometry">
      <rect>
       <x>430</x>
@@ -361,7 +361,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_i">
+   <widget class="QLabel" name="label_x">
     <property name="geometry">
      <rect>
       <x>460</x>
@@ -383,7 +383,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_l">
+   <widget class="QLabel" name="label_a">
     <property name="geometry">
      <rect>
       <x>490</x>
@@ -405,7 +405,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_k">
+   <widget class="QLabel" name="label_b">
     <property name="geometry">
      <rect>
       <x>460</x>
@@ -427,7 +427,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_y">
+   <widget class="QLabel" name="label_plus">
     <property name="geometry">
      <rect>
       <x>380</x>
@@ -449,7 +449,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_r">
+   <widget class="QLabel" name="label_minus">
     <property name="geometry">
      <rect>
       <x>260</x>
@@ -471,7 +471,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_h">
+   <widget class="QLabel" name="label_home">
     <property name="geometry">
      <rect>
       <x>350</x>
@@ -493,7 +493,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_g">
+   <widget class="QLabel" name="label_capture">
     <property name="geometry">
      <rect>
       <x>290</x>
@@ -515,7 +515,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_x">
+   <widget class="QLabel" name="label_lstick_press">
     <property name="geometry">
      <rect>
       <x>185</x>
@@ -537,7 +537,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_rc">
+   <widget class="QLabel" name="label_rstick_press">
     <property name="geometry">
      <rect>
       <x>395</x>
@@ -559,7 +559,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_e">
+   <widget class="QLabel" name="label_l">
     <property name="geometry">
      <rect>
       <x>80</x>
@@ -581,7 +581,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_q">
+   <widget class="QLabel" name="label_zl">
     <property name="geometry">
      <rect>
       <x>70</x>
@@ -603,7 +603,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_u">
+   <widget class="QLabel" name="label_r">
     <property name="geometry">
      <rect>
       <x>530</x>
@@ -625,7 +625,7 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_o">
+   <widget class="QLabel" name="label_zr">
     <property name="geometry">
      <rect>
       <x>529</x>

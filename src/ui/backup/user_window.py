@@ -8,7 +8,7 @@ from datatype.device import AudioDevice
 from PySide6.QtCore import Slot,Qt,QEvent,QTimer
 from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtMultimedia import QAudioFormat,QAudioSource,QAudioSink,QMediaDevices
-from ui.video import VideoThread
+from ui.qthread.video import VideoThread
 import time
 
 class UserWindows(QtWidgets.QMainWindow,Ui_MainWindow):
@@ -107,37 +107,37 @@ class UserWindows(QtWidgets.QMainWindow,Ui_MainWindow):
             self._key_press_map.clear()
             self.label_action.setText("")
 
-        self._set_joystick_label(Qt.Key_A,self.label_a)
-        self._set_joystick_label(Qt.Key_W,self.label_w)
-        self._set_joystick_label(Qt.Key_S,self.label_s)
-        self._set_joystick_label(Qt.Key_D,self.label_d)
-        self._set_joystick_label(Qt.Key_X,self.label_x)
+        self._set_joystick_label(Qt.Key_A,self.label_lstick_l)
+        self._set_joystick_label(Qt.Key_W,self.label_lstick_t)
+        self._set_joystick_label(Qt.Key_S,self.label_lstick_b)
+        self._set_joystick_label(Qt.Key_D,self.label_lstick_r)
+        self._set_joystick_label(Qt.Key_X,self.label_lstick_press)
 
-        self._set_joystick_label(Qt.Key_Semicolon,self.label_rt)
-        self._set_joystick_label(Qt.Key_Comma,self.label_rl)
-        self._set_joystick_label(Qt.Key_Period,self.label_rb)
-        self._set_joystick_label(Qt.Key_Slash,self.label_rr)
-        self._set_joystick_label(Qt.Key_Apostrophe,self.label_rc)
+        self._set_joystick_label(Qt.Key_Semicolon,self.label_rstick_t)
+        self._set_joystick_label(Qt.Key_Comma,self.label_rstick_l)
+        self._set_joystick_label(Qt.Key_Period,self.label_rstick_b)
+        self._set_joystick_label(Qt.Key_Slash,self.label_rstick_r)
+        self._set_joystick_label(Qt.Key_Apostrophe,self.label_rstick_press)
 
-        self._set_joystick_label(Qt.Key_F,self.label_f)
-        self._set_joystick_label(Qt.Key_C,self.label_c)
-        self._set_joystick_label(Qt.Key_B,self.label_b)
-        self._set_joystick_label(Qt.Key_V,self.label_v)
+        self._set_joystick_label(Qt.Key_F,self.label_dpad_t)
+        self._set_joystick_label(Qt.Key_C,self.label_dpad_l)
+        self._set_joystick_label(Qt.Key_B,self.label_dpad_r)
+        self._set_joystick_label(Qt.Key_V,self.label_dpad_b)
 
-        self._set_joystick_label(Qt.Key_R,self.label_r)
-        self._set_joystick_label(Qt.Key_Y,self.label_y)
-        self._set_joystick_label(Qt.Key_G,self.label_g)
-        self._set_joystick_label(Qt.Key_H,self.label_h)
+        self._set_joystick_label(Qt.Key_R,self.label_minus)
+        self._set_joystick_label(Qt.Key_Y,self.label_plus)
+        self._set_joystick_label(Qt.Key_G,self.label_capture)
+        self._set_joystick_label(Qt.Key_H,self.label_home)
 
-        self._set_joystick_label(Qt.Key_Q,self.label_q)
-        self._set_joystick_label(Qt.Key_E,self.label_e)
-        self._set_joystick_label(Qt.Key_O,self.label_o)
-        self._set_joystick_label(Qt.Key_U,self.label_u)
+        self._set_joystick_label(Qt.Key_Q,self.label_zl)
+        self._set_joystick_label(Qt.Key_E,self.label_l)
+        self._set_joystick_label(Qt.Key_O,self.label_zr)
+        self._set_joystick_label(Qt.Key_U,self.label_r)
 
-        self._set_joystick_label(Qt.Key_I,self.label_i)
-        self._set_joystick_label(Qt.Key_J,self.label_j)
-        self._set_joystick_label(Qt.Key_L,self.label_l)
-        self._set_joystick_label(Qt.Key_K,self.label_k)
+        self._set_joystick_label(Qt.Key_I,self.label_x)
+        self._set_joystick_label(Qt.Key_J,self.label_y)
+        self._set_joystick_label(Qt.Key_L,self.label_a)
+        self._set_joystick_label(Qt.Key_K,self.label_b)
 
         if self._current_tag == "实时控制":
             action = self._get_action_line()

@@ -46,7 +46,9 @@ class ControllerThread(QThread):
                 except Exception as e:
                     self._udp_socket.close()
                     self._udp_socket = None
-                    time.sleep(0.001)
+            if not self._udp_socket:
+                time.sleep(0.001)
+                continue
             recv_data = None
             try:
                 recv_data = self._udp_socket.recvfrom(1024)

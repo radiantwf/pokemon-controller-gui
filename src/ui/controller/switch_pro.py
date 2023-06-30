@@ -1,4 +1,4 @@
-from controller.device import SerialDevice
+from ui.controller.device import SerialDevice
 import serial
 
 class SwitchProControll(object):
