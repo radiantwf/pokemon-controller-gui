@@ -234,6 +234,9 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         if self._current_joystick:
             tmp_joystick = self._current_joystick
             self._current_joystick = None
+            self._set_joystick_labels("")
+            self._last_action_stick_l = (0,0)
+            self._last_action_stick_r = (0,0)
             time.sleep(0.1)
             tmp_joystick.quit()
         if self.cbxJoystickList.currentIndex() == 0:
@@ -409,8 +412,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             self._set_joystick_labels("")
             self._last_action_stick_l = (0,0)
             self._last_action_stick_r = (0,0)
-
-        if self.cbxSerialList.currentIndex() > 0:
+        else:
             action = self._get_action_line()
             if action != self._last_sent_action or time.monotonic() - self._last_sent_ts > 5:
                 self._last_sent_action = action
