@@ -204,3 +204,69 @@ def _get_action(name: str,paras:dict=dict()) -> action.Action:
     if act._head == None:
         return None
     return act
+
+
+
+
+    async def send_realtime_action(self,action_line):
+        async with self._action_lock:
+            if self._action_line != action_line:
+                self._action_line = action_line
+        self._last_key_press_ns = time.monotonic_ns()
+
+    async def _send(self,  input_line: str = "",earliest_send_key_monotonic_ns=0):
+        earliest = self._last_key_press_ns + _Min_Key_Send_Span_ns
+        if earliest < earliest_send_key_monotonic_ns:
+            earliest = earliest_send_key_monotonic_ns
+        loop = 0
+        while True:
+            loop += 1
+            now = time.monotonic_ns()
+            if now >= earliest:
+                break
+            elif now < earliest - _Min_Key_Send_Span_ns:
+                ms = int((earliest - now  - _Min_Key_Send_Span_ns)/1000000)
+                await asyncio.sleep_ms(ms)
+            else:
+                time.sleep(0.0001)
+        t1 = time.monotonic_ns()
+        await self.send_realtime_action(input_line)
+        t2 = time.monotonic_ns()
+
+    async def _key_press(self,  inputs = []):
+        release_monotonic_ns = 0
+        last_action = ""
+        for input_line in inputs:
+            last_action = input_line
+            if input_line == "~":
+                continue
+            await self._send(input_line[0],release_monotonic_ns)
+            release_monotonic_ns = self._last_key_press_ns + input_line[1]*1000000000
+        if last_action != "~":
+            await self.release(release_monotonic_ns)
+
+    async def release(self,release_monotonic_ns:float = 0):
+        await self._send("",release_monotonic_ns)
+
+    async def do_action(self,  action_line: str = ""):
+        inputs = []
+        actions = action_line.split("->")
+        for action in actions:
+            splits = action.split(":")
+            if len(splits) > 2:
+                continue
+            p1 = splits[0]
+            p2 = 0.1
+            if len(splits) == 1:
+                try:
+                    p2 = float(splits[0])
+                    p1 = ""
+                except:
+                    pass
+            else:
+                try:
+                    p2 = float(splits[1])
+                except:
+                    pass
+            inputs.append((p1,p2))
+        await self._key_press(inputs)

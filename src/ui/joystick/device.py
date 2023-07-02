@@ -14,23 +14,8 @@ class JoystickDevice(object):
 
     @staticmethod
     def list_device():
-        pygame.joystick.quit()
-        pygame.joystick.init()
         devices = []
         for i in range(pygame.joystick.get_count()):
             joystick = pygame.joystick.Joystick(i)
-            joystick.init()
             devices.append(JoystickDevice(joystick.get_name(),joystick.get_guid()))
-            joystick.quit()
         return devices
-
-def open_joystick(dev:JoystickDevice):
-    joystick = None
-    for i in range(pygame.joystick.get_count()):
-        joystick = pygame.joystick.Joystick(i)
-        joystick.init()
-        if joystick.get_guid() == dev.guid:
-            break
-        joystick.quit()
-        joystick = None
-    return joystick

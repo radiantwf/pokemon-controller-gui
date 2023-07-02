@@ -13,9 +13,11 @@ from PySide6.QtCore import Slot,Qt,QEvent,QTimer,QCoreApplication
 from PySide6.QtGui import QImage, QPixmap,QPainter
 from PySide6.QtMultimedia import QAudioFormat,QAudioSource,QAudioSink,QMediaDevices
 from PySide6.QtUiTools import loadUiType
+from ui.controller.input import ControllerInput, InputEnum, StickEnum
 from ui.controller.switch_pro import SwitchProControll
 from ui.controller.device import SerialDevice
-from ui.joystick.device import JoystickDevice, open_joystick
+from ui.joystick.device import JoystickDevice
+from ui.joystick.joystick import Joystick
 from ui.qthread.controller import ControllerThread
 
 from ui.qthread.video import VideoThread
@@ -44,21 +46,18 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self._cameras = []
         self._joystick_devices = []
         self._serial_devices = []
-        self._current_joystick:pygame.joystick.JoystickType = None
+        self._current_joystick = None
         self._current_camera = None
         self._current_controller = SwitchProControll()
         self.th_controller = None
         self.th_video = None
         self._key_press_map = dict()
         self._last_sent_ts = time.monotonic()
-        self._current_tag = None
         self._realtime_controller_socket_port = 0
+        self._current_controller_input_joystick:ControllerInput = None
+        self._current_controller_input_keyboard:ControllerInput = None
 
         self._last_sent_action = ""
-        self._last_action_stick_l = (0,0)
-        self._last_action_stick_l_ts = 0
-        self._last_action_stick_r = (0,0)
-        self._last_action_stick_r_ts = 0
 
     def setupUi(self):
         Ui_MainWindow.setupUi(self,self)
@@ -81,11 +80,15 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.th_controller.push_action.connect(self.push_action)
         self.th_controller.start()
 
+        self.chkJoystickButtonSwitch.stateChanged.connect(self.on_joystick_button_switch_changed)
+
         self.toolBox.setCurrentIndex(0)
         self.refresh_controller_server()
 
+        self._joystick_timer = None
+
         self._timer = QTimer()
-        self._timer.timeout.connect(self.key_send)
+        self._timer.timeout.connect(self.realtime_control_action_send)
         self._timer.start(1)
 
     def build_serial_device_list_comboBox(self):
@@ -236,26 +239,33 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.play_audio()
     
     def on_joystick_changed(self):
-        self.push_action("")
-        self._last_action_stick_l = (0,0)
-        self._last_action_stick_r = (0,0)
         self.chkJoystickButtonSwitch.setChecked(False)
-        if self._current_joystick:
-            tmp_joystick = self._current_joystick
-            self._current_joystick = None
-            time.sleep(0.1)
-            tmp_joystick.quit()
         if self.cbxJoystickList.currentIndex() == 0:
             return
-        joy = open_joystick(self._joystick_devices[self.cbxJoystickList.currentIndex() - 1])
-        if joy:
-            joy.init()
-            if joy.get_name() != "Nintendo Switch Pro Controller":
-                self.chkJoystickButtonSwitch.setChecked(True)
-            self._current_joystick = joy
-        # ret = self._current_joystick.open(self._joystick_devices[self.cbxJoystickList.currentIndex() - 1])
-        # if not ret:
-        #     self.pop_switch_pro_controller_err_dialog()
+        if self._current_joystick:
+            self._current_joystick.stop()
+
+        if self._joystick_timer:
+            self._joystick_timer.stop()
+            self._joystick_timer = None
+
+        
+        joystick_info = self._joystick_devices[self.cbxJoystickList.currentIndex() - 1]
+        self._current_joystick = Joystick(joystick_info,self._joystick_controller_event)
+        if self._current_joystick == None:
+            return
+        if joystick_info.name != "Nintendo Switch Pro Controller":
+            self.chkJoystickButtonSwitch.setChecked(True)
+        else:
+            self.chkJoystickButtonSwitch.setChecked(False)
+        self._joystick_timer = QTimer()
+        self._timer.timeout.connect(self._current_joystick.loop_event)
+        self._timer.start(0)
+
+
+    def on_joystick_button_switch_changed(self):
+        if self._current_joystick:
+            self._current_joystick.setButtonSwitch(self.chkJoystickButtonSwitch.isChecked())
             
     def on_serial_changed(self):
         self._current_controller.close()
@@ -302,8 +312,10 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
     def closeEvent(self, event):
         self._current_controller.close()
         if self._current_joystick:
-            self._current_joystick.quit()
-            self._current_joystick = None
+            self._current_joystick.stop()
+        if self._joystick_timer:
+            self._joystick_timer.stop()
+            self._joystick_timer = None
         if self._timer:
             self._timer.stop()
         self.stop_audio()
@@ -341,6 +353,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
     def push_action(self, action:str):
         self.controller_send_action(action)
         self._set_joystick_labels(action)
+        self.repaint()
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.Type.KeyPress:
@@ -412,18 +425,82 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         if self._key_press_map.get(Qt.Key_C) and self._key_press_map.get(Qt.Key_B):
             self._key_press_map.pop(Qt.Key_C,None)
             self._key_press_map.pop(Qt.Key_B,None)
+
+        input = ControllerInput()
+        if self._key_press_map.get(Qt.Key_L):
+            input.set_button(InputEnum.BUTTON_A)
+        if self._key_press_map.get(Qt.Key_K):
+            input.set_button(InputEnum.BUTTON_B)
+        if self._key_press_map.get(Qt.Key_I):
+            input.set_button(InputEnum.BUTTON_X)
+        if self._key_press_map.get(Qt.Key_J):
+            input.set_button(InputEnum.BUTTON_Y)
+        if self._key_press_map.get(Qt.Key_R):
+            input.set_button(InputEnum.BUTTON_MINUS)
+        if self._key_press_map.get(Qt.Key_H):
+            input.set_button(InputEnum.BUTTON_HOME)
+        if self._key_press_map.get(Qt.Key_Y):
+            input.set_button(InputEnum.BUTTON_PLUS)
+        if self._key_press_map.get(Qt.Key_X):
+            input.set_button(InputEnum.BUTTON_LPRESS)
+        if self._key_press_map.get(Qt.Key_Apostrophe):
+            input.set_button(InputEnum.BUTTON_RPRESS)
+        if self._key_press_map.get(Qt.Key_E):
+            input.set_button(InputEnum.BUTTON_L)
+        if self._key_press_map.get(Qt.Key_U):
+            input.set_button(InputEnum.BUTTON_R)
+        if self._key_press_map.get(Qt.Key_F):
+            input.set_button(InputEnum.DPAD_TOP)
+        if self._key_press_map.get(Qt.Key_V):
+            input.set_button(InputEnum.DPAD_BOTTOM)
+        if self._key_press_map.get(Qt.Key_C):
+            input.set_button(InputEnum.DPAD_LEFT)
+        if self._key_press_map.get(Qt.Key_B):
+            input.set_button(InputEnum.DPAD_RIGHT)
+        if self._key_press_map.get(Qt.Key_G):
+            input.set_button(InputEnum.BUTTON_CAPTURE)
+        if self._key_press_map.get(Qt.Key_Q):
+            input.set_button(InputEnum.BUTTON_ZL)
+        if self._key_press_map.get(Qt.Key_O):
+            input.set_button(InputEnum.BUTTON_ZR)
+        x = 0
+        y = 0
+        if self._key_press_map.get(Qt.Key_W):
+            y = -127
+        elif self._key_press_map.get(Qt.Key_S):
+            y = 127
+        if self._key_press_map.get(Qt.Key_A):
+            x = -127
+        elif self._key_press_map.get(Qt.Key_D):
+            x = 127
+        input.set_stick(StickEnum.LSTICK,x,y)
+
+        x = 0
+        y = 0
+        if self._key_press_map.get(Qt.Key_Semicolon):
+            y = -127
+        elif self._key_press_map.get(Qt.Key_Period):
+            y = 127
+        if self._key_press_map.get(Qt.Key_Period):
+            x = 127
+        elif self._key_press_map.get(Qt.Key_Comma):
+            x = -127
+        input.set_stick(StickEnum.RSTICK,x,y)
+
+        self._current_controller_input_keyboard = input
         return QtWidgets.QMainWindow.eventFilter(self, obj, event)
 
-    def key_send(self):
-        self._timer.stop()
+    def realtime_control_action_send(self):
         if self.cbxSerialList.currentIndex() == 0:
-            self._key_press_map.clear()
             self.push_action("")
-            self._last_action_stick_l = (0,0)
-            self._last_action_stick_r = (0,0)
         else:
-            action = self._get_action_line()
-            if action != self._last_sent_action or time.monotonic() - self._last_sent_ts > 1:
+            action = ""
+            if self._current_controller_input_joystick:
+                action = self._current_controller_input_joystick.get_action_line()
+            elif self._current_controller_input_keyboard:
+                action = self._current_controller_input_keyboard.get_action_line()
+            # if time.monotonic() - self._last_sent_ts > 0.01:
+            if True:
                 self._last_sent_action = action
                 if self._realtime_controller_socket_port > 0:
                     if self._my_const.AF_UNIX_FLAG:
@@ -436,8 +513,10 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
                         client.sendto(action.encode("utf-8"), ("127.0.0.1", self._realtime_controller_socket_port))
                         client.close()
                 self._last_sent_ts = time.monotonic()
-        self._timer.start()
     
+    def _joystick_controller_event(self,input):
+        self._current_controller_input_joystick = input
+
     def _set_joystick_labels(self,action):
         splits = action.upper().split("|", -1)
         buffer = bytearray(7)
@@ -572,145 +651,3 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         else:
             label.setStyleSheet(u"background-color:rgb(170,170,170)")
 
-
-    def _get_action_line(self)->str:
-        axes = []
-        buttons = []
-        hats = []
-        pygame.event.get()
-        if self._current_joystick:
-            axes = [self._current_joystick.get_axis(i) for i in range(self._current_joystick.get_numaxes())]
-            buttons = [self._current_joystick.get_button(i) for i in range(self._current_joystick.get_numbuttons())]
-            hats = [self._current_joystick.get_hat(i) for i in range(self._current_joystick.get_numhats())]
-        sio = StringIO()
-        if self.chkJoystickButtonSwitch.isChecked():
-            if self._key_press_map.get(Qt.Key_L) or (len(buttons) >= 4 and buttons[1]):
-                sio.write("A|")
-            if self._key_press_map.get(Qt.Key_K) or (len(buttons) >= 4 and buttons[0]):
-                sio.write("B|")
-            if self._key_press_map.get(Qt.Key_I) or (len(buttons) >= 4 and buttons[3]):
-                sio.write("X|")
-            if self._key_press_map.get(Qt.Key_J) or (len(buttons) >= 4 and buttons[2]):
-                sio.write("Y|")
-        else:
-            if self._key_press_map.get(Qt.Key_L) or (len(buttons) >= 4 and buttons[0]):
-                sio.write("A|")
-            if self._key_press_map.get(Qt.Key_K) or (len(buttons) >= 4 and buttons[1]):
-                sio.write("B|")
-            if self._key_press_map.get(Qt.Key_I) or (len(buttons) >= 4 and buttons[2]):
-                sio.write("X|")
-            if self._key_press_map.get(Qt.Key_J) or (len(buttons) >= 4 and buttons[3]):
-                sio.write("Y|")
-
-        if self._key_press_map.get(Qt.Key_R) or (len(buttons) >= 16 and buttons[4]):
-            sio.write("MINUS|")
-        if self._key_press_map.get(Qt.Key_H) or (len(buttons) >= 16 and buttons[5]):
-            sio.write("HOME|")
-        if self._key_press_map.get(Qt.Key_Y) or (len(buttons) >= 16 and buttons[6]):
-            sio.write("PLUS|")
-        if self._key_press_map.get(Qt.Key_X) or (len(buttons) >= 16 and buttons[7]):
-            sio.write("LPRESS|")
-        if self._key_press_map.get(Qt.Key_Apostrophe) or (len(buttons) >= 16 and buttons[8]):
-            sio.write("RPRESS|")
-        if self._key_press_map.get(Qt.Key_E) or (len(buttons) >= 16 and buttons[9]):
-            sio.write("L|")
-        if self._key_press_map.get(Qt.Key_U) or (len(buttons) >= 16 and buttons[10]):
-            sio.write("R|")
-        if self._key_press_map.get(Qt.Key_F) or (len(buttons) >= 16 and buttons[11]):
-            sio.write("TOP|")
-        if self._key_press_map.get(Qt.Key_V) or (len(buttons) >= 16 and buttons[12]):
-            sio.write("BOTTOM|")
-        if self._key_press_map.get(Qt.Key_C) or (len(buttons) >= 16 and buttons[13]):
-            sio.write("LEFT|")
-        if self._key_press_map.get(Qt.Key_B) or (len(buttons) >= 16 and buttons[14]):
-            sio.write("RIGHT|")
-        if self._key_press_map.get(Qt.Key_G) or (len(buttons) >= 16 and buttons[15]):
-            sio.write("CAPTURE|")
-
-        if self._key_press_map.get(Qt.Key_Q) or (len(axes) >= 6 and axes[4]>=0.5):
-            sio.write("ZL|")
-        if self._key_press_map.get(Qt.Key_O) or (len(axes) >= 6 and axes[5]>=0.5):
-            sio.write("ZR|")
-        
-        x = 0
-        y = 0
-        if self._key_press_map.get(Qt.Key_W):
-            y = -127
-        elif self._key_press_map.get(Qt.Key_S):
-            y = 127
-        if self._key_press_map.get(Qt.Key_D):
-            x = 127
-        elif self._key_press_map.get(Qt.Key_A):
-            x = -127
-        if x == 0 and y ==0 and len(axes) >= 6:
-            x = round((axes[0]+1)/2*0xFF) - 0x80
-            y = round((axes[1]+1)/2*0xFF) - 0x80
-        if x < -127:
-            x = -127
-        if x > 127:
-            x = 127
-        if y < -127:
-            y = -127
-        if y > 127:
-            y = 127
-        distance = sqrt((self._last_action_stick_l[0] - x)**2 + (self._last_action_stick_l[1] - y)**2)
-        update_stick = True
-        now = time.monotonic()
-        if now - self._last_action_stick_l_ts < 0.5 and distance < 10:
-            update_stick = False
-        # elif now - self._last_action_stick_l_ts < 0.01 and distance < 20:
-        #     update_stick = False
-        elif now - self._last_action_stick_l_ts < 0.004 and distance < 50:
-            update_stick = False
-        elif now - self._last_action_stick_l_ts < 0.002 and distance < 80:
-            update_stick = False
-        if not update_stick:
-            x = self._last_action_stick_l[0]
-            y = self._last_action_stick_l[1]
-            self._last_action_stick_l_ts = now
-        if x != 0 or y !=0:
-            sio.write("LSTICK@{},{}|".format(x,y))
-        self._last_action_stick_l = (x,y)
-
-        x = 0
-        y = 0
-        if self._key_press_map.get(Qt.Key_Semicolon):
-            y = -127
-        elif self._key_press_map.get(Qt.Key_Period):
-            y = 127
-        if self._key_press_map.get(Qt.Key_Period):
-            x = 127
-        elif self._key_press_map.get(Qt.Key_Comma):
-            x = -127
-        if x == 0 and y ==0 and len(axes) >= 6:
-            x = round((axes[2]+1)/2*0xFF) - 0x80
-            y = round((axes[3]+1)/2*0xFF) - 0x80
-        if x < -127:
-            x = -127
-        if x > 127:
-            x = 127
-        if y < -127:
-            y = -127
-        if y > 127:
-            y = 127
-        distance = sqrt((self._last_action_stick_r[0] - x)**2 + (self._last_action_stick_r[1] - y)**2)
-        update_stick = True
-        if distance < 10:
-            update_stick = False
-        elif now - self._last_action_stick_r_ts < 0.004 and distance < 50:
-            update_stick = False
-        elif now - self._last_action_stick_r_ts < 0.002 and distance < 80:
-            update_stick = False
-        if not update_stick:
-            x = self._last_action_stick_r[0]
-            y = self._last_action_stick_r[1]
-            self._last_action_stick_r_ts = now
-        if x != 0 or y !=0:
-            sio.write("RSTICK@{},{}|".format(x,y))
-        self._last_action_stick_r = (x,y)
-
-        sio.flush()
-        action = sio.getvalue()
-        sio.close()
-        return action
-    
