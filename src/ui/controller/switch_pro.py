@@ -1,3 +1,4 @@
+import time
 from ui.controller.device import SerialDevice
 import serial
 
@@ -8,7 +9,7 @@ class SwitchProControll(object):
     def open(self,device_info:SerialDevice):
         self.close()
         try:
-            self._device = serial.Serial(device_info.path,device_info.baudrate)
+            self._device = serial.Serial(device_info.path,device_info.baudrate,timeout=1)
         except:
             return False
         return True
@@ -26,7 +27,15 @@ class SwitchProControll(object):
     def send_action(self,str):
         if self._device == None:
             return
-        self._device.write(str.encode())
+        try:
+            self._device.write(str.encode())
+            self._device.flush()
+            while True:
+                if self._device.read_all() != None:
+                    break
+                time.sleep(0.001)
+        except:
+            pass
     
     def read_line(self)->str:
         if self._device == None:

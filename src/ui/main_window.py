@@ -36,7 +36,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         # self._processed_frame_queue = frame_queues[2]
 
         pygame.init()
-        pygame.display.init()
+        # pygame.display.init()
         pygame.joystick.init()
         JoystickDevice.list_device()
         self._my_const = ConstClass()
@@ -52,6 +52,8 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self._current_controller = SwitchProControll()
         self.th_controller = None
         self.th_video = None
+
+        # self._joystick_timer = None
         self._key_press_map = dict()
         self._last_sent_ts = time.monotonic()
         self._realtime_controller_socket_port = 0
@@ -245,26 +247,28 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
     def on_joystick_changed(self):
         if self._current_joystick:
             self._current_joystick.stop()
+            self._current_joystick = None
 
         if self._joystick_timer:
             self._joystick_timer.stop()
             self._joystick_timer = None
 
+        
         self.chkJoystickButtonSwitch.setChecked(False)
         if self.cbxJoystickList.currentIndex() == 0:
             return
         
         joystick_info = self._joystick_devices[self.cbxJoystickList.currentIndex() - 1]
-        self._current_joystick = Joystick(joystick_info,self._joystick_controller_event)
-        if self._current_joystick == None:
-            return
+        self._current_joystick = Joystick(self,joystick_info)
+        self._current_joystick.joystick_event.connect(self._joystick_controller_event)
         if joystick_info.name != "Nintendo Switch Pro Controller":
             self.chkJoystickButtonSwitch.setChecked(True)
         else:
             self.chkJoystickButtonSwitch.setChecked(False)
+    
         self._joystick_timer = QTimer()
-        self._timer.timeout.connect(self._current_joystick.loop_event)
-        self._timer.start(0)
+        self._timer.timeout.connect(self._current_joystick.run)
+        self._timer.start(1)
 
 
     def on_joystick_button_switch_changed(self):
@@ -317,6 +321,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self._current_controller.close()
         if self._current_joystick:
             self._current_joystick.stop()
+            self._current_joystick = None
         if self._joystick_timer:
             self._joystick_timer.stop()
             self._joystick_timer = None
@@ -357,7 +362,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
     def push_action(self, action:str):
         self.controller_send_action(action)
         self._set_joystick_labels(action)
-        self.repaint()
+        # self.repaint()
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.Type.KeyPress:
@@ -497,7 +502,6 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
     def realtime_control_action_send(self):
         if self.cbxSerialList.currentIndex() > 0:
             if self._current_controller_input_joystick:
-                print("2222     {}".format(self._current_controller_input_joystick.get_action_line()))
                 action = self._current_controller_input_joystick.get_action_line()
             elif self._current_controller_input_keyboard:
                 action = self._current_controller_input_keyboard.get_action_line()

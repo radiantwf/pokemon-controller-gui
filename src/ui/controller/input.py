@@ -127,12 +127,12 @@ class ControllerInput(object):
             self._buffer[2] |= button >> 16
     
     def set_stick(self,stick:StickEnum,x:int,y:int):
-        if x < -128:
-            x = -128
+        if x < -127:
+            x = -127
         elif x > 127:
             x = 127
-        if y < -128:
-            y = -128
+        if y < -127:
+            y = -127
         elif y > 127:
             y = 127
         if stick == StickEnum.LSTICK:
@@ -210,8 +210,8 @@ class ControllerInput(object):
             v = int(float(str))
         except:
             pass
-        if v < -128:
-            v = -128
+        if v < -127:
+            v = -127
         elif v > 127:
             v = 127
         return v + 0x80
