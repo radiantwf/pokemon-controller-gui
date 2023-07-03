@@ -7,16 +7,16 @@ class InputEnum(IntEnum):
     BUTTON_B = 0x2
     BUTTON_X = 0x4
     BUTTON_A = 0x8
-    BUTTON_L = 0x10
-    BUTTON_R = 0x20
-    BUTTON_ZL = 0x40
+    BUTTON_R = 0x40
     BUTTON_ZR = 0x80
+
     BUTTON_MINUS = 0x100
     BUTTON_PLUS = 0x200
-    BUTTON_LPRESS = 0x400
-    BUTTON_RPRESS = 0x800
+    BUTTON_RPRESS = 0x400
+    BUTTON_LPRESS = 0x800
     BUTTON_HOME = 0x1000
     BUTTON_CAPTURE = 0x2000
+
     DPAD_TOP = 0x010000
     DPAD_RIGHT = 0x020000
     DPAD_BOTTOM = 0x040000
@@ -25,7 +25,8 @@ class InputEnum(IntEnum):
     DPAD_BOTTOMRIGHT = 0x060000
     DPAD_BOTTOMLEFT = 0x0C0000
     DPAD_TOPLEFT = 0x090000
-
+    BUTTON_L = 0x400000
+    BUTTON_ZL = 0x800000
 class StickEnum(IntEnum):
     LSTICK = 0
     RSTICK = 1
@@ -52,12 +53,8 @@ class ControllerInput(object):
                 buffer[0] |= InputEnum.BUTTON_X
             elif s == "A":
                 buffer[0] |= InputEnum.BUTTON_A
-            elif s == "L":
-                buffer[0] |= InputEnum.BUTTON_L
             elif s == "R":
                 buffer[0] |= InputEnum.BUTTON_R
-            elif s == "ZL":
-                buffer[0] |= InputEnum.BUTTON_ZL
             elif s == "ZR":
                 buffer[0] |= InputEnum.BUTTON_ZR
             elif s == "MINUS":
@@ -88,6 +85,10 @@ class ControllerInput(object):
                 buffer[2] |= InputEnum.DPAD_BOTTOMLEFT >> 16
             elif s == "TOPLEFT":
                 buffer[2] |= InputEnum.DPAD_TOPLEFT >> 16
+            elif s == "L":
+                buffer[2] |= InputEnum.BUTTON_L >> 16
+            elif s == "ZL":
+                buffer[2] |= InputEnum.BUTTON_ZL >> 16
             else:
                 stick = s.split("@", -1)
                 if len(stick) == 2:
@@ -152,12 +153,8 @@ class ControllerInput(object):
             sio.write("X|")
         if (self._buffer[0] & InputEnum.BUTTON_Y) != 0:
             sio.write("Y|")
-        if (self._buffer[0] & InputEnum.BUTTON_L) != 0:
-            sio.write("L|")
         if (self._buffer[0] & InputEnum.BUTTON_R) != 0:
             sio.write("R|")
-        if (self._buffer[0] & InputEnum.BUTTON_ZL) != 0:
-            sio.write("ZL|")
         if (self._buffer[0] & InputEnum.BUTTON_ZR) != 0:
             sio.write("ZR|")
         if (self._buffer[1] & InputEnum.BUTTON_MINUS >> 8) != 0:
@@ -180,6 +177,10 @@ class ControllerInput(object):
             sio.write("BOTTOM|")
         if (self._buffer[2] & InputEnum.DPAD_LEFT >> 16) != 0:
             sio.write("LEFT|")
+        if (self._buffer[2] & InputEnum.BUTTON_L >> 16) != 0:
+            sio.write("L|")
+        if (self._buffer[2] & InputEnum.BUTTON_ZL >> 16) != 0:
+            sio.write("ZL|")
         x = self._buffer[3] - 0x80
         y = self._buffer[4] - 0x80
         if x != 0 or y != 0:
