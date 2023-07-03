@@ -61,33 +61,33 @@ class ControllerInput(object):
             elif s == "ZR":
                 buffer[0] |= InputEnum.BUTTON_ZR
             elif s == "MINUS":
-                buffer[1] |= InputEnum.BUTTON_MINUS >> 16
+                buffer[1] |= InputEnum.BUTTON_MINUS >> 8
             elif s == "PLUS":
-                buffer[1] |= InputEnum.BUTTON_PLUS >> 16
+                buffer[1] |= InputEnum.BUTTON_PLUS >> 8
             elif s == "LPRESS":
-                buffer[1] |= InputEnum.BUTTON_LPRESS >> 16
+                buffer[1] |= InputEnum.BUTTON_LPRESS >> 8
             elif s == "RPRESS":
-                buffer[1] |= InputEnum.BUTTON_RPRESS >> 16
+                buffer[1] |= InputEnum.BUTTON_RPRESS >> 8
             elif s == "HOME":
-                buffer[1] |= InputEnum.BUTTON_HOME >> 16
+                buffer[1] |= InputEnum.BUTTON_HOME >> 8
             elif s == "CAPTURE":
-                buffer[1] |= InputEnum.BUTTON_CAPTURE >> 16
+                buffer[1] |= InputEnum.BUTTON_CAPTURE >> 8
             elif s == "TOP":
-                buffer[2] |= InputEnum.DPAD_TOP >> 32
+                buffer[2] |= InputEnum.DPAD_TOP >> 16
             elif s == "RIGHT":
-                buffer[2] |= InputEnum.DPAD_RIGHT >> 32
+                buffer[2] |= InputEnum.DPAD_RIGHT >> 16
             elif s == "BOTTOM":
-                buffer[2] |= InputEnum.DPAD_BOTTOM >> 32
+                buffer[2] |= InputEnum.DPAD_BOTTOM >> 16
             elif s == "LEFT":
-                buffer[2] |= InputEnum.DPAD_LEFT >> 32
+                buffer[2] |= InputEnum.DPAD_LEFT >> 16
             elif s == "TOPRIGHT":
-                buffer[2] |= InputEnum.DPAD_TOPRIGHT >> 32
+                buffer[2] |= InputEnum.DPAD_TOPRIGHT >> 16
             elif s == "BOTTOMRIGHT":
-                buffer[2] |= InputEnum.DPAD_BOTTOMRIGHT >> 32
+                buffer[2] |= InputEnum.DPAD_BOTTOMRIGHT >> 16
             elif s == "BOTTOMLEFT":
-                buffer[2] |= InputEnum.DPAD_BOTTOMLEFT >> 32
+                buffer[2] |= InputEnum.DPAD_BOTTOMLEFT >> 16
             elif s == "TOPLEFT":
-                buffer[2] |= InputEnum.DPAD_TOPLEFT >> 32
+                buffer[2] |= InputEnum.DPAD_TOPLEFT >> 16
             else:
                 stick = s.split("@", -1)
                 if len(stick) == 2:
@@ -108,14 +108,23 @@ class ControllerInput(object):
     def get_buffer(self):
         return self._buffer
     
+    def check_button(self,button:InputEnum)->bool:
+        int_button = int(button)
+        if int_button < InputEnum.BUTTON_MINUS:
+            return (self._buffer[0] & button) != 0
+        elif int_button < InputEnum.DPAD_TOP:
+            return (self._buffer[1] & button >> 8) != 0
+        else:
+            return (self._buffer[2] & button >> 16) != 0
+
     def set_button(self,button:InputEnum):
         int_button = int(button)
         if int_button < InputEnum.BUTTON_MINUS:
             self._buffer[0] |= button
         elif int_button < InputEnum.DPAD_TOP:
-            self._buffer[1] |= button >> 16
+            self._buffer[1] |= button >> 8
         else:
-            self._buffer[2] |= button >> 32
+            self._buffer[2] |= button >> 16
     
     def set_stick(self,stick:StickEnum,x:int,y:int):
         if x < -128:
@@ -135,42 +144,41 @@ class ControllerInput(object):
 
     def get_action_line(self)->str:
         sio = StringIO()
-        
-        if (self._buffer[0] & int(InputEnum.BUTTON_A)) != 0:
+        if (self._buffer[0] & InputEnum.BUTTON_A) != 0:
             sio.write("A|")
-        if (self._buffer[0] & int(InputEnum.BUTTON_B)) != 0:
+        if (self._buffer[0] & InputEnum.BUTTON_B) != 0:
             sio.write("B|")
-        if (self._buffer[0] & int(InputEnum.BUTTON_X)) != 0:
+        if (self._buffer[0] & InputEnum.BUTTON_X) != 0:
             sio.write("X|")
-        if (self._buffer[0] & int(InputEnum.BUTTON_Y)) != 0:
+        if (self._buffer[0] & InputEnum.BUTTON_Y) != 0:
             sio.write("Y|")
-        if (self._buffer[0] & int(InputEnum.BUTTON_L)) != 0:
+        if (self._buffer[0] & InputEnum.BUTTON_L) != 0:
             sio.write("L|")
-        if (self._buffer[0] & int(InputEnum.BUTTON_R)) != 0:
+        if (self._buffer[0] & InputEnum.BUTTON_R) != 0:
             sio.write("R|")
-        if (self._buffer[0] & int(InputEnum.BUTTON_ZL)) != 0:
+        if (self._buffer[0] & InputEnum.BUTTON_ZL) != 0:
             sio.write("ZL|")
-        if (self._buffer[0] & int(InputEnum.BUTTON_ZR)) != 0:
+        if (self._buffer[0] & InputEnum.BUTTON_ZR) != 0:
             sio.write("ZR|")
-        if (self._buffer[1] & int(InputEnum.BUTTON_MINUS)) != 0:
+        if (self._buffer[1] & InputEnum.BUTTON_MINUS >> 8) != 0:
             sio.write("MINUS|")
-        if (self._buffer[1] & int(InputEnum.BUTTON_PLUS)) != 0:
+        if (self._buffer[1] & InputEnum.BUTTON_PLUS >> 8) != 0:
             sio.write("PLUS|")
-        if (self._buffer[1] & int(InputEnum.BUTTON_LPRESS)) != 0:
+        if (self._buffer[1] & InputEnum.BUTTON_LPRESS >> 8) != 0:
             sio.write("LPRESS|")
-        if (self._buffer[1] & int(InputEnum.BUTTON_RPRESS)) != 0:
+        if (self._buffer[1] & InputEnum.BUTTON_RPRESS >> 8) != 0:
             sio.write("RPRESS|")
-        if (self._buffer[1] & int(InputEnum.BUTTON_HOME)) != 0:
+        if (self._buffer[1] & InputEnum.BUTTON_HOME >>8) != 0:
             sio.write("HOME|")
-        if (self._buffer[1] & int(InputEnum.BUTTON_CAPTURE)) != 0:
+        if (self._buffer[1] & InputEnum.BUTTON_CAPTURE >> 8) != 0:
             sio.write("CAPTURE|")
-        if (self._buffer[2] & int(InputEnum.DPAD_TOP)) != 0:
+        if (self._buffer[2] & InputEnum.DPAD_TOP >> 16) != 0:
             sio.write("TOP|")
-        if (self._buffer[2] & int(InputEnum.DPAD_RIGHT)) != 0:
+        if (self._buffer[2] & InputEnum.DPAD_RIGHT >> 16) != 0:
             sio.write("RIGHT|")
-        if (self._buffer[2] & int(InputEnum.DPAD_BOTTOM)) != 0:
+        if (self._buffer[2] & InputEnum.DPAD_BOTTOM>> 16) != 0:
             sio.write("BOTTOM|")
-        if (self._buffer[2] & int(InputEnum.DPAD_LEFT)) != 0:
+        if (self._buffer[2] & InputEnum.DPAD_LEFT >> 16) != 0:
             sio.write("LEFT|")
         x = self._buffer[3] - 0x80
         y = self._buffer[4] - 0x80

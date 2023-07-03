@@ -59,32 +59,38 @@ class ControllerThread(QThread):
                         if not os.path.exists(self._local_addr):
                             self._udp_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM) 
                             self._udp_socket.bind(self._local_addr)
-                            self._udp_socket.setblocking(True)
-                            self._udp_socket.settimeout(0.001)
+                            self._udp_socket.setblocking(False)
                     else:
                         self._udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) 
                         local_addr = ("127.0.0.1", self._port)
                         self._udp_socket.bind(local_addr)
-                        self._udp_socket.setblocking(True)
-                        self._udp_socket.settimeout(0.001)
+                        self._udp_socket.setblocking(False)
                 except:
                     self._udp_socket.close()
                     self._udp_socket = None
             if not self._udp_socket:
-                time.sleep(0.001)
+                time.sleep(0.1)
                 continue
             recv_data = None
-            try:
-                recv_data = self._udp_socket.recvfrom(1024)
-            except:
-                pass
+            while True:
+                try:
+                    if self._stop_signal:
+                        break
+                    recv_data = self._udp_socket.recvfrom(1024)
+                except:
+                    break
             if recv_data != None:
                 recv_msg = recv_data[0].decode("utf-8").strip()
                 self.push_action.emit(recv_msg)
+            else:
+                time.sleep(0.001)
 
     def stop(self):
         self._stop_signal = True
 
     def __del__(self):
-        self.stop()
-        self.wait()
+        try:
+            self.stop()
+            self.wait()
+        except:
+            pass

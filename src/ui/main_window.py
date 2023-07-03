@@ -1,13 +1,13 @@
 from io import StringIO
 from math import sqrt
+import math
 import multiprocessing
-import const
 import time
 import socket
 import pygame
 from const import ConstClass
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QMessageBox,QLabel
 from camera.device import VideoDevice
 from PySide6.QtCore import Slot,Qt,QEvent,QTimer,QCoreApplication
 from PySide6.QtGui import QImage, QPixmap,QPainter
@@ -39,8 +39,9 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         pygame.display.init()
         pygame.joystick.init()
         JoystickDevice.list_device()
-        self._my_const = const.ConstClass()
+        self._my_const = ConstClass()
         self._timer = None
+        self._joystick_timer = None
         self._m_audioSink = None
         self._audio_input = None
         self._cameras = []
@@ -56,8 +57,12 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self._realtime_controller_socket_port = 0
         self._current_controller_input_joystick:ControllerInput = None
         self._current_controller_input_keyboard:ControllerInput = None
-
         self._last_sent_action = ""
+
+        start_color = (170, 170, 170)
+        end_color = (0, 0, 255)
+        steps = 1001
+        self._stick_label_gradient_colors = self._gradient(start_color, end_color, steps)
 
     def setupUi(self):
         Ui_MainWindow.setupUi(self,self)
@@ -85,7 +90,6 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.toolBox.setCurrentIndex(0)
         self.refresh_controller_server()
 
-        self._joystick_timer = None
 
         self._timer = QTimer()
         self._timer.timeout.connect(self.realtime_control_action_send)
@@ -239,9 +243,6 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.play_audio()
     
     def on_joystick_changed(self):
-        self.chkJoystickButtonSwitch.setChecked(False)
-        if self.cbxJoystickList.currentIndex() == 0:
-            return
         if self._current_joystick:
             self._current_joystick.stop()
 
@@ -249,6 +250,9 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             self._joystick_timer.stop()
             self._joystick_timer = None
 
+        self.chkJoystickButtonSwitch.setChecked(False)
+        if self.cbxJoystickList.currentIndex() == 0:
+            return
         
         joystick_info = self._joystick_devices[self.cbxJoystickList.currentIndex() - 1]
         self._current_joystick = Joystick(joystick_info,self._joystick_controller_event)
@@ -491,11 +495,9 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         return QtWidgets.QMainWindow.eventFilter(self, obj, event)
 
     def realtime_control_action_send(self):
-        if self.cbxSerialList.currentIndex() == 0:
-            self.push_action("")
-        else:
-            action = ""
+        if self.cbxSerialList.currentIndex() > 0:
             if self._current_controller_input_joystick:
+                print("2222     {}".format(self._current_controller_input_joystick.get_action_line()))
                 action = self._current_controller_input_joystick.get_action_line()
             elif self._current_controller_input_keyboard:
                 action = self._current_controller_input_keyboard.get_action_line()
@@ -518,93 +520,27 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self._current_controller_input_joystick = input
 
     def _set_joystick_labels(self,action):
-        splits = action.upper().split("|", -1)
-        buffer = bytearray(7)
-        buffer[3] = 0x80
-        buffer[4] = 0x80
-        buffer[5] = 0x80
-        buffer[6] = 0x80
-        for s in splits:
-            s = s.strip()
-            if s == "Y":
-                buffer[0] |= 0b1
-            elif s == "B":
-                buffer[0] |= 0b10
-            elif s == "X":
-                buffer[0] |= 0b100
-            elif s == "A":
-                buffer[0] |= 0b1000
-            elif s == "L":
-                buffer[0] |= 0b10000
-            elif s == "R":
-                buffer[0] |= 0b100000
-            elif s == "ZL":
-                buffer[0] |= 0b1000000
-            elif s == "ZR":
-                buffer[0] |= 0b10000000
-            elif s == "MINUS":
-                buffer[1] |= 0b1
-            elif s == "PLUS":
-                buffer[1] |= 0b10
-            elif s == "LPRESS":
-                buffer[1] |= 0b100
-            elif s == "RPRESS":
-                buffer[1] |= 0b1000
-            elif s == "HOME":
-                buffer[1] |= 0b10000
-            elif s == "CAPTURE":
-                buffer[1] |= 0b100000
-            elif s == "TOP":
-                buffer[2] |= 0b1
-            elif s == "RIGHT":
-                buffer[2] |= 0b10
-            elif s == "BOTTOM":
-                buffer[2] |= 0b100
-            elif s == "LEFT":
-                buffer[2] |= 0b1000
-            elif s == "TOPRIGHT":
-                buffer[2] |= 0b0011
-            elif s == "BOTTOMRIGHT":
-                buffer[2] |= 0b0110
-            elif s == "BOTTOMLEFT":
-                buffer[2] |= 0b1100
-            elif s == "TOPLEFT":
-                buffer[2] |= 0b1001
-            else:
-                stick = s.split("@", -1)
-                if len(stick) == 2:
-                    x = 0x80
-                    y = 0x80
-                    coordinate = stick[1].split(",", -1)
-                    if len(coordinate) == 2:
-                        x = self._coordinate_str_convert_byte(coordinate[0])
-                        y = self._coordinate_str_convert_byte(coordinate[1])
-                    if stick[0] == "LSTICK":
-                            buffer[3] = x
-                            buffer[4] = y
-                    elif stick[0] == "RSTICK":
-                            buffer[5] = x
-                            buffer[6] = y
+        input = ControllerInput(action)
 
-        self._set_label_style(self.label_y,(buffer[0] & 0b1) != 0)
-        self._set_label_style(self.label_b,(buffer[0] & 0b10) != 0)
-        self._set_label_style(self.label_x,(buffer[0] & 0b100) != 0)
-        self._set_label_style(self.label_a,(buffer[0] & 0b1000) != 0)
-        self._set_label_style(self.label_l,(buffer[0] & 0b10000) != 0)
-        self._set_label_style(self.label_r,(buffer[0] & 0b100000) != 0)
-        self._set_label_style(self.label_zl,(buffer[0] & 0b1000000) != 0)
-        self._set_label_style(self.label_zr,(buffer[0] & 0b10000000) != 0)
-
-        self._set_label_style(self.label_minus,(buffer[1] & 0b1) != 0)
-        self._set_label_style(self.label_plus,(buffer[1] & 0b10) != 0)
-        self._set_label_style(self.label_lstick_press,(buffer[1] & 0b100) != 0)
-        self._set_label_style(self.label_rstick_press,(buffer[1] & 0b1000) != 0)
-        self._set_label_style(self.label_home,(buffer[1] & 0b10000) != 0)
-        self._set_label_style(self.label_capture,(buffer[1] & 0b100000) != 0)
-        self._set_label_style(self.label_dpad_t,(buffer[2] & 0b1) != 0)
-        self._set_label_style(self.label_dpad_r,(buffer[2] & 0b10) != 0)
-        self._set_label_style(self.label_dpad_b,(buffer[2] & 0b100) != 0)
-        self._set_label_style(self.label_dpad_l,(buffer[2] & 0b1000) != 0)
+        self._set_label_style(self.label_y,input.check_button(InputEnum.BUTTON_Y))
+        self._set_label_style(self.label_x,input.check_button(InputEnum.BUTTON_X))
+        self._set_label_style(self.label_b,input.check_button(InputEnum.BUTTON_B))
+        self._set_label_style(self.label_a,input.check_button(InputEnum.BUTTON_A))
+        self._set_label_style(self.label_l,input.check_button(InputEnum.BUTTON_L))
+        self._set_label_style(self.label_r,input.check_button(InputEnum.BUTTON_R))
+        self._set_label_style(self.label_zl,input.check_button(InputEnum.BUTTON_ZL))
+        self._set_label_style(self.label_zr,input.check_button(InputEnum.BUTTON_ZR))
+        self._set_label_style(self.label_minus,input.check_button(InputEnum.BUTTON_MINUS))
+        self._set_label_style(self.label_plus,input.check_button(InputEnum.BUTTON_PLUS))
+        self._set_label_style(self.label_lstick_press,input.check_button(InputEnum.BUTTON_LPRESS))
+        self._set_label_style(self.label_rstick_press,input.check_button(InputEnum.BUTTON_RPRESS))
+        self._set_label_style(self.label_home,input.check_button(InputEnum.BUTTON_HOME))
+        self._set_label_style(self.label_capture,input.check_button(InputEnum.BUTTON_CAPTURE))
+        self._set_label_style(self.label_dpad_t,input.check_button(InputEnum.DPAD_TOP))
+        self._set_label_style(self.label_dpad_r,input.check_button(InputEnum.DPAD_RIGHT))
+        self._set_label_style(self.label_dpad_b,input.check_button(InputEnum.DPAD_BOTTOM))
+        self._set_label_style(self.label_dpad_l,input.check_button(InputEnum.DPAD_LEFT))
+        buffer = input.get_buffer()
         self._set_stick_label_style(self.label_lstick_l,(buffer[3] - 0x80) * (-1))
         self._set_stick_label_style(self.label_lstick_r,(buffer[3] - 0x80))
         self._set_stick_label_style(self.label_lstick_t,(buffer[4] - 0x80) * (-1))
@@ -641,13 +577,32 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         else:
             label.setStyleSheet(u"background-color:rgb(170, 170, 170)")
 
-    def _set_stick_label_style(self,label,v:int):
-        if v>80:
-            label.setStyleSheet(u"background-color:rgb(0,0,255)")
-        elif v>30:
-            label.setStyleSheet(u"background-color:rgb(80,80,255)")
-        elif v>2:
-            label.setStyleSheet(u"background-color:rgb(140,140,200)")
-        else:
-            label.setStyleSheet(u"background-color:rgb(170,170,170)")
+    def _set_stick_label_style(self, label: QLabel, v: int):
+        if v > 127:
+            v = 127
+        ret = round(v / 127.0 * 1000)
+        if ret < 0:
+            ret = 0
+        color = self._stick_label_gradient_colors[ret]
+        label.setStyleSheet(u"background-color:rgb({},{},{})".format(color[0], color[1], color[2]))
 
+
+    def _gradient(self, start_color, end_color, steps):
+        # 将RGB颜色转换为三个分量
+        start_r, start_g, start_b = start_color
+        end_r, end_g, end_b = end_color
+
+        # 计算每个分量的步长
+        r_step = (end_r - start_r) / (steps - 1)
+        g_step = (end_g - start_g) / (steps - 1)
+        b_step = (end_b - start_b) / (steps - 1)
+
+        # 生成渐变颜色列表
+        gradient_colors = []
+        for i in range(steps):
+            r = math.floor(start_r + i * r_step)
+            g = math.floor(start_g + i * g_step)
+            b = math.floor(start_b + i * b_step)
+            gradient_colors.append((r, g, b))
+
+        return gradient_colors

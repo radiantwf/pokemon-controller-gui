@@ -29,5 +29,8 @@ class VideoThread(QThread):
         self._stop_signal = True
 
     def __del__(self):
-        self.stop()
-        self.wait()
+        try:
+            self.stop()
+            self.wait()
+        except:
+            pass
