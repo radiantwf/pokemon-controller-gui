@@ -109,6 +109,21 @@ class ControllerInput(object):
     def get_buffer(self):
         return self._buffer
     
+    def get_action_buffer(self):
+        buffer = bytearray(11)
+        buffer[0] = 0xA2
+        buffer[1] = 0x02
+        buffer[9] = 0xA3
+        buffer[10] = 0x03
+        buffer[2] = self._buffer[0]
+        buffer[3] = self._buffer[1]
+        buffer[4] = self._buffer[2]
+        buffer[5] = self._buffer[3]
+        buffer[6] = self._buffer[4]
+        buffer[7] = self._buffer[5]
+        buffer[8] = self._buffer[6]
+        return buffer
+    
     def check_button(self,button:InputEnum)->bool:
         int_button = int(button)
         if int_button < InputEnum.BUTTON_MINUS:

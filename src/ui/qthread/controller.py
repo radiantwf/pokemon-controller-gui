@@ -6,8 +6,9 @@ import socket
 import sys
 import os
 from const import ConstClass
+from ui.controller.input import ControllerInput
 class ControllerThread(QThread):
-    push_action = Signal(str)
+    push_action = Signal(ControllerInput)
     def __init__(self, parent=None):
         QThread.__init__(self, parent)
         self._udp_socket = None
@@ -81,7 +82,7 @@ class ControllerThread(QThread):
                     break
             if recv_data != None:
                 recv_msg = recv_data[0].decode("utf-8").strip()
-                self.push_action.emit(recv_msg)
+                self.push_action.emit(ControllerInput(recv_msg))
             else:
                 time.sleep(0.001)
 

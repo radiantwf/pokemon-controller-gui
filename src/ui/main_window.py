@@ -284,19 +284,18 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             self.pop_switch_pro_controller_err_dialog()
         
     def pop_switch_pro_controller_err_dialog(self):
-        msg_box = QMessageBox()
+        self.setEnabled(False)
+        msg_box = QMessageBox(self)
         msg_box.setIcon(QMessageBox.Icon.Critical)
         msg_box.setText("NS控制设备连接错误")
         msg_box.setInformativeText("请检查设备连接或选择其他设备")
         msg_box.setWindowTitle("错误")
         msg_box.exec_()
         self.cbxSerialList.setCurrentIndex(0)
-
-    def controller_send_action(self,action:str):
-        try:
-            self._current_controller.send_action(action+"\n")
-        except:
-            self.pop_switch_pro_controller_err_dialog()
+        self.setEnabled(True)
+    
+    def controller_send_action(self,input:ControllerInput):
+        self._current_controller.send_action(input)
 
     def on_capture_clicked(self):
         self._camera_control_queue.put_nowait("camera")
@@ -359,9 +358,9 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             self._realtime_controller_socket_port = port
 
     @Slot(str)
-    def push_action(self, action:str):
-        self.controller_send_action(action)
-        self._set_joystick_labels(action)
+    def push_action(self, input:ControllerInput):
+        self.controller_send_action(input)
+        self._set_joystick_labels(input)
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.Type.KeyPress:
@@ -522,9 +521,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
     def _joystick_controller_event(self,input):
         self._current_controller_input_joystick = input
 
-    def _set_joystick_labels(self,action):
-        input = ControllerInput(action)
-
+    def _set_joystick_labels(self,input):
         self._set_label_style(self.label_y,input.check_button(InputEnum.BUTTON_Y))
         self._set_label_style(self.label_x,input.check_button(InputEnum.BUTTON_X))
         self._set_label_style(self.label_b,input.check_button(InputEnum.BUTTON_B))
@@ -552,7 +549,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self._set_stick_label_style(self.label_rstick_r,(buffer[5] - 0x80))
         self._set_stick_label_style(self.label_rstick_t,(buffer[6] - 0x80) * (-1))
         self._set_stick_label_style(self.label_rstick_b,(buffer[6] - 0x80))
-        self.label_action.setText("实时命令：{}".format(action))
+        self.label_action.setText("实时命令：{}".format(input.get_action_line()))
         # if self._current_joystick:
         #     pygame.event.get()
         #     axes = [self._current_joystick.get_axis(i) for i in range(self._current_joystick.get_numaxes())]

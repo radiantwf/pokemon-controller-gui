@@ -2,6 +2,8 @@ import time
 from ui.controller.device import SerialDevice
 import serial
 
+from ui.controller.input import ControllerInput
+
 class SwitchProControll(object):
     def __init__(self):
         self._device = None
@@ -24,16 +26,11 @@ class SwitchProControll(object):
         except:
             pass
 
-    def send_action(self,str):
+    def send_action(self,input:ControllerInput):
         if self._device == None:
             return
         try:
-            self._device.write(str.encode())
-            self._device.flush()
-            while True:
-                if self._device.read_all() != None:
-                    break
-                time.sleep(0.001)
+            self._device.write(input.get_action_buffer())
         except:
             pass
     

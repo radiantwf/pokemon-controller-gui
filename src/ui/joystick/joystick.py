@@ -31,18 +31,18 @@ class Joystick(QObject):
         input = ControllerInput()
         if self._chkJoystickButtonSwitch:
             if buttons[0]:
-                input.set_button(InputEnum.BUTTON_A)
-            if buttons[1]:
                 input.set_button(InputEnum.BUTTON_B)
+            if buttons[1]:
+                input.set_button(InputEnum.BUTTON_A)
             if buttons[2]:
                 input.set_button(InputEnum.BUTTON_Y)
             if buttons[3]:
                 input.set_button(InputEnum.BUTTON_X)
         else:
             if buttons[0]:
-                input.set_button(InputEnum.BUTTON_B)
-            if buttons[1]:
                 input.set_button(InputEnum.BUTTON_A)
+            if buttons[1]:
+                input.set_button(InputEnum.BUTTON_B)
             if buttons[2]:
                 input.set_button(InputEnum.BUTTON_X)
             if buttons[3]:
