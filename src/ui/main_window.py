@@ -362,7 +362,6 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
     def push_action(self, action:str):
         self.controller_send_action(action)
         self._set_joystick_labels(action)
-        # self.repaint()
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.Type.KeyPress:
