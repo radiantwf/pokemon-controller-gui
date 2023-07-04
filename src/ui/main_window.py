@@ -59,7 +59,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self._realtime_controller_socket_port = 0
         self._current_controller_input_joystick:ControllerInput = None
         self._current_controller_input_keyboard:ControllerInput = None
-        self._last_sent_action = ""
+        self._last_sent_input = ControllerInput()
 
         start_color = (170, 170, 170)
         end_color = (0, 0, 255)
@@ -267,8 +267,8 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             self.chkJoystickButtonSwitch.setChecked(False)
     
         self._joystick_timer = QTimer()
-        self._timer.timeout.connect(self._current_joystick.run)
-        self._timer.start(1)
+        self._joystick_timer.timeout.connect(self._current_joystick.run)
+        self._joystick_timer.start(1)
 
 
     def on_joystick_button_switch_changed(self):
@@ -499,22 +499,24 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
 
     def realtime_control_action_send(self):
         if self.cbxSerialList.currentIndex() > 0:
+            input = ControllerInput()
             if self._current_controller_input_joystick:
-                action = self._current_controller_input_joystick.get_action_line()
+                input = self._current_controller_input_joystick
             elif self._current_controller_input_keyboard:
-                action = self._current_controller_input_keyboard.get_action_line()
+                input = self._current_controller_input_keyboard
             # if time.monotonic() - self._last_sent_ts > 0.01:
-            if True:
-                self._last_sent_action = action
+            ret = input.compare(self._last_sent_input)
+            if ((not ret[0]) or ret[1] > 10 or ret[2] > 10 or time.monotonic() - self._last_sent_ts > 0.05) and time.monotonic() - self._last_sent_ts > 0.005:
+                self._last_sent_input = input
                 if self._realtime_controller_socket_port > 0:
                     if self._my_const.AF_UNIX_FLAG:
                         client = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
                         local_addr = "/tmp/{}.sock".format(self._realtime_controller_socket_port)
-                        client.sendto(action.encode("utf-8"), local_addr)
+                        client.sendto(input.get_action_line().encode("utf-8"), local_addr)
                         client.close()
                     else:
                         client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                        client.sendto(action.encode("utf-8"), ("127.0.0.1", self._realtime_controller_socket_port))
+                        client.sendto(input.get_action_line().encode("utf-8"), ("127.0.0.1", self._realtime_controller_socket_port))
                         client.close()
                 self._last_sent_ts = time.monotonic()
     

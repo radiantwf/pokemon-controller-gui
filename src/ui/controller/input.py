@@ -110,18 +110,16 @@ class ControllerInput(object):
         return self._buffer
     
     def get_action_buffer(self):
-        buffer = bytearray(11)
+        buffer = bytearray(9)
         buffer[0] = 0xA2
-        buffer[1] = 0x02
-        buffer[9] = 0xA3
-        buffer[10] = 0x03
-        buffer[2] = self._buffer[0]
-        buffer[3] = self._buffer[1]
-        buffer[4] = self._buffer[2]
-        buffer[5] = self._buffer[3]
-        buffer[6] = self._buffer[4]
-        buffer[7] = self._buffer[5]
-        buffer[8] = self._buffer[6]
+        buffer[8] = 0xA3
+        buffer[1] = self._buffer[0]
+        buffer[2] = self._buffer[1]
+        buffer[3] = self._buffer[2]
+        buffer[4] = self._buffer[3]
+        buffer[5] = self._buffer[4]
+        buffer[6] = self._buffer[5]
+        buffer[7] = self._buffer[6]
         return buffer
     
     def check_button(self,button:InputEnum)->bool:
@@ -211,14 +209,18 @@ class ControllerInput(object):
         return action
 
     def compare(self,other)->tuple():
-        ret = (True,0,0)
-        ret[0] = (ret[0] \
-            and ((self._buffer[0] == other._buffer[0])) \
-            and ((self._buffer[1] == other._buffer[1])) \
-            and ((self._buffer[2] == other._buffer[2])))
-        ret[1] = sqrt(pow(self._buffer[3] - other._buffer[3],2) + pow(self._buffer[4] - other._buffer[4],2))
-        ret[2] = sqrt(pow(self._buffer[5] - other._buffer[5],2) + pow(self._buffer[6] - other._buffer[6],2))
-        return ret
+        ret0 = True
+        ret1 = 0
+        ret2 = 0
+
+        other_buffer = other.get_buffer()
+        ret0 = (ret0 \
+            and ((self._buffer[0] == other_buffer[0])) \
+            and ((self._buffer[1] == other_buffer[1])) \
+            and ((self._buffer[2] == other_buffer[2])))
+        ret1 = sqrt(pow(self._buffer[3] - other_buffer[3],2) + pow(self._buffer[4] - other_buffer[4],2))
+        ret2 = sqrt(pow(self._buffer[5] - other_buffer[5],2) + pow(self._buffer[6] - other_buffer[6],2))
+        return (ret0,ret1,ret2)
 
     def _coordinate_str_convert_byte(self, str):
         v = 0
