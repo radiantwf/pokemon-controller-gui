@@ -4,8 +4,8 @@ from math import sqrt
 
 class InputEnum(IntEnum):
     BUTTON_Y = 0x1
-    BUTTON_B = 0x2
-    BUTTON_X = 0x4
+    BUTTON_X = 0x2
+    BUTTON_B = 0x4
     BUTTON_A = 0x8
     BUTTON_R = 0x40
     BUTTON_ZR = 0x80
