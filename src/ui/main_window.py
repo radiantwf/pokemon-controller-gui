@@ -488,7 +488,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             y = -127
         elif self._key_press_map.get(Qt.Key_Period):
             y = 127
-        if self._key_press_map.get(Qt.Key_Period):
+        if self._key_press_map.get(Qt.Key_Slash):
             x = 127
         elif self._key_press_map.get(Qt.Key_Comma):
             x = -127
