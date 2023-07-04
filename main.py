@@ -1,23 +1,21 @@
 import sys
-
 import numpy
+import multiprocessing
+import time
+import cv2
 
 sys.path.append('./src')
-# from macro import test
+import macro
 import camera
 from datatype.frame import Frame
 import ui
-import cv2
-import multiprocessing
-import time
 from const import ConstClass
-from PySide6.QtGui import QImage
 
 # import controller
 # import recognize
 def main():
     my_const = ConstClass()
-    # print(test())
+    print(macro.published())
     main_video_frame,capture_video_frame = multiprocessing.Pipe(False)
     ui_display_video_frame = multiprocessing.Queue()
     opencv_processed_video_frame = multiprocessing.Queue()
