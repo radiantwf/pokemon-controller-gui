@@ -17,7 +17,9 @@ class JoyStick(object):
             self._my_const = ConstClass()
             self._port = port
 
-    def send_action(self, action: str = " "):
+    def send_action(self, action: str = ""):
+        if action == "":
+            action = " "
         if self._port > 0 and self._port < 65535:
             if self._my_const.AF_UNIX_FLAG:
                 client = socket.socket(

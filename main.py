@@ -1,15 +1,15 @@
-from const import ConstClass
-import ui
-from datatype.frame import Frame
-import camera
-import macro
-import sys
-import numpy
-import multiprocessing
-import time
 import cv2
-
+import time
+import multiprocessing
+import numpy
+import sys
 sys.path.append('./src')
+import macro
+import camera
+from datatype.frame import Frame
+import ui
+from const import ConstClass
+
 
 # import controller
 # import recognize
@@ -18,6 +18,7 @@ sys.path.append('./src')
 def main():
     my_const = ConstClass()
     print(macro.published())
+    macro.run("连续点击A", -1)
     main_video_frame, capture_video_frame = multiprocessing.Pipe(False)
     ui_display_video_frame = multiprocessing.Queue()
     opencv_processed_video_frame = multiprocessing.Queue()
