@@ -94,12 +94,12 @@ class Joystick(QObject):
             self.joystick_event.emit(input)
 
     def stop(self):
-        if self.joystick_event:
-            self.joystick_event.emit(ControllerInput())
         if self._joystick != None:
             joystick = self._joystick
             self._joystick = None
             joystick.quit()
+        if self.joystick_event:
+            self.joystick_event.emit(None)
 
     def _open_joystick(self,dev:JoystickDevice):
         joystick = None
