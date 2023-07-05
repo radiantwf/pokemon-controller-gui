@@ -25,5 +25,5 @@ class SerialDevice(object):
         # 打印所有串口设备的信息
         for port in ports:
             if port.description != "n/a":
-                devices.append(SerialDevice(port.name,port.device,9600))
+                devices.append(SerialDevice(port.name,port.device,115200))
         return devices
