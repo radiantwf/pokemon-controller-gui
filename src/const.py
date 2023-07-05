@@ -1,12 +1,15 @@
 import sys
 
+
 def singleton(cls):
     instances = {}
+
     def get_instance(*args, **kwargs):
         if cls not in instances:
             instances[cls] = cls(*args, **kwargs)
         return instances[cls]
     return get_instance
+
 
 @singleton
 class ConstClass(object):
@@ -18,5 +21,5 @@ class ConstClass(object):
         pass
 
     @property
-    def AF_UNIX_FLAG(self)->bool:
+    def AF_UNIX_FLAG(self) -> bool:
         return self._AF_UNIX_FlAG and (sys.platform.startswith("linux") or sys.platform.startswith("darwin"))

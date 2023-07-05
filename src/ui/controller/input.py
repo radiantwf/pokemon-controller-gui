@@ -2,6 +2,7 @@ from enum import IntEnum
 from io import StringIO
 from math import sqrt
 
+
 class InputEnum(IntEnum):
     BUTTON_Y = 0x1
     BUTTON_X = 0x2
@@ -27,12 +28,15 @@ class InputEnum(IntEnum):
     DPAD_TOPLEFT = 0x090000
     BUTTON_L = 0x400000
     BUTTON_ZL = 0x800000
+
+
 class StickEnum(IntEnum):
     LSTICK = 0
     RSTICK = 1
 
+
 class ControllerInput(object):
-    def __init__(self,action_line:str = None):
+    def __init__(self, action_line: str = None):
         buffer = bytearray(7)
         buffer[3] = 0x80
         buffer[4] = 0x80
@@ -99,16 +103,16 @@ class ControllerInput(object):
                         x = self._coordinate_str_convert_byte(coordinate[0])
                         y = self._coordinate_str_convert_byte(coordinate[1])
                     if stick[0] == "LSTICK":
-                            buffer[3] = x
-                            buffer[4] = y
+                        buffer[3] = x
+                        buffer[4] = y
                     elif stick[0] == "RSTICK":
-                            buffer[5] = x
-                            buffer[6] = y
+                        buffer[5] = x
+                        buffer[6] = y
         self._buffer = buffer
 
     def get_buffer(self):
         return self._buffer
-    
+
     def get_action_buffer(self):
         buffer = bytearray(9)
         buffer[0] = 0xA2
@@ -121,8 +125,8 @@ class ControllerInput(object):
         buffer[6] = self._buffer[5]
         buffer[7] = self._buffer[6]
         return buffer
-    
-    def check_button(self,button:InputEnum)->bool:
+
+    def check_button(self, button: InputEnum) -> bool:
         int_button = int(button)
         if int_button < InputEnum.BUTTON_MINUS:
             return (self._buffer[0] & button) != 0
@@ -131,7 +135,7 @@ class ControllerInput(object):
         else:
             return (self._buffer[2] & button >> 16) != 0
 
-    def set_button(self,button:InputEnum):
+    def set_button(self, button: InputEnum):
         int_button = int(button)
         if int_button < InputEnum.BUTTON_MINUS:
             self._buffer[0] |= button
@@ -139,8 +143,8 @@ class ControllerInput(object):
             self._buffer[1] |= button >> 8
         else:
             self._buffer[2] |= button >> 16
-    
-    def set_stick(self,stick:StickEnum,x:int,y:int):
+
+    def set_stick(self, stick: StickEnum, x: int, y: int):
         if x < -127:
             x = -127
         elif x > 127:
@@ -156,7 +160,7 @@ class ControllerInput(object):
             self._buffer[5] = x + 0x80
             self._buffer[6] = y + 0x80
 
-    def get_action_line(self)->str:
+    def get_action_line(self) -> str:
         sio = StringIO()
         if (self._buffer[0] & InputEnum.BUTTON_A) != 0:
             sio.write("A|")
@@ -178,7 +182,7 @@ class ControllerInput(object):
             sio.write("LPRESS|")
         if (self._buffer[1] & InputEnum.BUTTON_RPRESS >> 8) != 0:
             sio.write("RPRESS|")
-        if (self._buffer[1] & InputEnum.BUTTON_HOME >>8) != 0:
+        if (self._buffer[1] & InputEnum.BUTTON_HOME >> 8) != 0:
             sio.write("HOME|")
         if (self._buffer[1] & InputEnum.BUTTON_CAPTURE >> 8) != 0:
             sio.write("CAPTURE|")
@@ -186,7 +190,7 @@ class ControllerInput(object):
             sio.write("TOP|")
         if (self._buffer[2] & InputEnum.DPAD_RIGHT >> 16) != 0:
             sio.write("RIGHT|")
-        if (self._buffer[2] & InputEnum.DPAD_BOTTOM>> 16) != 0:
+        if (self._buffer[2] & InputEnum.DPAD_BOTTOM >> 16) != 0:
             sio.write("BOTTOM|")
         if (self._buffer[2] & InputEnum.DPAD_LEFT >> 16) != 0:
             sio.write("LEFT|")
@@ -197,30 +201,32 @@ class ControllerInput(object):
         x = self._buffer[3] - 0x80
         y = self._buffer[4] - 0x80
         if x != 0 or y != 0:
-            sio.write("LSTICK@{0},{1}|".format(x,y))
+            sio.write("LSTICK@{0},{1}|".format(x, y))
         x = self._buffer[5] - 0x80
         y = self._buffer[6] - 0x80
         if x != 0 or y != 0:
-            sio.write("RSTICK@{0},{1}|".format(x,y))
+            sio.write("RSTICK@{0},{1}|".format(x, y))
 
         sio.flush()
         action = sio.getvalue()
         sio.close()
         return action
 
-    def compare(self,other)->tuple():
+    def compare(self, other) -> tuple():
         ret0 = True
         ret1 = 0
         ret2 = 0
 
         other_buffer = other.get_buffer()
-        ret0 = (ret0 \
-            and ((self._buffer[0] == other_buffer[0])) \
-            and ((self._buffer[1] == other_buffer[1])) \
-            and ((self._buffer[2] == other_buffer[2])))
-        ret1 = sqrt(pow(self._buffer[3] - other_buffer[3],2) + pow(self._buffer[4] - other_buffer[4],2))
-        ret2 = sqrt(pow(self._buffer[5] - other_buffer[5],2) + pow(self._buffer[6] - other_buffer[6],2))
-        return (ret0,ret1,ret2)
+        ret0 = (ret0
+                and ((self._buffer[0] == other_buffer[0]))
+                and ((self._buffer[1] == other_buffer[1]))
+                and ((self._buffer[2] == other_buffer[2])))
+        ret1 = sqrt(pow(self._buffer[3] - other_buffer[3],
+                    2) + pow(self._buffer[4] - other_buffer[4], 2))
+        ret2 = sqrt(pow(self._buffer[5] - other_buffer[5],
+                    2) + pow(self._buffer[6] - other_buffer[6], 2))
+        return (ret0, ret1, ret2)
 
     def _coordinate_str_convert_byte(self, str):
         v = 0

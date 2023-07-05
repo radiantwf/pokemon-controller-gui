@@ -13,5 +13,9 @@
 	"circuitpython.board.version": null,
 	"cSpell.words": [
 		"baudrate"
-	]
+	],
+	"[python]": {
+		"editor.defaultFormatter": "ms-python.autopep8"
+	},
+	"python.formatting.provider": "none"
 }

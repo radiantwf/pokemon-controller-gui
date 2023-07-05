@@ -1,7 +1,8 @@
-from PySide6.QtMultimedia import QMediaDevices,QVideoFrameFormat
+from PySide6.QtMultimedia import QMediaDevices, QVideoFrameFormat
+
 
 class VideoDevice(object):
-    def __init__(self,id,name,width,height,pixelFormat,min_fps,max_fps):
+    def __init__(self, id, name, width, height, pixelFormat, min_fps, max_fps):
         self._id = id
         self._name = name
         self._width = width
@@ -14,34 +15,40 @@ class VideoDevice(object):
     @property
     def id(self):
         return self._id
+
     @property
     def name(self):
         return self._name
+
     @property
     def width(self):
         return self._width
+
     @property
     def height(self):
         return self._height
+
     @property
     def fps(self):
         return self._fps
+
     @property
     def min_fps(self):
         return self._min_fps
+
     @property
     def max_fps(self):
         return self._max_fps
-    
-    def setFps(self,fps:int):
+
+    def setFps(self, fps: int):
         if fps < self._min_fps:
             self._fps = self._min_fps
         elif fps > self._max_fps:
             self._fps = self._max_fps
         else:
             self._fps = fps
-    
-	# 列出当前设备的所有摄像头
+
+        # 列出当前设备的所有摄像头
     @staticmethod
     def list_device():
         cameras = []
@@ -76,9 +83,8 @@ class VideoDevice(object):
                 max_fps = maxFps
                 min_fps = format.minFrameRate()
                 pixelFormat = format.pixelFormat()
-            if width == 0 :
+            if width == 0:
                 continue
-            cameras.append(VideoDevice(id,name,width,height,pixelFormat,min_fps,max_fps))
+            cameras.append(VideoDevice(id, name, width, height,
+                           pixelFormat, min_fps, max_fps))
         return cameras
-
-    

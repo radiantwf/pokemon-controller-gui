@@ -3,3 +3,4 @@ pillow
 PySide6
 pyserial
 pygame
+auto-py-to-exe

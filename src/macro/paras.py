@@ -1,5 +1,5 @@
 class Paras(object):
-    def __init__(self, default_para: dict,para:dict):
+    def __init__(self, default_para: dict, para: dict):
         self._paras = None
         if default_para != None:
             self._paras = default_para.copy()
@@ -13,14 +13,14 @@ class Paras(object):
                     self._paras[key] = v
         locals().update(self._paras)
 
-    def exec_str(self,key):
+    def exec_str(self, key):
         try:
             key = key.replace("|space|", " ", -1)
             exec(key)
         except:
             return
 
-    def get_bool(self,key)->bool:
+    def get_bool(self, key) -> bool:
         try:
             key = key.replace("|space|", " ", -1)
             v = eval(key)
@@ -33,8 +33,8 @@ class Paras(object):
         elif (type(v) is str) and v.lower() == "true":
             return True
         return False
-    
-    def get_int(self,key)->int:
+
+    def get_int(self, key) -> int:
         try:
             key = key.replace("|space|", " ", -1)
             v = eval(key)

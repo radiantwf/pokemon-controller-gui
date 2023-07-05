@@ -1,14 +1,17 @@
 
 import random
 import time
-from PySide6.QtCore import QThread,Signal
+from PySide6.QtCore import QThread, Signal
 import socket
 import sys
 import os
 from const import ConstClass
 from ui.controller.input import ControllerInput
+
+
 class ControllerThread(QThread):
     push_action = Signal(ControllerInput)
+
     def __init__(self, parent=None):
         QThread.__init__(self, parent)
         self._udp_socket = None
@@ -17,19 +20,18 @@ class ControllerThread(QThread):
         self._local_addr = None
         self._my_const = ConstClass()
 
-
-    def refresh_service(self)->int:
+    def refresh_service(self) -> int:
         sock = self._udp_socket
         self._udp_socket = None
         self._port = 0
         if sock:
             sock.close()
-        port = random.randint(40000,60000)
+        port = random.randint(40000, 60000)
         while True:
             if self._my_const.AF_UNIX_FLAG:
                 local_addr = "/tmp/{}.sock".format(port)
                 if os.path.exists(local_addr):
-                    port = random.randint(40000,60000)
+                    port = random.randint(40000, 60000)
                     continue
                 del_addr = self._local_addr
                 self._local_addr = local_addr
@@ -39,13 +41,13 @@ class ControllerThread(QThread):
             else:
                 self._local_addr = None
                 try:
-                    sock2 = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) 
+                    sock2 = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                     local_addr = ("127.0.0.1", port)
                     sock2.bind(local_addr)
                     sock2.close()
                     break
                 except:
-                    port = random.randint(40000,60000)
+                    port = random.randint(40000, 60000)
                     continue
         self._port = port
         return port
@@ -58,11 +60,13 @@ class ControllerThread(QThread):
                 try:
                     if self._my_const.AF_UNIX_FLAG:
                         if not os.path.exists(self._local_addr):
-                            self._udp_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM) 
+                            self._udp_socket = socket.socket(
+                                socket.AF_UNIX, socket.SOCK_DGRAM)
                             self._udp_socket.bind(self._local_addr)
                             self._udp_socket.setblocking(False)
                     else:
-                        self._udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) 
+                        self._udp_socket = socket.socket(
+                            socket.AF_INET, socket.SOCK_DGRAM)
                         local_addr = ("127.0.0.1", self._port)
                         self._udp_socket.bind(local_addr)
                         self._udp_socket.setblocking(False)

@@ -2,17 +2,19 @@ import serial.tools.list_ports
 
 
 class SerialDevice(object):
-    def __init__(self,name:str,path:str,baudrate:int):
+    def __init__(self, name: str, path: str, baudrate: int):
         self._name = name
         self._path = path
         self._baudrate = baudrate
-    
+
     @property
     def name(self):
         return self._name
+
     @property
     def path(self):
         return self._path
+
     @property
     def baudrate(self):
         return self._baudrate
@@ -25,5 +27,5 @@ class SerialDevice(object):
         # 打印所有串口设备的信息
         for port in ports:
             if port.description != "n/a":
-                devices.append(SerialDevice(port.name,port.device,115200))
+                devices.append(SerialDevice(port.name, port.device, 115200))
         return devices

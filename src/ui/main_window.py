@@ -7,11 +7,11 @@ import socket
 import pygame
 from const import ConstClass
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import QMessageBox,QLabel
+from PySide6.QtWidgets import QMessageBox, QLabel
 from camera.device import VideoDevice
-from PySide6.QtCore import Slot,Qt,QEvent,QTimer,QCoreApplication
-from PySide6.QtGui import QImage, QPixmap,QPainter
-from PySide6.QtMultimedia import QAudioFormat,QAudioSource,QAudioSink,QMediaDevices
+from PySide6.QtCore import Slot, Qt, QEvent, QTimer, QCoreApplication
+from PySide6.QtGui import QImage, QPixmap, QPainter
+from PySide6.QtMultimedia import QAudioFormat, QAudioSource, QAudioSink, QMediaDevices
 from PySide6.QtUiTools import loadUiType
 from ui.controller.input import ControllerInput, InputEnum, StickEnum
 from ui.controller.switch_pro import SwitchProControll
@@ -23,11 +23,12 @@ from ui.qthread.controller import ControllerThread
 from ui.qthread.video import VideoThread
 Ui_MainWindow, QMainWindowBase = loadUiType("./resources/ui/main_form.ui")
 
-class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
-    def __init__(self,camera_control_queue:multiprocessing.Queue,frame_queues):
+
+class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
+    def __init__(self, camera_control_queue: multiprocessing.Queue, frame_queues):
         QtWidgets.QMainWindow.__init__(self)
         Ui_MainWindow.__init__(self)
-        
+
         # 摄像头控制命令队列
         self._camera_control_queue = camera_control_queue
 
@@ -57,17 +58,18 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self._key_press_map = dict()
         self._last_sent_ts = time.monotonic()
         self._realtime_controller_socket_port = 0
-        self._current_controller_input_joystick:ControllerInput = None
-        self._current_controller_input_keyboard:ControllerInput = None
+        self._current_controller_input_joystick: ControllerInput = None
+        self._current_controller_input_keyboard: ControllerInput = None
         self._last_sent_input = ControllerInput()
 
         start_color = (170, 170, 170)
         end_color = (0, 0, 255)
         steps = 1001
-        self._stick_label_gradient_colors = self._gradient(start_color, end_color, steps)
+        self._stick_label_gradient_colors = self._gradient(
+            start_color, end_color, steps)
 
     def setupUi(self):
-        Ui_MainWindow.setupUi(self,self)
+        Ui_MainWindow.setupUi(self, self)
         self.build_camera_list_comboBox()
         self.build_audio_list_comboBox()
         self.build_serial_device_list_comboBox()
@@ -79,7 +81,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.btnSerialRescan.clicked.connect(self.on_serial_rescan_clicked)
         self.btnJoystickRescan.clicked.connect(self.on_joystick_rescan_clicked)
 
-        self.th_video = VideoThread(self,self._frame_queue)
+        self.th_video = VideoThread(self, self._frame_queue)
         self.th_video.on_recv_frame.connect(self.setImage)
         self.th_video.start()
 
@@ -87,11 +89,11 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.th_controller.push_action.connect(self.push_action)
         self.th_controller.start()
 
-        self.chkJoystickButtonSwitch.stateChanged.connect(self.on_joystick_button_switch_changed)
+        self.chkJoystickButtonSwitch.stateChanged.connect(
+            self.on_joystick_button_switch_changed)
 
         self.toolBox.setCurrentIndex(0)
         self.refresh_controller_server()
-
 
         self._timer = QTimer()
         self._timer.timeout.connect(self.realtime_control_action_send)
@@ -99,7 +101,8 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
 
     def build_serial_device_list_comboBox(self):
         try:
-            self.cbxSerialList.currentIndexChanged.disconnect(self.on_serial_changed)
+            self.cbxSerialList.currentIndexChanged.disconnect(
+                self.on_serial_changed)
         except:
             None
         self.cbxSerialList.clear()
@@ -117,7 +120,8 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
 
     def build_joystick_device_list_comboBox(self):
         try:
-            self.cbxJoystickList.currentIndexChanged.disconnect(self.on_joystick_changed)
+            self.cbxJoystickList.currentIndexChanged.disconnect(
+                self.on_joystick_changed)
         except:
             None
         self.cbxJoystickList.clear()
@@ -129,12 +133,14 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
 
         self.cbxJoystickList.addItems(devices)
         self.cbxJoystickList.setCurrentIndex(0)
-        self.cbxJoystickList.currentIndexChanged.connect(self.on_joystick_changed)
+        self.cbxJoystickList.currentIndexChanged.connect(
+            self.on_joystick_changed)
         self.on_joystick_changed()
 
     def build_camera_list_comboBox(self):
         try:
-            self.cbxCameraList.currentIndexChanged.disconnect(self.on_camera_changed)
+            self.cbxCameraList.currentIndexChanged.disconnect(
+                self.on_camera_changed)
         except:
             None
         self.cbxCameraList.clear()
@@ -162,18 +168,18 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             maxFps = round(self._current_camera.max_fps)
         fps = []
         cbxText = ""
-        for f in [5,10,15,30,60]:
+        for f in [5, 10, 15, 30, 60]:
             if f < minFps:
                 continue
             if f == maxFps:
                 cbxText = str(f)
                 fps.append(cbxText)
                 break
-            if f > maxFps: 
+            if f > maxFps:
                 cbxText = str(maxFps)
                 fps.append(str(maxFps))
                 break
-            if f < maxFps: 
+            if f < maxFps:
                 cbxText = str(f)
                 fps.append(cbxText)
         self.cbxFps.addItems(fps)
@@ -183,7 +189,8 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
 
     def build_audio_list_comboBox(self):
         try:
-            self.cbxAudioList.currentIndexChanged.disconnect(self.on_audio_changed)
+            self.cbxAudioList.currentIndexChanged.disconnect(
+                self.on_audio_changed)
         except:
             None
         self.cbxAudioList.clear()
@@ -216,7 +223,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
 
         self._output_device = QMediaDevices.defaultAudioOutput()
         self._m_audioSink = QAudioSink(self._output_device, format_audio)
-        self._m_output= self._m_audioSink.start()
+        self._m_output = self._m_audioSink.start()
 
     def stop_audio(self):
         if self._audio_input != None:
@@ -225,12 +232,13 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         if self._m_audioSink != None:
             self._m_audioSink.stop()
             self._m_audioSink = None
-        
+
     def on_camera_changed(self):
         if self.cbxCameraList.currentIndex() == 0:
             self._current_camera = None
         else:
-            self._current_camera = self._cameras[self.cbxCameraList.currentIndex() - 1]
+            self._current_camera = self._cameras[self.cbxCameraList.currentIndex(
+            ) - 1]
         self.build_fps_comboBox()
 
     def on_fps_changed(self):
@@ -240,10 +248,10 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
 
     def on_mute_changed(self):
         self.play_audio()
-    
+
     def on_audio_changed(self):
         self.play_audio()
-    
+
     def on_joystick_changed(self):
         if self._current_joystick:
             self._current_joystick.stop()
@@ -253,36 +261,38 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             self._joystick_timer.stop()
             self._joystick_timer = None
 
-        
         self.chkJoystickButtonSwitch.setChecked(False)
         if self.cbxJoystickList.currentIndex() == 0:
             return
-        
-        joystick_info = self._joystick_devices[self.cbxJoystickList.currentIndex() - 1]
-        self._current_joystick = Joystick(self,joystick_info)
-        self._current_joystick.joystick_event.connect(self._joystick_controller_event)
+
+        joystick_info = self._joystick_devices[self.cbxJoystickList.currentIndex(
+        ) - 1]
+        self._current_joystick = Joystick(self, joystick_info)
+        self._current_joystick.joystick_event.connect(
+            self._joystick_controller_event)
         if joystick_info.name != "Nintendo Switch Pro Controller":
             self.chkJoystickButtonSwitch.setChecked(True)
         else:
             self.chkJoystickButtonSwitch.setChecked(False)
-    
+
         self._joystick_timer = QTimer()
         self._joystick_timer.timeout.connect(self._current_joystick.run)
         self._joystick_timer.start(1)
 
-
     def on_joystick_button_switch_changed(self):
         if self._current_joystick:
-            self._current_joystick.setButtonSwitch(self.chkJoystickButtonSwitch.isChecked())
-            
+            self._current_joystick.setButtonSwitch(
+                self.chkJoystickButtonSwitch.isChecked())
+
     def on_serial_changed(self):
         self._current_controller.close()
         if self.cbxSerialList.currentIndex() == 0:
             return
-        ret = self._current_controller.open(self._serial_devices[self.cbxSerialList.currentIndex() - 1])
+        ret = self._current_controller.open(
+            self._serial_devices[self.cbxSerialList.currentIndex() - 1])
         if not ret:
             self.pop_switch_pro_controller_err_dialog()
-        
+
     def pop_switch_pro_controller_err_dialog(self):
         self.setEnabled(False)
         msg_box = QMessageBox(self)
@@ -293,8 +303,8 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         msg_box.exec_()
         self.cbxSerialList.setCurrentIndex(0)
         self.setEnabled(True)
-    
-    def controller_send_action(self,input:ControllerInput):
+
+    def controller_send_action(self, input: ControllerInput):
         self._current_controller.send_action(input)
 
     def on_capture_clicked(self):
@@ -314,7 +324,6 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
     def _readyRead(self):
         data = self._io_device.readAll()
         self._m_output.write(data)
-
 
     def closeEvent(self, event):
         self._current_controller.close()
@@ -346,7 +355,8 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
     @Slot(QImage)
     def setImage(self, image):
         if self._current_camera != None:
-            pixmap = QPixmap.fromImage(image)#.scaled(self.lblCameraFrame.size(), aspectMode=Qt.KeepAspectRatio)
+            # .scaled(self.lblCameraFrame.size(), aspectMode=Qt.KeepAspectRatio)
+            pixmap = QPixmap.fromImage(image)
             self.lblCameraFrame.setPixmap(pixmap)
         else:
             self.lblCameraFrame.clear()
@@ -358,7 +368,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             self._realtime_controller_socket_port = port
 
     @Slot(str)
-    def push_action(self, input:ControllerInput):
+    def push_action(self, input: ControllerInput):
         self.controller_send_action(input)
         self._set_joystick_labels(input)
 
@@ -366,7 +376,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         if event.type() == QEvent.Type.KeyPress:
             self._key_press_map[event.key()] = time.monotonic()
         elif event.type() == QEvent.Type.KeyRelease:
-            self._key_press_map.pop(event.key(),None)
+            self._key_press_map.pop(event.key(), None)
         elif event.type() == QEvent.Type.FocusOut:
             self._key_press_map.clear()
 
@@ -380,17 +390,17 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         if self._key_press_map.get(Qt.Key_W):
             count += 1
         if count > 2:
-            self._key_press_map.pop(Qt.Key_A,None)
-            self._key_press_map.pop(Qt.Key_S,None)
-            self._key_press_map.pop(Qt.Key_D,None)
-            self._key_press_map.pop(Qt.Key_W,None)
+            self._key_press_map.pop(Qt.Key_A, None)
+            self._key_press_map.pop(Qt.Key_S, None)
+            self._key_press_map.pop(Qt.Key_D, None)
+            self._key_press_map.pop(Qt.Key_W, None)
         if self._key_press_map.get(Qt.Key_A) and self._key_press_map.get(Qt.Key_D):
-            self._key_press_map.pop(Qt.Key_A,None)
-            self._key_press_map.pop(Qt.Key_D,None)
+            self._key_press_map.pop(Qt.Key_A, None)
+            self._key_press_map.pop(Qt.Key_D, None)
         if self._key_press_map.get(Qt.Key_S) and self._key_press_map.get(Qt.Key_W):
-            self._key_press_map.pop(Qt.Key_S,None)
-            self._key_press_map.pop(Qt.Key_W,None)
-        
+            self._key_press_map.pop(Qt.Key_S, None)
+            self._key_press_map.pop(Qt.Key_W, None)
+
         count = 0
         if self._key_press_map.get(Qt.Key_Semicolon):
             count += 1
@@ -401,16 +411,16 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         if self._key_press_map.get(Qt.Key_Slash):
             count += 1
         if count > 2:
-            self._key_press_map.pop(Qt.Key_Semicolon,None)
-            self._key_press_map.pop(Qt.Key_Comma,None)
-            self._key_press_map.pop(Qt.Key_Period,None)
-            self._key_press_map.pop(Qt.Key_Slash,None)
+            self._key_press_map.pop(Qt.Key_Semicolon, None)
+            self._key_press_map.pop(Qt.Key_Comma, None)
+            self._key_press_map.pop(Qt.Key_Period, None)
+            self._key_press_map.pop(Qt.Key_Slash, None)
         if self._key_press_map.get(Qt.Key_Semicolon) and self._key_press_map.get(Qt.Key_Period):
-            self._key_press_map.pop(Qt.Key_Semicolon,None)
-            self._key_press_map.pop(Qt.Key_Period,None)
+            self._key_press_map.pop(Qt.Key_Semicolon, None)
+            self._key_press_map.pop(Qt.Key_Period, None)
         if self._key_press_map.get(Qt.Key_Period) and self._key_press_map.get(Qt.Key_Slash):
-            self._key_press_map.pop(Qt.Key_Period,None)
-            self._key_press_map.pop(Qt.Key_Slash,None)
+            self._key_press_map.pop(Qt.Key_Period, None)
+            self._key_press_map.pop(Qt.Key_Slash, None)
 
         count = 0
         if self._key_press_map.get(Qt.Key_F):
@@ -422,16 +432,16 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         if self._key_press_map.get(Qt.Key_B):
             count += 1
         if count > 1:
-            self._key_press_map.pop(Qt.Key_F,None)
-            self._key_press_map.pop(Qt.Key_C,None)
-            self._key_press_map.pop(Qt.Key_V,None)
-            self._key_press_map.pop(Qt.Key_B,None)
+            self._key_press_map.pop(Qt.Key_F, None)
+            self._key_press_map.pop(Qt.Key_C, None)
+            self._key_press_map.pop(Qt.Key_V, None)
+            self._key_press_map.pop(Qt.Key_B, None)
         if self._key_press_map.get(Qt.Key_F) and self._key_press_map.get(Qt.Key_V):
-            self._key_press_map.pop(Qt.Key_F,None)
-            self._key_press_map.pop(Qt.Key_V,None)
+            self._key_press_map.pop(Qt.Key_F, None)
+            self._key_press_map.pop(Qt.Key_V, None)
         if self._key_press_map.get(Qt.Key_C) and self._key_press_map.get(Qt.Key_B):
-            self._key_press_map.pop(Qt.Key_C,None)
-            self._key_press_map.pop(Qt.Key_B,None)
+            self._key_press_map.pop(Qt.Key_C, None)
+            self._key_press_map.pop(Qt.Key_B, None)
 
         input = ControllerInput()
         if self._key_press_map.get(Qt.Key_L):
@@ -480,7 +490,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             x = -127
         elif self._key_press_map.get(Qt.Key_D):
             x = 127
-        input.set_stick(StickEnum.LSTICK,x,y)
+        input.set_stick(StickEnum.LSTICK, x, y)
 
         x = 0
         y = 0
@@ -492,7 +502,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             x = 127
         elif self._key_press_map.get(Qt.Key_Comma):
             x = -127
-        input.set_stick(StickEnum.RSTICK,x,y)
+        input.set_stick(StickEnum.RSTICK, x, y)
 
         self._current_controller_input_keyboard = input
         return QtWidgets.QMainWindow.eventFilter(self, obj, event)
@@ -510,47 +520,74 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
                 self._last_sent_input = input
                 if self._realtime_controller_socket_port > 0:
                     if self._my_const.AF_UNIX_FLAG:
-                        client = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-                        local_addr = "/tmp/{}.sock".format(self._realtime_controller_socket_port)
-                        client.sendto(input.get_action_line().encode("utf-8"), local_addr)
+                        client = socket.socket(
+                            socket.AF_UNIX, socket.SOCK_DGRAM)
+                        local_addr = "/tmp/{}.sock".format(
+                            self._realtime_controller_socket_port)
+                        client.sendto(input.get_action_line().encode(
+                            "utf-8"), local_addr)
                         client.close()
                     else:
-                        client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                        client.sendto(input.get_action_line().encode("utf-8"), ("127.0.0.1", self._realtime_controller_socket_port))
+                        client = socket.socket(
+                            socket.AF_INET, socket.SOCK_DGRAM)
+                        client.sendto(input.get_action_line().encode(
+                            "utf-8"), ("127.0.0.1", self._realtime_controller_socket_port))
                         client.close()
                 self._last_sent_ts = time.monotonic()
-    
-    def _joystick_controller_event(self,input):
+
+    def _joystick_controller_event(self, input):
         self._current_controller_input_joystick = input
 
-    def _set_joystick_labels(self,input):
-        self._set_label_style(self.label_y,input.check_button(InputEnum.BUTTON_Y))
-        self._set_label_style(self.label_x,input.check_button(InputEnum.BUTTON_X))
-        self._set_label_style(self.label_b,input.check_button(InputEnum.BUTTON_B))
-        self._set_label_style(self.label_a,input.check_button(InputEnum.BUTTON_A))
-        self._set_label_style(self.label_l,input.check_button(InputEnum.BUTTON_L))
-        self._set_label_style(self.label_r,input.check_button(InputEnum.BUTTON_R))
-        self._set_label_style(self.label_zl,input.check_button(InputEnum.BUTTON_ZL))
-        self._set_label_style(self.label_zr,input.check_button(InputEnum.BUTTON_ZR))
-        self._set_label_style(self.label_minus,input.check_button(InputEnum.BUTTON_MINUS))
-        self._set_label_style(self.label_plus,input.check_button(InputEnum.BUTTON_PLUS))
-        self._set_label_style(self.label_lstick_press,input.check_button(InputEnum.BUTTON_LPRESS))
-        self._set_label_style(self.label_rstick_press,input.check_button(InputEnum.BUTTON_RPRESS))
-        self._set_label_style(self.label_home,input.check_button(InputEnum.BUTTON_HOME))
-        self._set_label_style(self.label_capture,input.check_button(InputEnum.BUTTON_CAPTURE))
-        self._set_label_style(self.label_dpad_t,input.check_button(InputEnum.DPAD_TOP))
-        self._set_label_style(self.label_dpad_r,input.check_button(InputEnum.DPAD_RIGHT))
-        self._set_label_style(self.label_dpad_b,input.check_button(InputEnum.DPAD_BOTTOM))
-        self._set_label_style(self.label_dpad_l,input.check_button(InputEnum.DPAD_LEFT))
+    def _set_joystick_labels(self, input):
+        self._set_label_style(
+            self.label_y, input.check_button(InputEnum.BUTTON_Y))
+        self._set_label_style(
+            self.label_x, input.check_button(InputEnum.BUTTON_X))
+        self._set_label_style(
+            self.label_b, input.check_button(InputEnum.BUTTON_B))
+        self._set_label_style(
+            self.label_a, input.check_button(InputEnum.BUTTON_A))
+        self._set_label_style(
+            self.label_l, input.check_button(InputEnum.BUTTON_L))
+        self._set_label_style(
+            self.label_r, input.check_button(InputEnum.BUTTON_R))
+        self._set_label_style(
+            self.label_zl, input.check_button(InputEnum.BUTTON_ZL))
+        self._set_label_style(
+            self.label_zr, input.check_button(InputEnum.BUTTON_ZR))
+        self._set_label_style(
+            self.label_minus, input.check_button(InputEnum.BUTTON_MINUS))
+        self._set_label_style(
+            self.label_plus, input.check_button(InputEnum.BUTTON_PLUS))
+        self._set_label_style(self.label_lstick_press,
+                              input.check_button(InputEnum.BUTTON_LPRESS))
+        self._set_label_style(self.label_rstick_press,
+                              input.check_button(InputEnum.BUTTON_RPRESS))
+        self._set_label_style(
+            self.label_home, input.check_button(InputEnum.BUTTON_HOME))
+        self._set_label_style(self.label_capture,
+                              input.check_button(InputEnum.BUTTON_CAPTURE))
+        self._set_label_style(
+            self.label_dpad_t, input.check_button(InputEnum.DPAD_TOP))
+        self._set_label_style(
+            self.label_dpad_r, input.check_button(InputEnum.DPAD_RIGHT))
+        self._set_label_style(
+            self.label_dpad_b, input.check_button(InputEnum.DPAD_BOTTOM))
+        self._set_label_style(
+            self.label_dpad_l, input.check_button(InputEnum.DPAD_LEFT))
         buffer = input.get_buffer()
-        self._set_stick_label_style(self.label_lstick_l,(buffer[3] - 0x80) * (-1))
-        self._set_stick_label_style(self.label_lstick_r,(buffer[3] - 0x80))
-        self._set_stick_label_style(self.label_lstick_t,(buffer[4] - 0x80) * (-1))
-        self._set_stick_label_style(self.label_lstick_b,(buffer[4] - 0x80))
-        self._set_stick_label_style(self.label_rstick_l,(buffer[5] - 0x80) * (-1))
-        self._set_stick_label_style(self.label_rstick_r,(buffer[5] - 0x80))
-        self._set_stick_label_style(self.label_rstick_t,(buffer[6] - 0x80) * (-1))
-        self._set_stick_label_style(self.label_rstick_b,(buffer[6] - 0x80))
+        self._set_stick_label_style(
+            self.label_lstick_l, (buffer[3] - 0x80) * (-1))
+        self._set_stick_label_style(self.label_lstick_r, (buffer[3] - 0x80))
+        self._set_stick_label_style(
+            self.label_lstick_t, (buffer[4] - 0x80) * (-1))
+        self._set_stick_label_style(self.label_lstick_b, (buffer[4] - 0x80))
+        self._set_stick_label_style(
+            self.label_rstick_l, (buffer[5] - 0x80) * (-1))
+        self._set_stick_label_style(self.label_rstick_r, (buffer[5] - 0x80))
+        self._set_stick_label_style(
+            self.label_rstick_t, (buffer[6] - 0x80) * (-1))
+        self._set_stick_label_style(self.label_rstick_b, (buffer[6] - 0x80))
         self.label_action.setText("实时命令：{}".format(input.get_action_line()))
         # if self._current_joystick:
         #     pygame.event.get()
@@ -558,8 +595,6 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         #     buttons = [self._current_joystick.get_button(i) for i in range(self._current_joystick.get_numbuttons())]
         #     hats = [self._current_joystick.get_hat(i) for i in range(self._current_joystick.get_numhats())]
         #     self.label_action.setText("实时命令：{} {}".format(axes,hats))
-
-
 
     def _coordinate_str_convert_byte(self, str):
         v = 0
@@ -572,8 +607,8 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         elif v > 127:
             v = 127
         return v + 0x80
-    
-    def _set_label_style(self,label,pushed):
+
+    def _set_label_style(self, label, pushed):
         if pushed:
             label.setStyleSheet(u"background-color:rgb(0, 0, 255)")
         else:
@@ -586,8 +621,8 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         if ret < 0:
             ret = 0
         color = self._stick_label_gradient_colors[ret]
-        label.setStyleSheet(u"background-color:rgb({},{},{})".format(color[0], color[1], color[2]))
-
+        label.setStyleSheet(
+            u"background-color:rgb({},{},{})".format(color[0], color[1], color[2]))
 
     def _gradient(self, start_color, end_color, steps):
         # 将RGB颜色转换为三个分量

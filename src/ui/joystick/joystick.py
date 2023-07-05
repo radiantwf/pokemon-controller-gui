@@ -1,12 +1,14 @@
 import time
 import pygame
 from ui.controller.input import ControllerInput, InputEnum, StickEnum
-from PySide6.QtCore import QObject,Signal
+from PySide6.QtCore import QObject, Signal
 
 from ui.joystick.device import JoystickDevice
 
+
 class Joystick(QObject):
     joystick_event = Signal(ControllerInput)
+
     def __init__(self, parent=None, joystick_info=None):
         QObject.__init__(self, parent)
         self._joystick = self._open_joystick(joystick_info)
@@ -15,19 +17,22 @@ class Joystick(QObject):
             return
         self._joystick.init()
         # 只允许手柄事件进入事件队列
-        pygame.event.set_allowed([pygame.JOYAXISMOTION, pygame.JOYBUTTONDOWN, pygame.JOYBUTTONUP, pygame.JOYHATMOTION])
+        pygame.event.set_allowed(
+            [pygame.JOYAXISMOTION, pygame.JOYBUTTONDOWN, pygame.JOYBUTTONUP, pygame.JOYHATMOTION])
 
-
-    def setButtonSwitch(self,chkJoystickButtonSwitch:bool):
+    def setButtonSwitch(self, chkJoystickButtonSwitch: bool):
         self._chkJoystickButtonSwitch = chkJoystickButtonSwitch
-    
+
     def run(self):
         pygame.event.pump()
         if self._joystick == None:
             return
-        axes = [self._joystick.get_axis(i) for i in range(self._joystick.get_numaxes())]
-        buttons = [self._joystick.get_button(i) for i in range(self._joystick.get_numbuttons())]
-        hats = [self._joystick.get_hat(i) for i in range(self._joystick.get_numhats())]
+        axes = [self._joystick.get_axis(i) for i in range(
+            self._joystick.get_numaxes())]
+        buttons = [self._joystick.get_button(
+            i) for i in range(self._joystick.get_numbuttons())]
+        hats = [self._joystick.get_hat(i)
+                for i in range(self._joystick.get_numhats())]
         input = ControllerInput()
         if self._chkJoystickButtonSwitch:
             if buttons[0]:
@@ -71,9 +76,9 @@ class Joystick(QObject):
             input.set_button(InputEnum.DPAD_RIGHT)
         if buttons[15]:
             input.set_button(InputEnum.BUTTON_CAPTURE)
-        if axes[4]>=0.5:
+        if axes[4] >= 0.5:
             input.set_button(InputEnum.BUTTON_ZL)
-        if axes[5]>=0.5:
+        if axes[5] >= 0.5:
             input.set_button(InputEnum.BUTTON_ZR)
         if hats != None and len(hats) > 1:
             if hats[0][0] == -1:
@@ -86,10 +91,10 @@ class Joystick(QObject):
                 input.set_button(InputEnum.DPAD_BOTTOM)
         x = round((axes[0]+1)/2*0xFF) - 0x80
         y = round((axes[1]+1)/2*0xFF) - 0x80
-        input.set_stick(StickEnum.LSTICK,x,y)
+        input.set_stick(StickEnum.LSTICK, x, y)
         x = round((axes[2]+1)/2*0xFF) - 0x80
         y = round((axes[3]+1)/2*0xFF) - 0x80
-        input.set_stick(StickEnum.RSTICK,x,y)
+        input.set_stick(StickEnum.RSTICK, x, y)
         if self.joystick_event:
             self.joystick_event.emit(input)
 
@@ -101,7 +106,7 @@ class Joystick(QObject):
         if self.joystick_event:
             self.joystick_event.emit(None)
 
-    def _open_joystick(self,dev:JoystickDevice):
+    def _open_joystick(self, dev: JoystickDevice):
         joystick = None
         for i in range(pygame.joystick.get_count()):
             joystick = pygame.joystick.Joystick(i)

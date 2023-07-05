@@ -1,3 +1,8 @@
+from const import ConstClass
+import ui
+from datatype.frame import Frame
+import camera
+import macro
 import sys
 import numpy
 import multiprocessing
@@ -5,26 +10,26 @@ import time
 import cv2
 
 sys.path.append('./src')
-import macro
-import camera
-from datatype.frame import Frame
-import ui
-from const import ConstClass
 
 # import controller
 # import recognize
+
+
 def main():
     my_const = ConstClass()
     print(macro.published())
-    main_video_frame,capture_video_frame = multiprocessing.Pipe(False)
+    main_video_frame, capture_video_frame = multiprocessing.Pipe(False)
     ui_display_video_frame = multiprocessing.Queue()
     opencv_processed_video_frame = multiprocessing.Queue()
     recognize_video_frame = multiprocessing.Queue(1)
-    frame_queues = (recognize_video_frame,ui_display_video_frame,opencv_processed_video_frame,)
+    frame_queues = (recognize_video_frame, ui_display_video_frame,
+                    opencv_processed_video_frame,)
     camera_control_queue = multiprocessing.Queue()
-    ui_process = multiprocessing.Process(target=ui.run, args=(camera_control_queue,frame_queues,))
+    ui_process = multiprocessing.Process(
+        target=ui.run, args=(camera_control_queue, frame_queues,))
     ui_process.start()
-    video_process = multiprocessing.Process(target=camera.capture_video, args=(camera_control_queue,capture_video_frame,))
+    video_process = multiprocessing.Process(
+        target=camera.capture_video, args=(camera_control_queue, capture_video_frame,))
     video_process.start()
     try:
         while True:
@@ -33,10 +38,14 @@ def main():
             if main_video_frame.poll():
                 video_frame = main_video_frame.recv()
                 try:
-                    np_array = numpy.frombuffer(video_frame.bytes(), dtype=numpy.uint8)
-                    mat = np_array.reshape((video_frame.height, video_frame.width, video_frame.channels))
-                    display_mat = cv2.resize(mat, (my_const.DisplayCameraWidth,my_const.DisplayCameraHeight), interpolation=cv2.INTER_AREA)
-                    ui_display_video_frame.put(Frame(my_const.DisplayCameraWidth,my_const.DisplayCameraHeight,video_frame.channels,video_frame.format,display_mat),False,0)
+                    np_array = numpy.frombuffer(
+                        video_frame.bytes(), dtype=numpy.uint8)
+                    mat = np_array.reshape(
+                        (video_frame.height, video_frame.width, video_frame.channels))
+                    display_mat = cv2.resize(
+                        mat, (my_const.DisplayCameraWidth, my_const.DisplayCameraHeight), interpolation=cv2.INTER_AREA)
+                    ui_display_video_frame.put(Frame(my_const.DisplayCameraWidth, my_const.DisplayCameraHeight,
+                                               video_frame.channels, video_frame.format, display_mat), False, 0)
                 except:
                     pass
             # try:
@@ -92,7 +101,7 @@ def main():
     #     recognize_process.kill()
     #     ui_process.kill()
 
-if __name__ == "__main__":
-    multiprocessing.freeze_support() 
-    main()
 
+if __name__ == "__main__":
+    multiprocessing.freeze_support()
+    main()

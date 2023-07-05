@@ -1,12 +1,12 @@
-from . import macro,paras
+from . import macro, paras
 
 
 class Action(object):
-    def __init__(self, macro_name: str,in_paras:dict = dict()):
+    def __init__(self, macro_name: str, in_paras: dict = dict()):
         self._macro = macro.Macro()
         n = self._macro.get_node(macro_name)
         self._head = n[0]
-        self._paras = paras.Paras(n[1],in_paras)
+        self._paras = paras.Paras(n[1], in_paras)
         self._current = self._head
         self._current_node_link_cycle_times = 1
         self._waiting_node = []
@@ -52,7 +52,7 @@ class Action(object):
             ret = self._waiting_node.pop()
             self._current = ret[0]
             self._current_node_link_cycle_times = ret[1]
-            
+
             if self._current.action == macro._FINISHED_LINE:
                 self._return_jump()
 

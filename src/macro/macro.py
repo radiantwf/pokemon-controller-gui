@@ -11,6 +11,7 @@ _MACRO_BASE_PATH = "./resources/macros"
 _MACRO_EXT = ".m"
 _FINISHED_LINE = "0000000"
 
+
 class Macro(object):
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, '_instance'):
@@ -32,7 +33,7 @@ class Macro(object):
             for p in self._publish:
                 if p.get("summary") == name:
                     macro_name = p.get("name")
-            return (self._dic_macros.get(macro_name),self._default_paras.get(macro_name))
+            return (self._dic_macros.get(macro_name), self._default_paras.get(macro_name))
         except:
             return None
 
@@ -106,7 +107,7 @@ class Macro(object):
                         rows.append(_FINISHED_LINE)
                         dic[name] = rows
                     rows = []
-                name = self._process_title(row[1:len(row) - 1],file_tag)
+                name = self._process_title(row[1:len(row) - 1], file_tag)
                 sub_rows = []
                 sub = False
                 continue
@@ -153,7 +154,7 @@ class Macro(object):
             dic[name] = rows
         return dic
 
-    def _process_title(self, title_line:str,file_tag: str = "") -> str:
+    def _process_title(self, title_line: str, file_tag: str = "") -> str:
         splits = title_line.split("--")
         t1 = splits[0].split("|")
         name = file_tag + t1[0]
@@ -176,16 +177,17 @@ class Macro(object):
                 v = ""
                 s = para.split("|")
                 p1 = s[0]
-                if len(s)>= 3:
+                if len(s) >= 3:
                     p2 = s[1]
                     v = s[2]
-                elif len(s)==2:
-                    p2 =s[1]
-                paras.append(dict({"name":p1,"summary":p2,"default":v}))
+                elif len(s) == 2:
+                    p2 = s[1]
+                paras.append(dict({"name": p1, "summary": p2, "default": v}))
                 dic_paras[p1] = v
             self._default_paras[name] = dic_paras
-            
+
         if summary != "":
-            self._publish.append(dict({"name":name,"summary":summary,"loop":loop,"paras":paras}))
-        
+            self._publish.append(
+                dict({"name": name, "summary": summary, "loop": loop, "paras": paras}))
+
         return name

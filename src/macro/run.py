@@ -1,11 +1,10 @@
 import time
-import asyncio
 from . import action
 
 _last_key_press_ns = time.monotonic_ns()
 _Min_Key_Send_Span_ns = 1000000
 
-async def _run_macro(name: str, loop: int = 1, paras: dict = dict()):
+def _run_macro(name: str, loop: int = 1, paras: dict = dict(),port: int = 50000):
     msg = "开始运行{}脚本，循环次数：{}".format(name, loop)
     print(msg)
     times = 0
@@ -33,7 +32,7 @@ async def _run_macro(name: str, loop: int = 1, paras: dict = dict()):
                 ret = act.pop()
                 # print(ret[0])
                 if ret[0] != None:
-                    await joystick.do_action(ret[0])
+                    joystick.do_action(ret[0])
                 if ret[1]:
                     break
             times += 1
@@ -48,7 +47,7 @@ async def _run_macro(name: str, loop: int = 1, paras: dict = dict()):
         _result_info = "脚本[{}]运行完成，实际运行{}次\n持续运行时间：{:.0f}小时{:.0f}分{:.0f}秒".format(
             name, times, span/3600, (span % 3600)/60, span % 60)
     except asyncio.CancelledError:
-        await joystick.release()
+        joystick.release()
         msg = "脚本{}运行中止，当前运行次数：{}".format(name, times)
         print(msg)
         span = time.time() - start_ts
@@ -65,7 +64,7 @@ def _get_action(name: str,paras:dict=dict()) -> action.Action:
         return None
     return act
 
-async def _run_line(action_line:str):
+def _run_line(action_line:str):
         inputs = []
         actions = action_line.split("->")
         for action in actions:
@@ -86,25 +85,25 @@ async def _run_line(action_line:str):
                 except:
                     pass
             inputs.append((p1,p2))
-        await _key_press(inputs)
+        _key_press(inputs)
 
-async def _key_press(inputs = []):
+def _key_press(inputs = []):
     release_monotonic_ns = 0
     last_action = ""
     for input_line in inputs:
         last_action = input_line
         if input_line == "~":
             continue
-        await _send(input_line[0],release_monotonic_ns)
+        _send(input_line[0],release_monotonic_ns)
         release_monotonic_ns = _last_key_press_ns + input_line[1]*1000000000
     if last_action != "~":
-        await release(release_monotonic_ns)
+        release(release_monotonic_ns)
 
-async def release(release_monotonic_ns:float = 0):
-    await _send("",release_monotonic_ns)
+def release(release_monotonic_ns:float = 0):
+    _send("",release_monotonic_ns)
 
 
-async def _send(input_line: str = "",earliest_send_key_monotonic_ns=0):
+def _send(input_line: str = "",earliest_send_key_monotonic_ns=0):
     earliest = _last_key_press_ns + _Min_Key_Send_Span_ns
     if earliest < earliest_send_key_monotonic_ns:
         earliest = earliest_send_key_monotonic_ns
@@ -116,10 +115,10 @@ async def _send(input_line: str = "",earliest_send_key_monotonic_ns=0):
             break
         elif now < earliest - _Min_Key_Send_Span_ns:
             ms = int((earliest - now  - _Min_Key_Send_Span_ns)/1000000)
-            await asyncio.sleep_ms(ms)
+            time.sleep_ms(ms)
         else:
             time.sleep(0.0001)
     t1 = time.monotonic_ns()
-    await send_realtime_action(input_line)
+    send_realtime_action(input_line)
     _last_key_press_ns = time.monotonic_ns()
     t2 = time.monotonic_ns()
