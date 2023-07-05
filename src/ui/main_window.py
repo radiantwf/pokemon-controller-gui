@@ -506,7 +506,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
                 input = self._current_controller_input_keyboard
             # if time.monotonic() - self._last_sent_ts > 0.01:
             ret = input.compare(self._last_sent_input)
-            if ((not ret[0]) or time.monotonic() - self._last_sent_ts > 0.05) and time.monotonic() - self._last_sent_ts > 0.005:
+            if ((not ret[0]) or ret[1] > 0 or ret[2] > 0 or time.monotonic() - self._last_sent_ts > 1):
                 self._last_sent_input = input
                 if self._realtime_controller_socket_port > 0:
                     if self._my_const.AF_UNIX_FLAG:
