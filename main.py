@@ -16,8 +16,8 @@ from const import ConstClass
 
 def main():
     my_const = ConstClass()
-    # macro.show_dialog()
-
+    macro.show_dialog()
+    return
     main_video_frame, capture_video_frame = multiprocessing.Pipe(False)
     ui_display_video_frame = multiprocessing.Queue()
     opencv_processed_video_frame = multiprocessing.Queue()
