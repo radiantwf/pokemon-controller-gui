@@ -1,8 +1,8 @@
 import json
-
-from macro.run import _run_macro
 from . import macro
-
+from macro.dialog import ScriptDialog
+from macro.run import _run_macro
+from PySide6.QtWidgets import QApplication
 
 def published():
     m = macro.Macro()
@@ -14,3 +14,8 @@ def published():
 
 def run(macro: str, loop: int = 1, paras: dict = dict(), port: int = 50000):
     _run_macro(macro, loop, paras, port)
+
+def show_dialog(parent = None):
+    app = QApplication([])
+    dialog = ScriptDialog(parent)
+    dialog.exec_()

@@ -10,15 +10,14 @@ from datatype.frame import Frame
 import ui
 from const import ConstClass
 
-
 # import controller
 # import recognize
 
 
 def main():
     my_const = ConstClass()
-    print(macro.published())
-    macro.run("连续点击A", -1)
+    # macro.show_dialog()
+
     main_video_frame, capture_video_frame = multiprocessing.Pipe(False)
     ui_display_video_frame = multiprocessing.Queue()
     opencv_processed_video_frame = multiprocessing.Queue()
