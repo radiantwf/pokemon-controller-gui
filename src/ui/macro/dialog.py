@@ -6,12 +6,14 @@ from PySide6.QtWidgets import QSpacerItem, QSizePolicy
 class LaunchMacroParasDialog(QDialog):
     def __init__(self, parent, macro):
         super().__init__(parent)
+        self._macro = macro.copy()
+        self._edit_widgets = dict()
         self.setWindowTitle('执行脚本')
         self.layout = QGridLayout()
         self.setLayout(self.layout)
         row = self._add_title_label(0)
         row = self._add_row_spacer(row,20)
-        row = self._add_script_paras(row, macro)
+        row = self._add_script_paras(row)
         row = self._add_row_spacer(row)
         row = self._add_buttons(row)
         self.adjustSize()
@@ -25,13 +27,15 @@ class LaunchMacroParasDialog(QDialog):
         row += 1
         return row
 
-    def _add_script_paras(self, row, macro) -> int:
+    def _add_script_paras(self, row) -> int:
         para_label = QLabel(f'循环次数')
-        para_edit = QLineEdit(str(macro['loop']))
+        para_edit = QLineEdit(str(self._macro['loop']))
         self.layout.addWidget(para_label, row, 0, 1, 2)
         self.layout.addWidget(para_edit, row, 2, 1, 2)
+        self._edit_widgets["loop"] = para_edit
+        self._edit_widgets["paras"] = dict()
         row += 1
-        for para in macro['paras']:
+        for para in self._macro['paras']:
             para_name = para['name']
             para_summary = para['summary']
             para_default = para['default']
@@ -39,6 +43,7 @@ class LaunchMacroParasDialog(QDialog):
             para_edit = QLineEdit(para_default)
             self.layout.addWidget(para_label, row, 0, 1, 2)
             self.layout.addWidget(para_edit, row, 2, 1, 2)
+            self._edit_widgets["paras"][para['name']] = para_edit
             row += 1
         return row
         
