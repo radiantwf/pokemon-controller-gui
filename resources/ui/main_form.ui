@@ -936,7 +936,7 @@
      </rect>
     </property>
    </widget>
-   <widget class="QGroupBox" name="groupBox_3">
+   <widget class="QGroupBox" name="gpb_mode">
     <property name="geometry">
      <rect>
       <x>660</x>
@@ -958,9 +958,9 @@
       </rect>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
-     <widget class="QWidget" name="page">
+     <widget class="QWidget" name="page_realtime">
       <property name="geometry">
        <rect>
         <x>0</x>
@@ -976,7 +976,7 @@
        <property name="geometry">
         <rect>
          <x>50</x>
-         <y>10</y>
+         <y>40</y>
          <width>211</width>
          <height>26</height>
         </rect>
@@ -998,7 +998,7 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>10</y>
+         <y>40</y>
          <width>30</width>
          <height>26</height>
         </rect>
@@ -1023,7 +1023,7 @@
        <property name="geometry">
         <rect>
          <x>180</x>
-         <y>40</y>
+         <y>70</y>
          <width>80</width>
          <height>35</height>
         </rect>
@@ -1048,7 +1048,7 @@
        <property name="geometry">
         <rect>
          <x>50</x>
-         <y>80</y>
+         <y>110</y>
          <width>201</width>
          <height>20</height>
         </rect>
@@ -1061,7 +1061,7 @@
        <property name="geometry">
         <rect>
          <x>70</x>
-         <y>100</y>
+         <y>130</y>
          <width>171</width>
          <height>16</height>
         </rect>
@@ -1079,8 +1079,58 @@
         <string>适配Switch Pro以外手柄布局</string>
        </property>
       </widget>
+      <widget class="QLabel" name="label_7">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>10</y>
+         <width>30</width>
+         <height>26</height>
+        </rect>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>30</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>30</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>键盘:</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_8">
+       <property name="geometry">
+        <rect>
+         <x>60</x>
+         <y>10</y>
+         <width>201</width>
+         <height>26</height>
+        </rect>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>201</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>211</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>已启用</string>
+       </property>
+      </widget>
      </widget>
-     <widget class="QWidget" name="page_2">
+     <widget class="QWidget" name="page_macro">
       <property name="geometry">
        <rect>
         <x>0</x>
@@ -1090,9 +1140,9 @@
        </rect>
       </property>
       <attribute name="label">
-       <string>内置脚本</string>
+       <string>无识别脚本</string>
       </attribute>
-      <widget class="QListView" name="listView">
+      <widget class="QListWidget" name="listWidget_macro">
        <property name="geometry">
         <rect>
          <x>0</x>
@@ -1101,8 +1151,20 @@
          <height>171</height>
         </rect>
        </property>
+       <property name="minimumSize">
+        <size>
+         <width>271</width>
+         <height>171</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>271</width>
+         <height>171</height>
+        </size>
+       </property>
       </widget>
-      <widget class="QPushButton" name="pushButton">
+      <widget class="QPushButton" name="btn_macro_opt">
        <property name="geometry">
         <rect>
          <x>192</x>
@@ -1116,7 +1178,7 @@
        </property>
       </widget>
      </widget>
-     <widget class="QWidget" name="page_3">
+     <widget class="QWidget" name="page_recognize">
       <property name="geometry">
        <rect>
         <x>0</x>
@@ -1126,66 +1188,41 @@
        </rect>
       </property>
       <attribute name="label">
-       <string>外部脚本</string>
+       <string>图像识别脚本</string>
       </attribute>
-      <widget class="QLabel" name="label_7">
+      <widget class="QPushButton" name="btn_recognize_opt">
        <property name="geometry">
         <rect>
-         <x>10</x>
-         <y>10</y>
-         <width>251</width>
-         <height>91</height>
-        </rect>
-       </property>
-       <property name="frameShape">
-        <enum>QFrame::StyledPanel</enum>
-       </property>
-       <property name="lineWidth">
-        <number>0</number>
-       </property>
-       <property name="midLineWidth">
-        <number>0</number>
-       </property>
-       <property name="text">
-        <string>未选择文件</string>
-       </property>
-       <property name="textFormat">
-        <enum>Qt::AutoText</enum>
-       </property>
-       <property name="scaledContents">
-        <bool>true</bool>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="pushButton_2">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>110</y>
-         <width>71</width>
-         <height>32</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>选择</string>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="pushButton_3">
-       <property name="geometry">
-        <rect>
-         <x>200</x>
-         <y>110</y>
-         <width>71</width>
+         <x>192</x>
+         <y>190</y>
+         <width>81</width>
          <height>32</height>
         </rect>
        </property>
        <property name="text">
         <string>启动</string>
+       </property>
+      </widget>
+      <widget class="QListWidget" name="listWidget_recognize">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>10</y>
+         <width>271</width>
+         <height>171</height>
+        </rect>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>271</width>
+         <height>171</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>271</width>
+         <height>171</height>
+        </size>
        </property>
       </widget>
      </widget>

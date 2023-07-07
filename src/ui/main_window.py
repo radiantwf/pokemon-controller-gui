@@ -1,5 +1,3 @@
-from io import StringIO
-from math import sqrt
 import math
 import multiprocessing
 import time
@@ -7,10 +5,10 @@ import socket
 import pygame
 from const import ConstClass
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import QMessageBox, QLabel
+from PySide6.QtWidgets import QMessageBox, QLabel, QListWidgetItem
 from camera.device import VideoDevice
 from PySide6.QtCore import Slot, Qt, QEvent, QTimer, QCoreApplication
-from PySide6.QtGui import QImage, QPixmap, QPainter
+from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtMultimedia import QAudioFormat, QAudioSource, QAudioSink, QMediaDevices
 from PySide6.QtUiTools import loadUiType
 from ui.controller.input import ControllerInput, InputEnum, StickEnum
@@ -18,6 +16,8 @@ from ui.controller.switch_pro import SwitchProControll
 from ui.controller.device import SerialDevice
 from ui.joystick.device import JoystickDevice
 from ui.joystick.joystick import Joystick
+from ui.macro.dialog import LaunchMacroParasDialog
+from ui.macro.launcher import MacroLauncher
 from ui.qthread.controller import ControllerThread
 
 from ui.qthread.video import VideoThread
@@ -67,6 +67,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         steps = 1001
         self._stick_label_gradient_colors = self._gradient(
             start_color, end_color, steps)
+        self._macro_list = []
+        self._macro_launcher = MacroLauncher()
 
     def setupUi(self):
         Ui_MainWindow.setupUi(self, self)
@@ -98,6 +100,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._timer = QTimer()
         self._timer.timeout.connect(self.realtime_control_action_send)
         self._timer.start(1)
+
+        self.build_macro_list_listView()
+        self.btn_macro_opt.clicked.connect(self.macro_opt)
 
     def build_serial_device_list_comboBox(self):
         try:
@@ -202,6 +207,33 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.cbxAudioList.setCurrentIndex(0)
         self.cbxAudioList.currentIndexChanged.connect(self.on_audio_changed)
         self.on_audio_changed()
+
+    def build_macro_list_listView(self):
+        self._macro_list = self._macro_launcher.list_macro()
+        self.listWidget_macro.clear()
+        for macro in self._macro_list:
+            item = QListWidgetItem(macro["summary"])
+            self.listWidget_macro.addItem(item)
+            
+    def macro_opt(self):
+        self._macro_launcher.macro_stop()
+        if self.listWidget_macro.currentRow() < 0:
+            return
+        macro = self._macro_list[self.listWidget_macro.currentRow()]
+        dialog = LaunchMacroParasDialog(self,macro)
+        ret = dialog.exec()
+        if ret == QtWidgets.QDialog.Accepted:
+            print('accept')
+        else:
+            print('cancel')
+
+
+        # if macro["status"] == "running":
+        #     self._macro_launcher.stop(macro["id"])
+        # else:
+        #     self._macro_launcher.start(macro["id"])
+        # self.build_macro_list_listView()
+        
 
     def play_audio(self):
         self.stop_audio()
