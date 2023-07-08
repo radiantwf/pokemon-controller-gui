@@ -4,6 +4,7 @@ from macro.run import _run_macro
 
 def published():
     m = macro.Macro()
+    m.reload()
     if m._publish != None:
         return json.dumps(m._publish, separators=(',', ':'), ensure_ascii=False)
     else:

@@ -69,9 +69,9 @@ class Joystick(QObject):
         if buttons[11]:
             input.set_button(InputEnum.DPAD_TOP)
         if buttons[12]:
-            input.set_button(InputEnum.DPAD_LEFT)
-        if buttons[13]:
             input.set_button(InputEnum.DPAD_BOTTOM)
+        if buttons[13]:
+            input.set_button(InputEnum.DPAD_LEFT)
         if buttons[14]:
             input.set_button(InputEnum.DPAD_RIGHT)
         if buttons[15]:

@@ -27,6 +27,11 @@ class Macro(object):
             self._default_paras = dict()
             self._dic_macros = self._get_macros()
 
+    def reload(self):
+        self._publish = []
+        self._default_paras = dict()
+        self._dic_macros = self._get_macros()
+
     def get_node(self, name: str) -> node.Node:
         try:
             macro_name = name

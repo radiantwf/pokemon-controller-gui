@@ -18,14 +18,14 @@ class InputEnum(IntEnum):
     BUTTON_HOME = 0x1000
     BUTTON_CAPTURE = 0x2000
 
-    DPAD_TOP = 0x010000
-    DPAD_RIGHT = 0x020000
-    DPAD_BOTTOM = 0x040000
+    DPAD_BOTTOM = 0x010000
+    DPAD_TOP = 0x020000
+    DPAD_RIGHT = 0x040000
     DPAD_LEFT = 0x080000
-    DPAD_TOPRIGHT = 0x030000
-    DPAD_BOTTOMRIGHT = 0x060000
-    DPAD_BOTTOMLEFT = 0x0C0000
-    DPAD_TOPLEFT = 0x090000
+    DPAD_TOPRIGHT = (DPAD_TOP | DPAD_RIGHT)
+    DPAD_BOTTOMRIGHT = (DPAD_BOTTOM | DPAD_RIGHT)
+    DPAD_BOTTOMLEFT = (DPAD_BOTTOM | DPAD_LEFT)
+    DPAD_TOPLEFT = (DPAD_TOP | DPAD_LEFT)
     BUTTON_L = 0x400000
     BUTTON_ZL = 0x800000
 
@@ -130,7 +130,7 @@ class ControllerInput(object):
         int_button = int(button)
         if int_button < InputEnum.BUTTON_MINUS:
             return (self._buffer[0] & button) != 0
-        elif int_button < InputEnum.DPAD_TOP:
+        elif int_button < InputEnum.DPAD_BOTTOM:
             return (self._buffer[1] & button >> 8) != 0
         else:
             return (self._buffer[2] & button >> 16) != 0
@@ -139,7 +139,7 @@ class ControllerInput(object):
         int_button = int(button)
         if int_button < InputEnum.BUTTON_MINUS:
             self._buffer[0] |= button
-        elif int_button < InputEnum.DPAD_TOP:
+        elif int_button < InputEnum.DPAD_BOTTOM:
             self._buffer[1] |= button >> 8
         else:
             self._buffer[2] |= button >> 16

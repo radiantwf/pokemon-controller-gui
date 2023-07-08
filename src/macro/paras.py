@@ -1,29 +1,30 @@
 class Paras(object):
     def __init__(self, default_para: dict, para: dict):
-        self._paras = None
+        paras = None
         if default_para != None:
-            self._paras = default_para.copy()
+            paras = default_para.copy()
         else:
-            self._paras = dict()
+            paras = dict()
 
         if para != None:
             for key in para.keys():
                 v = para[key]
                 if v != None and v != "":
-                    self._paras[key] = v
-        locals().update(self._paras)
+                    paras[key] = v
+        globals().update(paras)
+        pass
 
     def exec_str(self, key):
         try:
             key = key.replace("|space|", " ", -1)
-            exec(key)
+            exec(key, globals())
         except:
             return
 
     def get_bool(self, key) -> bool:
         try:
             key = key.replace("|space|", " ", -1)
-            v = eval(key)
+            v = eval(key, globals())
         except:
             return False
         if v == None:
@@ -37,7 +38,7 @@ class Paras(object):
     def get_int(self, key) -> int:
         try:
             key = key.replace("|space|", " ", -1)
-            v = eval(key)
+            v = eval(key, globals())
         except:
             return 0
 

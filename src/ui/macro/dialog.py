@@ -82,10 +82,13 @@ class LaunchMacroParasDialog(QDialog):
         return row
 
     def _add_buttons(self, row) -> int:
-        button_box = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        button_box = QDialogButtonBox()
+        button_box.addButton('运行', QDialogButtonBox.ButtonRole.AcceptRole)
+        button_box.addButton('取消', QDialogButtonBox.ButtonRole.RejectRole)
+
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self.reject)
+        
         self.layout.addWidget(button_box, row, 2,1,2)
         row += 1
         return row

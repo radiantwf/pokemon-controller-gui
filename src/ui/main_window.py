@@ -11,6 +11,7 @@ from PySide6.QtCore import Slot, Qt, QEvent, QTimer, QCoreApplication
 from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtMultimedia import QAudioFormat, QAudioSource, QAudioSink, QMediaDevices
 from PySide6.QtUiTools import loadUiType
+from log import send_log
 from ui.qthread.log import LogThread
 from ui.controller.input import ControllerInput, InputEnum, StickEnum
 from ui.controller.switch_pro import SwitchProControll
@@ -80,6 +81,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.build_joystick_device_list_comboBox()
         self.destroyed.connect(self.on_destroy)
         self.chkMute.stateChanged.connect(self.on_mute_changed)
+        self.toolBox.currentChanged.connect(self.on_toolBox_current_changed)
         self.btnCapture.clicked.connect(self.on_capture_clicked)
         self.btnRescan.clicked.connect(self.on_rescan_clicked)
         self.btnSerialRescan.clicked.connect(self.on_serial_rescan_clicked)
@@ -109,6 +111,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.build_macro_list_listView()
         self.btn_macro_opt.clicked.connect(self.macro_opt)
+        self.btn_macro_refresh.clicked.connect(self.macro_refresh)
+        
 
     def build_serial_device_list_comboBox(self):
         try:
@@ -222,13 +226,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.listWidget_macro.addItem(item)
             
     def macro_opt(self):
-        self._macro_launcher.macro_stop()
         if self.listWidget_macro.currentRow() < 0:
+            return
+        if not self.check_macro_thread_running():
+            return
+        if not self.check_switch_pro_controller():
             return
         self.refresh_controller_server()
         macro = self._macro_list[self.listWidget_macro.currentRow()]
         dialog = LaunchMacroParasDialog(self,macro)
-        ret = dialog.exec()
+        ret = dialog.exec_()
         if ret == QtWidgets.QDialog.Accepted:
             script = dialog.get_macro_script()
             paras = dict()
@@ -236,13 +243,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 paras[para["name"]] = para["value"]
             self._macro_launcher.macro_start(script["name"],script["loop"],paras,self._controller_socket_port)
 
-
-        # if macro["status"] == "running":
-        #     self._macro_launcher.stop(macro["id"])
-        # else:
-        #     self._macro_launcher.start(macro["id"])
-        # self.build_macro_list_listView()
-        
+    def macro_refresh(self):
+        self.build_macro_list_listView()
 
     def play_audio(self):
         self.stop_audio()
@@ -334,8 +336,25 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if not ret:
             self.pop_switch_pro_controller_err_dialog()
 
+    def on_toolBox_current_changed(self, index):
+        if index != 1:
+            if not self.check_macro_thread_running():
+                self.toolBox.setCurrentIndex(1)
+
+
+
+    def check_switch_pro_controller(self):
+        if self.cbxSerialList.currentIndex() == 0:
+            msg_box = QMessageBox(self)
+            msg_box.setIcon(QMessageBox.Icon.Critical)
+            msg_box.setText("NS控制设备连接错误")
+            msg_box.setInformativeText("请选择一个NS控制设备")
+            msg_box.setWindowTitle("错误")
+            msg_box.exec_()
+            return False
+        return True
+
     def pop_switch_pro_controller_err_dialog(self):
-        self.setEnabled(False)
         msg_box = QMessageBox(self)
         msg_box.setIcon(QMessageBox.Icon.Critical)
         msg_box.setText("NS控制设备连接错误")
@@ -343,8 +362,25 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         msg_box.setWindowTitle("错误")
         msg_box.exec_()
         self.cbxSerialList.setCurrentIndex(0)
-        self.setEnabled(True)
 
+    def check_macro_thread_running(self):
+        if self._macro_launcher.macro_running():
+            msg_box = QMessageBox(self)
+            msg_box.setIcon(QMessageBox.Icon.Information)
+            msg_box.setText("脚本正在运行")
+            msg_box.setInformativeText("是否停止正在运行脚本")
+            msg_box.setWindowTitle("提示")
+            msg_box.addButton('确定', QMessageBox.ButtonRole.ActionRole)
+            msg_box.addButton('取消', QMessageBox.ButtonRole.RejectRole)
+            ret = msg_box.exec_()
+            if ret == QMessageBox.ButtonRole.ActionRole.value:
+                self._macro_launcher.macro_stop()
+                self.push_action(ControllerInput())
+                send_log("已强行终止运行中脚本")
+                return True
+            return False
+        return True
+    
     def controller_send_action(self, input: ControllerInput):
         self._current_controller.send_action(input)
 
@@ -553,7 +589,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         return QtWidgets.QMainWindow.eventFilter(self, obj, event)
 
     def realtime_control_action_send(self):
-        if self.cbxSerialList.currentIndex() > 0:
+        if self.cbxSerialList.currentIndex() > 0 and self.toolBox.currentIndex() == 0:
             input = ControllerInput()
             if self._current_controller_input_joystick:
                 input = self._current_controller_input_joystick
