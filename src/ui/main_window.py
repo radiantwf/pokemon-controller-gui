@@ -403,6 +403,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._m_output.write(data)
 
     def closeEvent(self, event):
+        self._macro_launcher.macro_stop()
         self._current_controller.close()
         if self._current_joystick:
             self._current_joystick.stop()
