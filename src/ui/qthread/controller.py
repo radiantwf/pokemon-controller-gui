@@ -29,7 +29,7 @@ class ControllerThread(QThread):
         port = random.randint(40000, 60000)
         while True:
             if self._my_const.AF_UNIX_FLAG:
-                local_addr = "/tmp/{}.sock".format(port)
+                local_addr = "/tmp/poke_ui_controller_{}.sock".format(port)
                 if os.path.exists(local_addr):
                     port = random.randint(40000, 60000)
                     continue

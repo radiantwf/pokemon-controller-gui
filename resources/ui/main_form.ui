@@ -926,7 +926,7 @@
      </property>
     </widget>
    </widget>
-   <widget class="QTextBrowser" name="textBrowser">
+   <widget class="QTextBrowser" name="textBrowserLog">
     <property name="geometry">
      <rect>
       <x>660</x>
@@ -958,7 +958,7 @@
       </rect>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="page_realtime">
       <property name="geometry">

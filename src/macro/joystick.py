@@ -24,7 +24,7 @@ class JoyStick(object):
             if self._my_const.AF_UNIX_FLAG:
                 client = socket.socket(
                     socket.AF_UNIX, socket.SOCK_DGRAM)
-                local_addr = "/tmp/{}.sock".format(
+                local_addr = "/tmp/poke_ui_controller_{}.sock".format(
                     self._port)
                 client.sendto(action.encode(
                     "utf-8"), local_addr)

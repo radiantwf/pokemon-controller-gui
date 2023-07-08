@@ -11,6 +11,7 @@ from PySide6.QtCore import Slot, Qt, QEvent, QTimer, QCoreApplication
 from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtMultimedia import QAudioFormat, QAudioSource, QAudioSink, QMediaDevices
 from PySide6.QtUiTools import loadUiType
+from ui.qthread.log import LogThread
 from ui.controller.input import ControllerInput, InputEnum, StickEnum
 from ui.controller.switch_pro import SwitchProControll
 from ui.controller.device import SerialDevice
@@ -53,11 +54,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._current_controller = SwitchProControll()
         self.th_controller = None
         self.th_video = None
+        self.th_log = None
 
         # self._joystick_timer = None
         self._key_press_map = dict()
         self._last_sent_ts = time.monotonic()
-        self._realtime_controller_socket_port = 0
+        self._controller_socket_port = 0
         self._current_controller_input_joystick: ControllerInput = None
         self._current_controller_input_keyboard: ControllerInput = None
         self._last_sent_input = ControllerInput()
@@ -90,6 +92,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.th_controller = ControllerThread(self)
         self.th_controller.push_action.connect(self.push_action)
         self.th_controller.start()
+
+        self.th_log = LogThread(self)
+        self.th_log.log.connect(self.setLog)
+        self.th_log.start()
 
         self.chkJoystickButtonSwitch.stateChanged.connect(
             self.on_joystick_button_switch_changed)
@@ -219,13 +225,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._macro_launcher.macro_stop()
         if self.listWidget_macro.currentRow() < 0:
             return
+        self.refresh_controller_server()
         macro = self._macro_list[self.listWidget_macro.currentRow()]
         dialog = LaunchMacroParasDialog(self,macro)
         ret = dialog.exec()
         if ret == QtWidgets.QDialog.Accepted:
-            print('accept')
-        else:
-            print('cancel')
+            script = dialog.get_macro_script()
+            paras = dict()
+            for para in script["paras"]:
+                paras[para["name"]] = para["value"]
+            self._macro_launcher.macro_start(script["name"],script["loop"],paras,self._controller_socket_port)
 
 
         # if macro["status"] == "running":
@@ -372,10 +381,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.th_video.stop()
         if self.th_controller:
             self.th_controller.stop()
+        if self.th_log:
+            self.th_log.stop()
+            
         if self.th_video:
             self.th_video.wait()
         if self.th_controller:
             self.th_controller.wait()
+        if self.th_log:
+            self.th_log.wait()
         pygame.quit()
         event.accept()
         QCoreApplication.instance().aboutToQuit.emit()
@@ -394,10 +408,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.lblCameraFrame.clear()
 
     def refresh_controller_server(self):
-        self._realtime_controller_socket_port = 0
+        self._controller_socket_port = 0
         port = self.th_controller.refresh_service()
-        if self.toolBox.currentIndex() == 0:
-            self._realtime_controller_socket_port = port
+        self._controller_socket_port = port
 
     @Slot(str)
     def push_action(self, input: ControllerInput):
@@ -550,12 +563,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             ret = input.compare(self._last_sent_input)
             if ((not ret[0]) or ret[1] > 0 or ret[2] > 0 or time.monotonic() - self._last_sent_ts > 1):
                 self._last_sent_input = input
-                if self._realtime_controller_socket_port > 0:
+                if self._controller_socket_port > 0:
                     if self._my_const.AF_UNIX_FLAG:
                         client = socket.socket(
                             socket.AF_UNIX, socket.SOCK_DGRAM)
-                        local_addr = "/tmp/{}.sock".format(
-                            self._realtime_controller_socket_port)
+                        local_addr = "/tmp/poke_ui_controller_{}.sock".format(
+                            self._controller_socket_port)
                         client.sendto(input.get_action_line().encode(
                             "utf-8"), local_addr)
                         client.close()
@@ -563,7 +576,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                         client = socket.socket(
                             socket.AF_INET, socket.SOCK_DGRAM)
                         client.sendto(input.get_action_line().encode(
-                            "utf-8"), ("127.0.0.1", self._realtime_controller_socket_port))
+                            "utf-8"), ("127.0.0.1", self._controller_socket_port))
                         client.close()
                 self._last_sent_ts = time.monotonic()
 
@@ -675,3 +688,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             gradient_colors.append((r, g, b))
 
         return gradient_colors
+
+    @Slot(str)
+    def setLog(self, log):
+        self.textBrowserLog.append(log)

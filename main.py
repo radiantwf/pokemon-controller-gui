@@ -3,6 +3,9 @@ import time
 import multiprocessing
 import numpy
 import sys
+import glob
+import os
+
 sys.path.append('./src')
 import macro
 import camera
@@ -15,6 +18,10 @@ from const import ConstClass
 
 
 def main():
+    files_to_delete = glob.glob('/tmp/poke_ui_*.sock')
+    for file in files_to_delete:
+        os.remove(file)
+        
     my_const = ConstClass()
     main_video_frame, capture_video_frame = multiprocessing.Pipe(False)
     ui_display_video_frame = multiprocessing.Queue()

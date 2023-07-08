@@ -24,8 +24,8 @@ class MacroLauncher(object):
     def list_macro(self):
         return self._macro_list
     
-    def macro_run(self, macro_name: str, loop: int = 1, paras: dict = dict(), port: int = 50000):
-        self.stop()
+    def macro_start(self, macro_name: str, loop: int = 1, paras: dict = dict(), port: int = 50000):
+        self.macro_stop()
 
         self._macro_process = multiprocessing.Process(
             target=macro.run, args=(macro_name, loop, paras, port))

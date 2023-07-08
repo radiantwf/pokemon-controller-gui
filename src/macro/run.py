@@ -1,4 +1,5 @@
 import time
+from log import send_log
 
 from macro.joystick import JoyStick
 from . import action
@@ -8,8 +9,7 @@ _Min_Key_Send_Span = 0.001
 
 def _run_macro(name: str, loop: int = 1, paras: dict = dict(), port: int = 50000):
     joystick = JoyStick(port)
-    msg = "开始运行{}脚本，循环次数：{}".format(name, loop)
-    print(msg)
+    # msg = "开始运行{}脚本，循环次数：{}".format(name, loop)
     times = 0
     if loop <= 0:
         loop = -1
@@ -22,10 +22,12 @@ def _run_macro(name: str, loop: int = 1, paras: dict = dict(), port: int = 50000
         act = _get_action(name, paras)
         if act == None:
             _result_info = "不存在名称为{}的脚本".format(name)
+            send_log(_result_info)
             return
         _result_info = ""
         _current_info = "正在运行[{}]脚本，已运行{}次，计划运行{}次\n".format(
             name, times, loop)
+        send_log(_current_info)
         while True:
             while True:
                 ret = act.pop()
@@ -40,17 +42,17 @@ def _run_macro(name: str, loop: int = 1, paras: dict = dict(), port: int = 50000
             if loop > 0 and times >= loop:
                 break
             act.cycle_reset()
-        msg = "脚本{}运行完成，当前运行次数：{}".format(name, times)
-        print(msg)
+        # msg = "脚本{}运行完成，当前运行次数：{}".format(name, times)
         span = time.time() - start_ts
-        _result_info = "脚本[{}]运行完成，实际运行{}次\n持续运行时间：{:.0f}小时{:.0f}分{:.0f}秒".format(
+        _result_info = "[{}]脚本运行完成，实际运行{}次\n持续运行时间：{:.0f}小时{:.0f}分{:.0f}秒".format(
             name, times, span/3600, (span % 3600)/60, span % 60)
+        send_log(_result_info)
     except InterruptedError:
-        msg = "脚本{}运行中止，当前运行次数：{}".format(name, times)
-        print(msg)
+        # msg = "脚本{}运行中止，当前运行次数：{}".format(name, times)
         span = time.time() - start_ts
-        _result_info = "脚本[{}]停止，实际运行{}次，计划运行{}次\n持续运行时间：{:.0f}小时{:.0f}分{:.0f}秒".format(
+        _result_info = "[{}]脚本停止，实际运行{}次，计划运行{}次\n持续运行时间：{:.0f}小时{:.0f}分{:.0f}秒".format(
             name, times, loop, span/3600, (span % 3600)/60, span % 60)
+        send_log(_result_info)
     finally:
         _start_time = None
         _current_info = ""
