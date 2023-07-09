@@ -229,7 +229,7 @@ A:0.05
 
 
 <battle_check_shiny>
-7.5
+7.8
 LStick@0,127:0.1
 0.1
 LStick@0,127:0.1
