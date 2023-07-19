@@ -47,13 +47,13 @@ def _run_macro(name: str, summary: str, loop: int = 1, paras: dict = dict(), por
                 break
             act.cycle_reset()
         # msg = "脚本{}运行完成，当前运行次数：{}".format(name, times)
-        span = time.monotonic() - start_ts
+        span = int(time.monotonic() - start_ts)
         _result_info = "[{}] 脚本运行完成，实际运行{}次\n持续运行时间：{:.0f}小时{:.0f}分{:.0f}秒".format(
             summary, times, span/3600, (span % 3600)/60, span % 60)
         send_log(_result_info)
     except InterruptedError:
         # msg = "脚本{}运行中止，当前运行次数：{}".format(name, times)
-        span = time.monotonic() - start_ts
+        span = int(time.monotonic() - start_ts)
         _result_info = "[{}] 脚本停止，实际运行{}次，计划运行{}次\n持续运行时间：{:.0f}小时{:.0f}分{:.0f}秒".format(
             summary, times, loop, span/3600, (span % 3600)/60, span % 60)
         send_log(_result_info)
