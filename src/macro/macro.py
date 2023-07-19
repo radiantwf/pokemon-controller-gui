@@ -5,7 +5,7 @@ import time
 import random
 from typing import Literal
 
-random.seed(time.time())
+random.seed(time.monotonic_ns())
 _S_IFDIR: Literal[16384] = 16384
 _MACRO_BASE_PATH = "./resources/macros"
 _MACRO_EXT = ".m"

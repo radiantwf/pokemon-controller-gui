@@ -16,7 +16,7 @@ def _run_macro(name: str, summary: str, loop: int = 1, paras: dict = dict(), por
     global _current_info
     global _result_info
     global _start_time
-    start_ts = time.time()
+    start_ts = time.monotonic()
     _start_time = start_ts
     try:
         act = _get_action(name, paras)
@@ -28,7 +28,7 @@ def _run_macro(name: str, summary: str, loop: int = 1, paras: dict = dict(), por
         _current_info = "正在运行 [{}] 脚本，已运行{}次，计划运行{}次\n".format(
             summary, times, loop)
         send_log(_current_info)
-        last_send_log_ts = time.time()
+        last_send_log_ts = time.monotonic()
         while True:
             while True:
                 ret = act.pop()
@@ -38,22 +38,22 @@ def _run_macro(name: str, summary: str, loop: int = 1, paras: dict = dict(), por
                 if ret[1]:
                     break
             times += 1
-            if time.time() - last_send_log_ts >= 5:
+            if time.monotonic() - last_send_log_ts >= 5:
                 _current_info = "正在运行 [{}] 脚本，已运行{}次，计划运行{}次\n".format(
                     summary, times, loop)
                 send_log(_current_info)
-                last_send_log_ts = time.time()
+                last_send_log_ts = time.monotonic()
             if loop > 0 and times >= loop:
                 break
             act.cycle_reset()
         # msg = "脚本{}运行完成，当前运行次数：{}".format(name, times)
-        span = time.time() - start_ts
+        span = time.monotonic() - start_ts
         _result_info = "[{}] 脚本运行完成，实际运行{}次\n持续运行时间：{:.0f}小时{:.0f}分{:.0f}秒".format(
             summary, times, span/3600, (span % 3600)/60, span % 60)
         send_log(_result_info)
     except InterruptedError:
         # msg = "脚本{}运行中止，当前运行次数：{}".format(name, times)
-        span = time.time() - start_ts
+        span = time.monotonic() - start_ts
         _result_info = "[{}] 脚本停止，实际运行{}次，计划运行{}次\n持续运行时间：{:.0f}小时{:.0f}分{:.0f}秒".format(
             summary, times, loop, span/3600, (span % 3600)/60, span % 60)
         send_log(_result_info)
@@ -109,7 +109,7 @@ def release(joystick: JoyStick):
 
 
 def _send(joystick: JoyStick, input_line: str = "", delay: float = 0):
-    # print("{}\t{}".format(time.time() - _start_time, input_line))
+    # print("{}\t{}".format(time.monotonic() - _start_time, input_line))
     first = True
     while True:
         if first:
