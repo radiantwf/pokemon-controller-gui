@@ -14,6 +14,7 @@ class ControllerThread(QThread):
 
     def __init__(self, parent=None):
         QThread.__init__(self, parent)
+        self.setPriority(QThread.HighestPriority)
         self._udp_socket = None
         self._port = 0
         self._stop_signal = False

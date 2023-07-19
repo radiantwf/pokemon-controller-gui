@@ -14,6 +14,6 @@ def send_log(log:str):
     else:
         client = socket.socket(
             socket.AF_INET, socket.SOCK_DGRAM)
-        client.sendto(input.get_action_line().encode(
+        client.sendto(log.encode(
             "utf-8"), ("127.0.0.1", _my_const.LogSocketPort))
         client.close()

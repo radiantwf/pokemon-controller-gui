@@ -85,7 +85,6 @@ def _run_line(joystick: JoyStick, action_line: str):
                 p2 = float(splits[1])
             except:
                 pass
-        # print("{}\t{}:{}".format(time.time() - _start_time, p1, p2))
         inputs.append((p1, p2))
     _key_press(joystick, inputs)
 
@@ -93,8 +92,8 @@ def _run_line(joystick: JoyStick, action_line: str):
 def _key_press(joystick: JoyStick, inputs=[]):
     last_action = ""
     for input_line in inputs:
-        last_action = input_line
-        if input_line == "~":
+        last_action = input_line[0]
+        if input_line[0] == "~":
             continue
         _send(joystick, input_line[0], input_line[1])
     if last_action != "~":
@@ -106,8 +105,19 @@ def release(joystick: JoyStick):
 
 
 def _send(joystick: JoyStick, input_line: str = "", delay: float = 0):
-    joystick.send_action(input_line)
-    sent_time = time.monotonic()
-    time.sleep(_Min_Key_Send_Span)
-    while time.monotonic() - sent_time < delay:
+    # print("{}\t{}".format(time.time() - _start_time, input_line))
+    first = True
+    while True:
+        if first:
+            first = False
+            joystick.send_action(input_line)
+            send_time = time.monotonic()
+            resend_time = send_time
+            time.sleep(_Min_Key_Send_Span)
+        if time.monotonic() - send_time >= delay:
+            return
+        if time.monotonic() - resend_time > 0.005:
+            joystick.send_action(input_line)
+            resend_time = time.monotonic()
         time.sleep(0.001)
+        
