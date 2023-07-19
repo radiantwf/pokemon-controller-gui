@@ -38,7 +38,7 @@ def _run_macro(name: str, summary: str, loop: int = 1, paras: dict = dict(), por
                 if ret[1]:
                     break
             times += 1
-            if time.monotonic() - last_send_log_ts >= 5:
+            if time.monotonic() - last_send_log_ts >= 5 * 3600:
                 _current_info = "正在运行 [{}] 脚本，已运行{}次，计划运行{}次\n".format(
                     summary, times, loop)
                 send_log(_current_info)
