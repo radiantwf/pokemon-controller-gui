@@ -7,7 +7,7 @@ from . import action
 _Min_Key_Send_Span = 0.001
 
 
-def _run_macro(name: str, loop: int = 1, paras: dict = dict(), port: int = 50000):
+def _run_macro(name: str, summary: str, loop: int = 1, paras: dict = dict(), port: int = 50000):
     joystick = JoyStick(port)
     # msg = "开始运行{}脚本，循环次数：{}".format(name, loop)
     times = 0
@@ -25,9 +25,10 @@ def _run_macro(name: str, loop: int = 1, paras: dict = dict(), port: int = 50000
             send_log(_result_info)
             return
         _result_info = ""
-        _current_info = "正在运行[{}]脚本，已运行{}次，计划运行{}次\n".format(
-            name, times, loop)
+        _current_info = "正在运行 [{}] 脚本，已运行{}次，计划运行{}次\n".format(
+            summary, times, loop)
         send_log(_current_info)
+        last_send_log_ts = time.time()
         while True:
             while True:
                 ret = act.pop()
@@ -37,21 +38,24 @@ def _run_macro(name: str, loop: int = 1, paras: dict = dict(), port: int = 50000
                 if ret[1]:
                     break
             times += 1
-            _current_info = "正在运行[{}]脚本，已运行{}次，计划运行{}次\n".format(
-                name, times, loop)
+            if time.time() - last_send_log_ts >= 5:
+                _current_info = "正在运行 [{}] 脚本，已运行{}次，计划运行{}次\n".format(
+                    summary, times, loop)
+                send_log(_current_info)
+                last_send_log_ts = time.time()
             if loop > 0 and times >= loop:
                 break
             act.cycle_reset()
         # msg = "脚本{}运行完成，当前运行次数：{}".format(name, times)
         span = time.time() - start_ts
-        _result_info = "[{}]脚本运行完成，实际运行{}次\n持续运行时间：{:.0f}小时{:.0f}分{:.0f}秒".format(
-            name, times, span/3600, (span % 3600)/60, span % 60)
+        _result_info = "[{}] 脚本运行完成，实际运行{}次\n持续运行时间：{:.0f}小时{:.0f}分{:.0f}秒".format(
+            summary, times, span/3600, (span % 3600)/60, span % 60)
         send_log(_result_info)
     except InterruptedError:
         # msg = "脚本{}运行中止，当前运行次数：{}".format(name, times)
         span = time.time() - start_ts
-        _result_info = "[{}]脚本停止，实际运行{}次，计划运行{}次\n持续运行时间：{:.0f}小时{:.0f}分{:.0f}秒".format(
-            name, times, loop, span/3600, (span % 3600)/60, span % 60)
+        _result_info = "[{}] 脚本停止，实际运行{}次，计划运行{}次\n持续运行时间：{:.0f}小时{:.0f}分{:.0f}秒".format(
+            summary, times, loop, span/3600, (span % 3600)/60, span % 60)
         send_log(_result_info)
     finally:
         _start_time = None

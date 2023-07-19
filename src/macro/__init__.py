@@ -11,5 +11,5 @@ def published():
         return "{}"
 
 
-def run(macro: str, loop: int = 1, paras: dict = dict(), port: int = 50000):
-    _run_macro(macro, loop, paras, port)
+def run(macro: str, summary: str, loop: int = 1, paras: dict = dict(), port: int = 50000):
+    _run_macro(macro, summary, loop, paras, port)

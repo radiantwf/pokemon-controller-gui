@@ -1,3 +1,4 @@
+import datetime
 import math
 import multiprocessing
 import time
@@ -241,7 +242,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             paras = dict()
             for para in script["paras"]:
                 paras[para["name"]] = para["value"]
-            self._macro_launcher.macro_start(script["name"],script["loop"],paras,self._controller_socket_port)
+            self._macro_launcher.macro_start(script["name"],script["summary"],script["loop"],paras,self._controller_socket_port)
 
     def macro_refresh(self):
         self.build_macro_list_listView()
@@ -728,4 +729,5 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     @Slot(str)
     def setLog(self, log):
-        self.textBrowserLog.append(log)
+        now_str = datetime.datetime.now().strftime('%H:%M:%S')
+        self.textBrowserLog.append("{}\t{}".format(now_str,log))
