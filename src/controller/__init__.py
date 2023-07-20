@@ -4,11 +4,11 @@ import time
 from controller.action_display import send_action_display
 
 from controller.device import SerialDevice
-from controller.switch_pro import SwitchProControll
+from controller.switch_pro import SwitchProController
 
 
 def run(device: SerialDevice, controller_input_action_queue: multiprocessing.Queue):
-    controller = SwitchProControll()
+    controller = SwitchProController()
     if not controller.open(device):
         exit(-1)
 

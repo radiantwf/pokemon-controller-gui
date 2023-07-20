@@ -5,7 +5,7 @@ import serial
 from datatype.input import ControllerInput
 
 
-class SwitchProControll(object):
+class SwitchProController(object):
     def __init__(self):
         self._device = None
 
