@@ -1,6 +1,6 @@
 import socket
 from const import ConstClass
-from controller.input import ControllerInput
+from datatype.input import ControllerInput
 
 def send_action_display(action:ControllerInput):
     _my_const = ConstClass()

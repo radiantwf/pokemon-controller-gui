@@ -2,7 +2,7 @@ import time
 from controller.device import SerialDevice
 import serial
 
-from controller.input import ControllerInput
+from datatype.input import ControllerInput
 
 
 class SwitchProControll(object):

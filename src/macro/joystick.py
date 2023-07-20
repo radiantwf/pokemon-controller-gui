@@ -1,7 +1,7 @@
 
 import multiprocessing
 from const import ConstClass
-from controller.input import ControllerInput
+from datatype.input import ControllerInput
 
 
 class JoyStick(object):

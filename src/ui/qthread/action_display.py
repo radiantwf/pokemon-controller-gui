@@ -5,7 +5,7 @@ import time
 from PySide6.QtCore import QThread, Signal
 
 from const import ConstClass
-from controller.input import ControllerInput
+from datatype.input import ControllerInput
 
 
 class ActionDisplayThread(QThread):

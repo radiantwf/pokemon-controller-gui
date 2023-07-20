@@ -16,7 +16,7 @@ from log import send_log
 from ui.controller.launcher import ControllerLauncher
 from ui.qthread.action_display import ActionDisplayThread
 from ui.qthread.log import LogThread
-from controller.input import ControllerInput, InputEnum, StickEnum
+from datatype.input import ControllerInput, InputEnum, StickEnum
 from ui.joystick.device import JoystickDevice
 from ui.joystick.joystick import Joystick
 from ui.macro.dialog import LaunchMacroParasDialog
