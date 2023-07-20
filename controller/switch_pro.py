@@ -1,8 +1,8 @@
 import time
-from ui.controller.device import SerialDevice
+from controller.device import SerialDevice
 import serial
 
-from ui.controller.input import ControllerInput
+from controller.input import ControllerInput
 
 
 class SwitchProControll(object):

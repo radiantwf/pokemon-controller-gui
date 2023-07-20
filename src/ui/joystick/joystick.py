@@ -1,6 +1,6 @@
 import time
 import pygame
-from ui.controller.input import ControllerInput, InputEnum, StickEnum
+from controller.input import ControllerInput, InputEnum, StickEnum
 from PySide6.QtCore import QObject, Signal
 
 from ui.joystick.device import JoystickDevice

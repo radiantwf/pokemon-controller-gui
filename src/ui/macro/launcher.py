@@ -25,11 +25,11 @@ class MacroLauncher(object):
         self._macro_list = json.loads(script)
         return self._macro_list
     
-    def macro_start(self, macro_name: str, macro_summary: str, loop: int = 1, paras: dict = dict(), port: int = 50000):
+    def macro_start(self, macro_name: str, macro_summary: str, controller_input_action_queue: multiprocessing.Queue, loop: int = 1, paras: dict = dict()):
         self.macro_stop()
 
         self._macro_process = multiprocessing.Process(
-            target=macro.run, args=(macro_name, macro_summary, loop, paras, port))
+            target=macro.run, args=(macro_name, macro_summary, controller_input_action_queue, loop, paras))
         self._macro_process.start()
 
     

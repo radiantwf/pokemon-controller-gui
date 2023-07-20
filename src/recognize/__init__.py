@@ -1,11 +1,11 @@
 import asyncio
 from recognize import frame, opencv
 
-def run(frame_queues,control_queues,video_with,video_height,fps = 5):
+def run(frame_tuple,control_queues,video_with,video_height,fps = 5):
 	f = frame.Frame(video_with,video_height,fps)
 	loop = asyncio.get_event_loop()
-	task1 = loop.create_task(f.loop_read(frame_queues[0]))
-	task2 = loop.create_task(_task_manager(loop,f,frame_queues[2],control_queues[0],control_queues[1]))
+	task1 = loop.create_task(f.loop_read(frame_tuple[0]))
+	task2 = loop.create_task(_task_manager(loop,f,frame_tuple[2],control_queues[0],control_queues[1]))
 	loop.run_forever()
 
 async def _task_manager(loop,f,opencv_processed_video_frame,opencv_processed_control_queue,controller_action_queue):

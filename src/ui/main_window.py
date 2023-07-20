@@ -13,31 +13,33 @@ from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtMultimedia import QAudioFormat, QAudioSource, QAudioSink, QMediaDevices
 from PySide6.QtUiTools import loadUiType
 from log import send_log
+from ui.controller.launcher import ControllerLauncher
+from ui.qthread.action_display import ActionDisplayThread
 from ui.qthread.log import LogThread
-from ui.controller.input import ControllerInput, InputEnum, StickEnum
-from ui.controller.switch_pro import SwitchProControll
-from ui.controller.device import SerialDevice
+from controller.input import ControllerInput, InputEnum, StickEnum
 from ui.joystick.device import JoystickDevice
 from ui.joystick.joystick import Joystick
 from ui.macro.dialog import LaunchMacroParasDialog
 from ui.macro.launcher import MacroLauncher
-from ui.qthread.controller import ControllerThread
 
 from ui.qthread.video import VideoThread
 Ui_MainWindow, QMainWindowBase = loadUiType("./resources/ui/main_form.ui")
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
-    def __init__(self, camera_control_queue: multiprocessing.Queue, frame_queues):
+    def __init__(self, camera_control_queue: multiprocessing.Queue, frame_tuple, controller_input_action_queue: multiprocessing.Queue):
         QtWidgets.QMainWindow.__init__(self)
         Ui_MainWindow.__init__(self)
 
         # 摄像头控制命令队列
         self._camera_control_queue = camera_control_queue
 
+        # 控制器输入命令队列
+        self._controller_input_action_queue = controller_input_action_queue
+
         # 图像采集桢管道集合
-        self._frame_queue = frame_queues[1]
-        # self._processed_frame_queue = frame_queues[2]
+        self._frame_queue = frame_tuple[1]
+        # self._processed_frame_queue = frame_tuple[2]
 
         pygame.init()
         # pygame.display.init()
@@ -53,15 +55,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._serial_devices = []
         self._current_joystick = None
         self._current_camera = None
-        self._current_controller = SwitchProControll()
-        self.th_controller = None
         self.th_video = None
         self.th_log = None
+        self.th_action_display = None
 
         # self._joystick_timer = None
         self._key_press_map = dict()
         self._last_sent_ts = time.monotonic()
-        self._controller_socket_port = 0
         self._current_controller_input_joystick: ControllerInput = None
         self._current_controller_input_keyboard: ControllerInput = None
         self._last_sent_input = ControllerInput()
@@ -73,6 +73,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             start_color, end_color, steps)
         self._macro_list = []
         self._macro_launcher = MacroLauncher()
+        self._controller_launcher = ControllerLauncher()
 
     def setupUi(self):
         Ui_MainWindow.setupUi(self, self)
@@ -92,19 +93,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.th_video.on_recv_frame.connect(self.setImage)
         self.th_video.start()
 
-        self.th_controller = ControllerThread(self)
-        self.th_controller.push_action.connect(self.push_action)
-        self.th_controller.start()
-
         self.th_log = LogThread(self)
         self.th_log.log.connect(self.setLog)
         self.th_log.start()
+
+        self.th_action_display = ActionDisplayThread(self)
+        self.th_action_display.action.connect(self.displayAction)
+        self.th_action_display.start()
 
         self.chkJoystickButtonSwitch.stateChanged.connect(
             self.on_joystick_button_switch_changed)
 
         self.toolBox.setCurrentIndex(0)
-        self.refresh_controller_server()
 
         self._timer = QTimer()
         self._timer.timeout.connect(self.realtime_control_action_send)
@@ -123,7 +123,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             None
         self.cbxSerialList.clear()
 
-        self._serial_devices = SerialDevice.list_device()
+        self._serial_devices = self._controller_launcher.list_controller()
         devices = []
         devices.append("选择NS控制设备")
         for device in self._serial_devices:
@@ -233,7 +233,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             return
         if not self.check_switch_pro_controller():
             return
-        self.refresh_controller_server()
         macro = self._macro_list[self.listWidget_macro.currentRow()]
         dialog = LaunchMacroParasDialog(self,macro)
         ret = dialog.exec_()
@@ -242,7 +241,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             paras = dict()
             for para in script["paras"]:
                 paras[para["name"]] = para["value"]
-            self._macro_launcher.macro_start(script["name"],script["summary"],script["loop"],paras,self._controller_socket_port)
+            self._macro_launcher.macro_start(script["name"],script["summary"],script["loop"],paras,self._controller_input_action_queue)
 
     def macro_refresh(self):
         self.build_macro_list_listView()
@@ -329,12 +328,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.chkJoystickButtonSwitch.isChecked())
 
     def on_serial_changed(self):
-        self._current_controller.close()
+        self._controller_launcher.controller_stop()
         if self.cbxSerialList.currentIndex() == 0:
             return
-        ret = self._current_controller.open(
-            self._serial_devices[self.cbxSerialList.currentIndex() - 1])
-        if not ret:
+        self._controller_launcher.controller_start(self._serial_devices[self.cbxSerialList.currentIndex() - 1],self._controller_input_action_queue)
+        time.sleep(0.5)
+        if not self._controller_launcher.controller_running():
             self.pop_switch_pro_controller_err_dialog()
 
     def on_toolBox_current_changed(self, index):
@@ -382,9 +381,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             return False
         return True
     
-    def controller_send_action(self, input: ControllerInput):
-        self._current_controller.send_action(input)
-
     def on_capture_clicked(self):
         self._camera_control_queue.put_nowait("camera")
 
@@ -405,7 +401,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def closeEvent(self, event):
         self._macro_launcher.macro_stop()
-        self._current_controller.close()
+        self._controller_launcher.controller_stop()
         if self._current_joystick:
             self._current_joystick.stop()
             self._current_joystick = None
@@ -417,17 +413,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.stop_audio()
         if self.th_video:
             self.th_video.stop()
-        if self.th_controller:
-            self.th_controller.stop()
         if self.th_log:
             self.th_log.stop()
+        if self.th_action_display:
+            self.th_action_display.stop()
             
         if self.th_video:
             self.th_video.wait()
-        if self.th_controller:
-            self.th_controller.wait()
         if self.th_log:
             self.th_log.wait()
+        if self.th_action_display:
+            self.th_action_display.wait()
         pygame.quit()
         event.accept()
         QCoreApplication.instance().aboutToQuit.emit()
@@ -444,16 +440,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.lblCameraFrame.setPixmap(pixmap)
         else:
             self.lblCameraFrame.clear()
-
-    def refresh_controller_server(self):
-        self._controller_socket_port = 0
-        port = self.th_controller.refresh_service()
-        self._controller_socket_port = port
-
-    @Slot(str)
-    def push_action(self, input: ControllerInput):
-        self.controller_send_action(input)
-        self._set_joystick_labels(input)
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.Type.KeyPress:
@@ -601,21 +587,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             ret = input.compare(self._last_sent_input)
             if ((not ret[0]) or ret[1] > 0 or ret[2] > 0 or time.monotonic() - self._last_sent_ts > 1):
                 self._last_sent_input = input
-                if self._controller_socket_port > 0:
-                    if self._my_const.AF_UNIX_FLAG:
-                        client = socket.socket(
-                            socket.AF_UNIX, socket.SOCK_DGRAM)
-                        local_addr = "/tmp/poke_ui_controller_{}.sock".format(
-                            self._controller_socket_port)
-                        client.sendto(input.get_action_line().encode(
-                            "utf-8"), local_addr)
-                        client.close()
-                    else:
-                        client = socket.socket(
-                            socket.AF_INET, socket.SOCK_DGRAM)
-                        client.sendto(input.get_action_line().encode(
-                            "utf-8"), ("127.0.0.1", self._controller_socket_port))
-                        client.close()
+                if self._controller_launcher and self._controller_launcher.controller_running():
+                    self._controller_input_action_queue.put(input)
                 self._last_sent_ts = time.monotonic()
 
     def _joystick_controller_event(self, input):
@@ -731,3 +704,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def setLog(self, log):
         now_str = datetime.datetime.now().strftime('%H:%M:%S')
         self.textBrowserLog.append("{}\t{}".format(now_str,log))
+
+    @Slot(ControllerInput)
+    def displayAction(self, action):
+        self._set_joystick_labels(action)
+
+        

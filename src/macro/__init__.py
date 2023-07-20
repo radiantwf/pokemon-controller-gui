@@ -1,4 +1,5 @@
 import json
+import multiprocessing
 from . import macro
 from macro.run import _run_macro
 
@@ -11,5 +12,5 @@ def published():
         return "{}"
 
 
-def run(macro: str, summary: str, loop: int = 1, paras: dict = dict(), port: int = 50000):
-    _run_macro(macro, summary, loop, paras, port)
+def run(macro: str, summary: str, controller_input_action_queue: multiprocessing.Queue, loop: int = 1, paras: dict = dict()):
+    _run_macro(macro, summary, controller_input_action_queue, loop, paras)

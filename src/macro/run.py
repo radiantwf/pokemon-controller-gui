@@ -1,3 +1,4 @@
+import multiprocessing
 import time
 from log import send_log
 
@@ -7,8 +8,8 @@ from . import action
 _Min_Key_Send_Span = 0.001
 
 
-def _run_macro(name: str, summary: str, loop: int = 1, paras: dict = dict(), port: int = 50000):
-    joystick = JoyStick(port)
+def _run_macro(name: str, summary: str, controller_input_action_queue: multiprocessing.Queue, loop: int = 1, paras: dict = dict()):
+    joystick = JoyStick(controller_input_action_queue)
     # msg = "开始运行{}脚本，循环次数：{}".format(name, loop)
     times = 0
     if loop <= 0:

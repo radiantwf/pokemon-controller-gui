@@ -5,10 +5,11 @@ import time
 from PySide6.QtCore import QThread, Signal
 
 from const import ConstClass
+from controller.input import ControllerInput
 
 
-class LogThread(QThread):
-    log = Signal(str)
+class ActionDisplayThread(QThread):
+    action = Signal(ControllerInput)
 
     def __init__(self, parent=None):
         QThread.__init__(self, parent)
@@ -27,8 +28,8 @@ class LogThread(QThread):
                     s.close()
 
                 if self._my_const.AF_UNIX_FLAG:
-                    local_addr = "/tmp/poke_ui_log_{}.sock".format(
-                        self._my_const.LogSocketPort)
+                    local_addr = "/tmp/poke_ui_action_{}.sock".format(
+                        self._my_const.ActionDisplaySocketPort)
                     if os.path.exists(local_addr):
                         os.remove(local_addr)
                     self._udp_socket = socket.socket(
@@ -37,7 +38,7 @@ class LogThread(QThread):
                 else:
                     self._udp_socket = socket.socket(
                         socket.AF_INET, socket.SOCK_DGRAM)
-                    local_addr = ("127.0.0.1", self._my_const.LogSocketPort)
+                    local_addr = ("127.0.0.1", self._my_const.ActionDisplaySocketPort)
                     self._udp_socket.bind(local_addr)
                 self._udp_socket.setblocking(False)
                 while True:
@@ -45,12 +46,12 @@ class LogThread(QThread):
                         break
                     recv_data = None
                     try:
-                        recv_data = self._udp_socket.recvfrom(4096)
+                        recv_data = self._udp_socket.recvfrom(1024)
                     except Exception as e:
                         pass
                     if recv_data != None:
                         recv_msg = recv_data[0].decode("utf-8").strip()
-                        self.log.emit(recv_msg)
+                        self.action.emit(ControllerInput(recv_msg))
                     time.sleep(0.001)
             except:
                 continue

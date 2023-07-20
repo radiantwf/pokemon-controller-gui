@@ -21,17 +21,19 @@ def main():
     files_to_delete = glob.glob('/tmp/poke_ui_*.sock')
     for file in files_to_delete:
         os.remove(file)
-        
+    
     my_const = ConstClass()
     main_video_frame, capture_video_frame = multiprocessing.Pipe(False)
     ui_display_video_frame = multiprocessing.Queue()
     opencv_processed_video_frame = multiprocessing.Queue()
     recognize_video_frame = multiprocessing.Queue(1)
-    frame_queues = (recognize_video_frame, ui_display_video_frame,
+    frame_tuple = (recognize_video_frame, ui_display_video_frame,
                     opencv_processed_video_frame,)
     camera_control_queue = multiprocessing.Queue()
+    controller_input_action_queue = multiprocessing.Queue()
+
     ui_process = multiprocessing.Process(
-        target=ui.run, args=(camera_control_queue, frame_queues,))
+        target=ui.run, args=(camera_control_queue, frame_tuple, controller_input_action_queue, ))
     ui_process.start()
     video_process = multiprocessing.Process(
         target=camera.capture_video, args=(camera_control_queue, capture_video_frame,))
@@ -77,9 +79,9 @@ def main():
     # control_queues=(opencv_processed_control_queue,controller_action_queue,)
     # controller_process = multiprocessing.Process(target=controller.run, args=(dev_joystick,control_queues,))
     # controller_process.start()
-    # ui_process = multiprocessing.Process(target=ui.run, args=(frame_queues,control_queues,dev_audio,_Display_Width,_Display_Height))
+    # ui_process = multiprocessing.Process(target=ui.run, args=(frame_tuple,control_queues,dev_audio,_Display_Width,_Display_Height))
     # ui_process.start()
-    # recognize_process = multiprocessing.Process(target=recognize.run, args=(frame_queues,control_queues,_Display_Width,_Display_Height,_Recognize_FPS,))
+    # recognize_process = multiprocessing.Process(target=recognize.run, args=(frame_tuple,control_queues,_Display_Width,_Display_Height,_Recognize_FPS,))
     # recognize_process.start()
     # video_process = multiprocessing.Process(target=camera.capture_video, args=(capture_video_frame,dev_video,_Display_Width,_Display_Height,_Display_FPS,))
     # video_process.start()
