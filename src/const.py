@@ -15,6 +15,11 @@ def singleton(cls):
 class ConstClass(object):
     DisplayCameraWidth = 640
     DisplayCameraHeight = 360
+    
+    RecognizeVideoWidth = 960
+    RecognizeVideoHeight = 540
+    RecognizeVideoFps = 5
+
     LogSocketPort = 39008
     ActionDisplaySocketPort = 39009
     _AF_UNIX_FlAG = True
