@@ -15,11 +15,6 @@ def run(device: SerialDevice, controller_input_action_queue: multiprocessing.Que
     # 定义信号处理函数
     def signal_handler(signum, frame):
         controller.close()
-        print('Received signal', signum)
-        # 清空队列
-        while not controller_input_action_queue.empty():
-            controller_input_action_queue.get()
-        # 退出进程
         exit(0)
 
     # 注册信号处理函数

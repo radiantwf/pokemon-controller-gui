@@ -3,16 +3,20 @@ import math
 import multiprocessing
 import time
 import socket
+import cv2
+import numpy
 import pygame
 from const import ConstClass
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QMessageBox, QLabel, QListWidgetItem
-from camera.device import VideoDevice
+from camera.device import CameraDevice
 from PySide6.QtCore import Slot, Qt, QEvent, QTimer, QCoreApplication
 from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtMultimedia import QAudioFormat, QAudioSource, QAudioSink, QMediaDevices
 from PySide6.QtUiTools import loadUiType
+from datatype.frame import Frame
 from log import send_log
+from ui.camera.launcher import CameraLauncher
 from ui.controller.launcher import ControllerLauncher
 from ui.qthread.action_display import ActionDisplayThread
 from ui.qthread.log import LogThread
@@ -27,22 +31,14 @@ Ui_MainWindow, QMainWindowBase = loadUiType("./resources/ui/main_form.ui")
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
-    def __init__(self, camera_control_queue: multiprocessing.Queue, frame_tuple):
+    def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
         Ui_MainWindow.__init__(self)
-
-        # 摄像头控制命令队列
-        self._camera_control_queue = camera_control_queue
 
         # 控制器输入命令队列
         self._controller_input_action_queue:multiprocessing.Queue = None
 
-        # 图像采集桢管道集合
-        self._frame_queue = frame_tuple[1]
-        # self._processed_frame_queue = frame_tuple[2]
-
         pygame.init()
-        # pygame.display.init()
         pygame.joystick.init()
         JoystickDevice.list_device()
         self._my_const = ConstClass()
@@ -74,6 +70,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._macro_list = []
         self._macro_launcher = MacroLauncher()
         self._controller_launcher = ControllerLauncher()
+        self._camera_launcher = CameraLauncher()
 
     def setupUi(self):
         Ui_MainWindow.setupUi(self, self)
@@ -89,9 +86,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.btnSerialRescan.clicked.connect(self.on_serial_rescan_clicked)
         self.btnJoystickRescan.clicked.connect(self.on_joystick_rescan_clicked)
 
-        self.th_video = VideoThread(self, self._frame_queue)
-        self.th_video.on_recv_frame.connect(self.setImage)
-        self.th_video.start()
+        self.th_video = None
 
         self.th_log = LogThread(self)
         self.th_log.log.connect(self.setLog)
@@ -160,7 +155,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         except:
             None
         self.cbxCameraList.clear()
-        self._cameras = VideoDevice.list_device()
+        self._cameras = CameraDevice.list_device()
         cameras = []
         cameras.append("选择视频输入设备")
         for camera_info in self._cameras:
@@ -290,7 +285,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def on_fps_changed(self):
         if self._current_camera != None:
             self._current_camera.setFps(int(self.cbxFps.currentText()))
-        self._camera_control_queue.put_nowait(self._current_camera)
+        self._camera_launcher.camera_stop(self._current_camera)
+        if self.th_video:
+            self.th_video.stop()
+            self.th_video.wait()
+            self.th_video = None
+        if self._current_camera:
+            frame_queue = self._camera_launcher.camera_start(self._current_camera)
+            self.th_video = VideoThread(self, frame_queue)
+            self.th_video.on_recv_frame.connect(self.on_receive_frame)
+            self.th_video.start()
 
     def on_mute_changed(self):
         self.play_audio()
@@ -374,7 +378,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         return True
     
     def on_capture_clicked(self):
-        self._camera_control_queue.put_nowait("camera")
+        pass
+        # self._camera_launcher.put_nowait("camera")
 
     def on_rescan_clicked(self):
         self.build_camera_list_comboBox()
@@ -424,11 +429,21 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def on_destroy(self):
         print('on_destroy')
 
-    @Slot(QImage)
-    def setImage(self, image):
+    @Slot(Frame)
+    def on_receive_frame(self, frame):
+        np_array = numpy.frombuffer(
+            frame.bytes(), dtype=numpy.uint8)
+        mat = np_array.reshape(
+            (frame.height, frame.width, frame.channels))
+        display_mat = cv2.resize(
+            mat, (self._my_const.DisplayCameraWidth, self._my_const.DisplayCameraHeight), interpolation=cv2.INTER_AREA)
+        display_frame = Frame(self._my_const.DisplayCameraWidth, self._my_const.DisplayCameraHeight,
+                                    frame.channels, frame.format, display_mat)
+        img = QImage(display_frame.bytes(), display_frame.width, display_frame.height,
+                        display_frame.channels*display_frame.width, QImage.Format_BGR888)
         if self._current_camera != None:
             # .scaled(self.lblCameraFrame.size(), aspectMode=Qt.KeepAspectRatio)
-            pixmap = QPixmap.fromImage(image)
+            pixmap = QPixmap.fromImage(img)
             self.lblCameraFrame.setPixmap(pixmap)
         else:
             self.lblCameraFrame.clear()

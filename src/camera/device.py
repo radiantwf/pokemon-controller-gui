@@ -1,7 +1,7 @@
 from PySide6.QtMultimedia import QMediaDevices, QVideoFrameFormat
 
 
-class VideoDevice(object):
+class CameraDevice(object):
     def __init__(self, id, name, width, height, pixelFormat, min_fps, max_fps):
         self._id = id
         self._name = name
@@ -85,6 +85,6 @@ class VideoDevice(object):
                 pixelFormat = format.pixelFormat()
             if width == 0:
                 continue
-            cameras.append(VideoDevice(id, name, width, height,
+            cameras.append(CameraDevice(id, name, width, height,
                            pixelFormat, min_fps, max_fps))
         return cameras

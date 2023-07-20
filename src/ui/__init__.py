@@ -1,13 +1,17 @@
-import multiprocessing
+import glob
+import os
 import sys
-import cv2
 from PySide6 import QtWidgets
 from ui.main_window import MainWindow
 
 
-def run(camera_control_queue: multiprocessing.Queue, frame_tuple):
+def run():
+    files_to_delete = glob.glob('/tmp/poke_ui_*.sock')
+    for file in files_to_delete:
+        os.remove(file)
+
     app = QtWidgets.QApplication()
-    _main_window = MainWindow(camera_control_queue, frame_tuple)
+    _main_window = MainWindow()
     app.installEventFilter(_main_window)
     _main_window.setupUi()
     _main_window.show()

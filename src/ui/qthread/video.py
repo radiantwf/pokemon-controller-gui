@@ -1,10 +1,10 @@
 
 from PySide6.QtCore import QThread, Signal
-from PySide6.QtGui import QImage
+from datatype.frame import Frame
 
 
 class VideoThread(QThread):
-    on_recv_frame = Signal(QImage)
+    on_recv_frame = Signal(Frame)
 
     def __init__(self, parent=None, queue=None):
         QThread.__init__(self, parent)
@@ -23,9 +23,7 @@ class VideoThread(QThread):
                     break
             if frame == None:
                 continue
-            img = QImage(frame.bytes(), frame.width, frame.height,
-                         frame.channels*frame.width, QImage.Format_BGR888)
-            self.on_recv_frame.emit(img)
+            self.on_recv_frame.emit(frame)
 
     def stop(self):
         self._stop_signal = True
