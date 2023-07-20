@@ -30,10 +30,9 @@ def main():
     frame_tuple = (recognize_video_frame, ui_display_video_frame,
                     opencv_processed_video_frame,)
     camera_control_queue = multiprocessing.Queue()
-    controller_input_action_queue = multiprocessing.Queue()
 
     ui_process = multiprocessing.Process(
-        target=ui.run, args=(camera_control_queue, frame_tuple, controller_input_action_queue, ))
+        target=ui.run, args=(camera_control_queue, frame_tuple, ))
     ui_process.start()
     video_process = multiprocessing.Process(
         target=camera.capture_video, args=(camera_control_queue, capture_video_frame,))

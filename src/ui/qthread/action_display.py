@@ -34,6 +34,7 @@ class ActionDisplayThread(QThread):
                         os.remove(local_addr)
                     self._udp_socket = socket.socket(
                         socket.AF_UNIX, socket.SOCK_DGRAM)
+                    self._udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 1024 * 1024)
                     self._udp_socket.bind(local_addr)
                 else:
                     self._udp_socket = socket.socket(

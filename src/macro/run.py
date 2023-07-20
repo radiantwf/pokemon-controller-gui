@@ -121,7 +121,7 @@ def _send(joystick: JoyStick, input_line: str = "", delay: float = 0):
             time.sleep(_Min_Key_Send_Span)
         if time.monotonic() - send_time >= delay:
             return
-        if time.monotonic() - resend_time > 0.005:
+        if time.monotonic() - resend_time > 0.1:
             joystick.send_action(input_line)
             resend_time = time.monotonic()
         time.sleep(0.001)

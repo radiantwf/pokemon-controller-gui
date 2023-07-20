@@ -22,20 +22,28 @@ class ControllerLauncher(object):
             self._controller_list = dict()
             ControllerLauncher._first = False
             self._controller_process = None
+            self._controller_input_action_queue = None
     
     def list_controller(self):
         return SerialDevice.list_device()
     
-    def controller_start(self, device: SerialDevice, controller_input_action_queue: multiprocessing.Queue):
+    def controller_start(self, device: SerialDevice)->multiprocessing.Queue():
         self.controller_stop()
-        while not controller_input_action_queue.empty():
-            controller_input_action_queue.get()
+        self._controller_input_action_queue = multiprocessing.Queue()
+
+        while not self._controller_input_action_queue.empty():
+            self._controller_input_action_queue.get()
         self._controller_process = multiprocessing.Process(
-            target=controller.run, args=(device, controller_input_action_queue, ))
+            target=controller.run, args=(device, self._controller_input_action_queue, ))
         self._controller_process.start()
+        return self._controller_input_action_queue
 
     
     def controller_stop(self):
+        if self._controller_input_action_queue:
+            self._controller_input_action_queue.close()
+            self._controller_input_action_queue = None
+            
         if self._controller_process:
             try:
                 self._controller_process.terminate()

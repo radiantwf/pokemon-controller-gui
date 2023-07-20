@@ -27,7 +27,7 @@ Ui_MainWindow, QMainWindowBase = loadUiType("./resources/ui/main_form.ui")
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
-    def __init__(self, camera_control_queue: multiprocessing.Queue, frame_tuple, controller_input_action_queue: multiprocessing.Queue):
+    def __init__(self, camera_control_queue: multiprocessing.Queue, frame_tuple):
         QtWidgets.QMainWindow.__init__(self)
         Ui_MainWindow.__init__(self)
 
@@ -35,7 +35,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._camera_control_queue = camera_control_queue
 
         # 控制器输入命令队列
-        self._controller_input_action_queue = controller_input_action_queue
+        self._controller_input_action_queue:multiprocessing.Queue = None
 
         # 图像采集桢管道集合
         self._frame_queue = frame_tuple[1]
@@ -231,7 +231,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             return
         if not self.check_macro_thread_running():
             return
-        if not self.check_switch_pro_controller():
+        
+        self.on_serial_changed()
+
+        if not self._controller_input_action_queue:
             return
         macro = self._macro_list[self.listWidget_macro.currentRow()]
         dialog = LaunchMacroParasDialog(self,macro)
@@ -241,7 +244,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             paras = dict()
             for para in script["paras"]:
                 paras[para["name"]] = para["value"]
-            self._macro_launcher.macro_start(script["name"],script["summary"],script["loop"],paras,self._controller_input_action_queue)
+            self._macro_launcher.macro_start(script["name"],script["summary"],self._controller_input_action_queue,script["loop"],paras)
 
     def macro_refresh(self):
         self.build_macro_list_listView()
@@ -331,28 +334,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._controller_launcher.controller_stop()
         if self.cbxSerialList.currentIndex() == 0:
             return
-        self._controller_launcher.controller_start(self._serial_devices[self.cbxSerialList.currentIndex() - 1],self._controller_input_action_queue)
+        self._controller_input_action_queue = self._controller_launcher.controller_start(self._serial_devices[self.cbxSerialList.currentIndex() - 1])
         time.sleep(0.5)
         if not self._controller_launcher.controller_running():
+            self._controller_launcher.controller_stop()
+            self._controller_input_action_queue = None
             self.pop_switch_pro_controller_err_dialog()
 
     def on_toolBox_current_changed(self, index):
         if index != 1:
             if not self.check_macro_thread_running():
                 self.toolBox.setCurrentIndex(1)
-
-
-
-    def check_switch_pro_controller(self):
-        if self.cbxSerialList.currentIndex() == 0:
-            msg_box = QMessageBox(self)
-            msg_box.setIcon(QMessageBox.Icon.Critical)
-            msg_box.setText("NS控制设备连接错误")
-            msg_box.setInformativeText("请选择一个NS控制设备")
-            msg_box.setWindowTitle("错误")
-            msg_box.exec_()
-            return False
-        return True
 
     def pop_switch_pro_controller_err_dialog(self):
         msg_box = QMessageBox(self)
@@ -375,7 +367,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             ret = msg_box.exec_()
             if ret == QMessageBox.ButtonRole.ActionRole.value:
                 self._macro_launcher.macro_stop()
-                self.push_action(ControllerInput())
+                self.on_serial_changed()
                 send_log("已强行终止运行中脚本")
                 return True
             return False
