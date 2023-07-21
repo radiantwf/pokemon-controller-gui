@@ -27,7 +27,7 @@ class CameraLauncher(object):
     
     def camera_start(self, device: CameraDevice)->multiprocessing.Queue():
         self.camera_stop()
-        self._camera_frame_queue = multiprocessing.Queue()
+        self._camera_frame_queue = multiprocessing.Queue(1)
 
         self._camera_process = multiprocessing.Process(
             target=camera.run, args=(device, self._camera_frame_queue, ))

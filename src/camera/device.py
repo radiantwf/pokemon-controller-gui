@@ -58,7 +58,7 @@ class CameraDevice(object):
             name = camera_info.description()
             id = camera_info.id().data().decode()
             # 获取最适合的分辨率与帧数
-            width = 0
+            width = 99999
             height = 0
             max_fps = 0
             min_fps = 0
@@ -72,7 +72,7 @@ class CameraDevice(object):
                     continue
                 if maxFps > 61 or maxFps < 29:
                     continue
-                if resolution.width() < width:
+                if resolution.width() > width:
                     continue
                 if maxFps < max_fps:
                     continue
@@ -83,7 +83,7 @@ class CameraDevice(object):
                 max_fps = maxFps
                 min_fps = format.minFrameRate()
                 pixelFormat = format.pixelFormat()
-            if width == 0:
+            if width == 99999:
                 continue
             cameras.append(CameraDevice(id, name, width, height,
                            pixelFormat, min_fps, max_fps))

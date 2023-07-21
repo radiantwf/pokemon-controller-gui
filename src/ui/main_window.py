@@ -1,8 +1,9 @@
 import datetime
 import math
 import multiprocessing
+import os
+import queue
 import time
-import socket
 import cv2
 import numpy
 import pygame
@@ -19,6 +20,7 @@ from log import send_log
 from ui.camera.launcher import CameraLauncher
 from ui.controller.launcher import ControllerLauncher
 from ui.qthread.action_display import ActionDisplayThread
+from ui.qthread.display import DisplayThread
 from ui.qthread.log import LogThread
 from datatype.input import ControllerInput, InputEnum, StickEnum
 from ui.joystick.device import JoystickDevice
@@ -54,6 +56,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.th_video = None
         self.th_log = None
         self.th_action_display = None
+        self._display_frame_queue = None
+        self.th_display = None
+        self._capture = False
 
         # self._joystick_timer = None
         self._key_press_map = dict()
@@ -86,12 +91,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.btnSerialRescan.clicked.connect(self.on_serial_rescan_clicked)
         self.btnJoystickRescan.clicked.connect(self.on_joystick_rescan_clicked)
 
-        self.th_video = None
-
         self.th_log = LogThread(self)
         self.th_log.log.connect(self.setLog)
         self.th_log.start()
-
+        self._display_frame_queue = queue.Queue(1)
+        self.th_display = DisplayThread(self, self._display_frame_queue)
+        self.th_display.display_frame.connect(self.display_frame)
+        self.th_display.start()
+        
         self.th_action_display = ActionDisplayThread(self)
         self.th_action_display.action.connect(self.displayAction)
         self.th_action_display.start()
@@ -285,12 +292,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def on_fps_changed(self):
         if self._current_camera != None:
             self._current_camera.setFps(int(self.cbxFps.currentText()))
-        self._camera_launcher.camera_stop(self._current_camera)
+        self._camera_launcher.camera_stop()
         if self.th_video:
             self.th_video.stop()
             self.th_video.wait()
             self.th_video = None
         if self._current_camera:
+            self._capture = False
             frame_queue = self._camera_launcher.camera_start(self._current_camera)
             self.th_video = VideoThread(self, frame_queue)
             self.th_video.on_recv_frame.connect(self.on_receive_frame)
@@ -378,7 +386,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         return True
     
     def on_capture_clicked(self):
-        pass
+        self._capture = True
         # self._camera_launcher.put_nowait("camera")
 
     def on_rescan_clicked(self):
@@ -397,6 +405,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._m_output.write(data)
 
     def closeEvent(self, event):
+        self._camera_launcher.camera_stop()
         self._macro_launcher.macro_stop()
         self._controller_launcher.controller_stop()
         if self._current_joystick:
@@ -410,6 +419,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.stop_audio()
         if self.th_video:
             self.th_video.stop()
+        if self.th_display:
+            self.th_display.stop()
         if self.th_log:
             self.th_log.stop()
         if self.th_action_display:
@@ -417,6 +428,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             
         if self.th_video:
             self.th_video.wait()
+        if self.th_display:
+            self.th_display.wait()
         if self.th_log:
             self.th_log.wait()
         if self.th_action_display:
@@ -430,7 +443,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         print('on_destroy')
 
     @Slot(Frame)
-    def on_receive_frame(self, frame):
+    def display_frame(self, frame):
         np_array = numpy.frombuffer(
             frame.bytes(), dtype=numpy.uint8)
         mat = np_array.reshape(
@@ -447,6 +460,21 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.lblCameraFrame.setPixmap(pixmap)
         else:
             self.lblCameraFrame.clear()
+
+    def on_receive_frame(self, frame):
+        if self._display_frame_queue.empty():
+            self._display_frame_queue.put_nowait(frame)
+        if self._capture:
+            np_array = numpy.frombuffer(
+                frame.bytes(), dtype=numpy.uint8)
+            mat = np_array.reshape(
+                (frame.height, frame.width, frame.channels))
+            if not os.path.exists("./Captures"):
+                os.mkdir("./Captures")
+            time_str = time.strftime(
+                "%Y%m%d%H%M%S", time.localtime())
+            cv2.imwrite("./Captures/"+time_str+".jpg", mat)
+            self._capture = False
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.Type.KeyPress:

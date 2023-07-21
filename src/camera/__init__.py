@@ -10,7 +10,7 @@ import platform
 system = platform.system()
 
 
-def capture_video(camera_device: CameraDevice, frame_queue: multiprocessing.Queue):
+def run(camera_device: CameraDevice, frame_queue: multiprocessing.Queue):
     id = -1
     cameras = QMediaDevices.videoInputs()
     cameras.sort(key=lambda x: x.id().data())
@@ -49,7 +49,8 @@ def capture_video(camera_device: CameraDevice, frame_queue: multiprocessing.Queu
                     send_frame = Frame(
                         camera_device.width, camera_device.height, 3, cv2.CAP_PVAPI_PIXELFORMAT_BGR24, frame.tobytes())
                     try:
-                        frame_queue.put_nowait(send_frame)
+                        if frame_queue.empty():
+                            frame_queue.put_nowait(send_frame)
                     except KeyboardInterrupt:
                         # 处理键盘中断信号
                         signal_handler(signal.SIGINT, None)
@@ -62,10 +63,3 @@ def capture_video(camera_device: CameraDevice, frame_queue: multiprocessing.Queu
             signal_handler(signal.SIGINT, None)
 
     cap.release()
-        # if frame.any():
-        #     if not os.path.exists("./Captures"):
-        #         os.mkdir("./Captures")
-
-        #     time_str = time.strftime(
-        #         "%Y%m%d%H%M%S", time.localtime())
-        #     cv2.imwrite("./Captures/"+time_str+".jpg", frame)
