@@ -295,7 +295,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._camera_launcher.camera_stop()
         if self.th_video:
             self.th_video.stop()
-            self.th_video.wait()
+            if not self.th_video.wait(1000):
+                self.th_video.terminate()
             self.th_video = None
         if self._current_camera:
             self._capture = False
@@ -418,22 +419,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self._timer.stop()
         self.stop_audio()
         if self.th_video:
-            self.th_video.stop()
+            self.th_video.terminate()
         if self.th_display:
-            self.th_display.stop()
+            self.th_display.terminate()
         if self.th_log:
-            self.th_log.stop()
+            self.th_log.terminate()
         if self.th_action_display:
-            self.th_action_display.stop()
-            
-        if self.th_video:
-            self.th_video.wait()
-        if self.th_display:
-            self.th_display.wait()
-        if self.th_log:
-            self.th_log.wait()
-        if self.th_action_display:
-            self.th_action_display.wait()
+            self.th_action_display.terminate()
         pygame.quit()
         event.accept()
         QCoreApplication.instance().aboutToQuit.emit()

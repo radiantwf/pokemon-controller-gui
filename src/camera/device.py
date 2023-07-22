@@ -48,7 +48,7 @@ class CameraDevice(object):
         else:
             self._fps = fps
 
-        # 列出当前设备的所有摄像头
+    # 列出当前设备的所有摄像头
     @staticmethod
     def list_device():
         cameras = []

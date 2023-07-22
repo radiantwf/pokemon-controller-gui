@@ -40,8 +40,9 @@ def _run_macro(name: str, summary: str, controller_input_action_queue: multiproc
                     break
             times += 1
             if time.monotonic() - last_send_log_ts >= 5 * 60:
-                _current_info = "正在运行 [{}] 脚本，已运行{}次，计划运行{}次\n".format(
-                    summary, times, loop)
+                span = int(time.monotonic() - start_ts)
+                _current_info = "正在运行 [{}] 脚本，持续运行{:.0f}小时{:.0f}分{:.0f}秒，已运行{}次，计划运行{}次\n".format(
+                    summary,  span/3600, (span % 3600)/60, span % 60, times, loop)
                 send_log(_current_info)
                 last_send_log_ts = time.monotonic()
             if loop > 0 and times >= loop:

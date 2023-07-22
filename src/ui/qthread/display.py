@@ -1,5 +1,6 @@
 
 import queue
+import time
 from PySide6.QtCore import QThread, Signal
 from datatype.frame import Frame
 
@@ -21,6 +22,7 @@ class DisplayThread(QThread):
             except queue.Empty:
                 continue
             if frame == None:
+                time.sleep(0.01)
                 continue
             self.display_frame.emit(frame)
 
