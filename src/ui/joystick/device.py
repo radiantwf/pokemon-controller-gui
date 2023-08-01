@@ -18,7 +18,10 @@ class JoystickDevice(object):
     def list_device():
         devices = []
         for i in range(pygame.joystick.get_count()):
-            joystick = pygame.joystick.Joystick(i)
+            try:
+                joystick = pygame.joystick.Joystick(i)
+            except:
+                continue
             devices.append(JoystickDevice(
                 joystick.get_name(), joystick.get_guid()))
         return devices
