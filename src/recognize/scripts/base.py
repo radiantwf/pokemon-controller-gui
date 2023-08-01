@@ -106,33 +106,45 @@ class BaseScript(ABC):
     
     # 运行宏命令
     @final
-    def macro_run(self, macro_name, loop ,paras, block=True, timeout=60):
+    def macro_run(self, macro_name, loop=1, paras={}, block:bool=True, timeout:float=None):
         self.macro_stop()
-        self._macro_process = multiprocessing.Process(
-            target=macro.run, args=(macro_name, self._controller_input_action_queue, loop, paras, False))
-        self._macro_process.start()
-
 
         self._macro_stop_event = multiprocessing.Event()
         self._macro_process = multiprocessing.Process(
-            target=macro.run, args=(macro_name, self._macro_stop_event, self._controller_input_action_queue, loop, paras))
-
+            target=macro.run, args=(macro_name, self._macro_stop_event, self._controller_input_action_queue, loop, paras, False))
+        self._macro_process.start()
+        if not block:
+            return True
+        start_monotonic = time.monotonic()
+        while self._macro_process.is_alive():
+            time.sleep(0.1)
+            if timeout != None and timeout > 0 and time.monotonic() - start_monotonic > timeout:
+                return self.macro_stop(timeout=None)
+        self._macro_stop_event = None
+        return True
     # 停止宏命令
     @final
-    def macro_stop(self,timeout = None):
+    def macro_stop(self, block=True, timeout = None):
         if self._macro_process != None:
-            try:
-                self._macro_stop_event.set()
-                self._macro_process.join(timeout)
-                if self._macro_process.is_alive():
-                    self._macro_process.terminate()
-                else:
+            if self._macro_process.is_alive():
+                if block:
+                    try:
+                        self._macro_stop_event.set()
+                        self._macro_process.join(timeout)
+                        if self._macro_process.is_alive():
+                            self._macro_process.terminate()
+                        else:
+                            self._macro_process = None
+                            return True
+                    except:
+                        self._macro_process.terminate()
                     self._macro_process = None
+                    return False
+                else:
+                    self._macro_stop_event.set()
                     return True
-            except:
-                self._macro_process.terminate()
-            self._macro_process = None
-            return False
+            else:
+                self._macro_process = None
         return True
     
     # 发送日志
@@ -220,7 +232,7 @@ class BaseScript(ABC):
             self.on_error()
             raise e
         finally:
-            self.macro_stop(1)
+            self.macro_stop(timeout=1)
             self._on_stop()
 
     @final

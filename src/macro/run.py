@@ -69,6 +69,7 @@ def _run_macro(name: str, stop_event: multiprocessing.Event, controller_input_ac
         if log:
             send_log(_result_info)
     finally:
+        release(joystick)
         _start_time = None
         _current_info = ""
 
