@@ -21,6 +21,7 @@ class CameraLauncher(object):
             CameraLauncher._first = False
             self._camera_process = None
             self._camera_frame_queue = None
+            self._stop_event = None
     
     def list_camera(self):
         return CameraDevice.list_device()
@@ -29,25 +30,31 @@ class CameraLauncher(object):
         self.camera_stop()
         self._camera_frame_queue = multiprocessing.Queue(1)
 
+        self._stop_event = multiprocessing.Event()
         self._camera_process = multiprocessing.Process(
-            target=camera.run, args=(device, self._camera_frame_queue, ))
+            target=camera.run, args=(device, self._stop_event, self._camera_frame_queue, ))
         self._camera_process.start()
         return self._camera_frame_queue
 
     
-    def camera_stop(self):
+    def camera_stop(self,timeout = 1):
         if self._camera_frame_queue:
             self._camera_frame_queue.close()
             self._camera_frame_queue = None
-            
-        if self._camera_process:
+        if self._camera_process != None:
             try:
-                self._camera_process.terminate()
-                self._camera_process.join(1)
-                self._camera_process = None
+                self._stop_event.set()
+                self._camera_process.join(timeout)
+                if self._camera_process.is_alive():
+                    self._camera_process.terminate()
+                else:
+                    self._camera_process = None
+                    return True
             except:
-                self._camera_process.kill()
-                self._camera_process = None
+                self._camera_process.terminate()
+            self._camera_process = None
+            return False
+        return True
     
     def camera_running(self):
         if self._camera_process:

@@ -12,5 +12,12 @@ def published():
         return "{}"
 
 
-def run(macro: str, summary: str, controller_input_action_queue: multiprocessing.Queue, loop: int = 1, paras: dict = dict()):
-    _run_macro(macro, summary, controller_input_action_queue, loop, paras)
+def run(macro_name: str, stop_event: multiprocessing.Event, controller_input_action_queue: multiprocessing.Queue, loop: int = 1, paras: dict = dict(), log = True):
+    m = macro.Macro()
+    m.reload()
+    summary = macro_name
+    for iter in m._publish:
+        if iter["name"] == macro_name:
+            summary = iter["summary"]
+            break
+    _run_macro(macro_name, stop_event, controller_input_action_queue, summary, loop, paras, log)

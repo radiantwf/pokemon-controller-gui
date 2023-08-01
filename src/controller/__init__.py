@@ -1,29 +1,21 @@
 import multiprocessing
-import signal
-import time
 from controller.action_display import send_action_display
 
 from controller.device import SerialDevice
 from controller.switch_pro import SwitchProController
 
 
-def run(device: SerialDevice, controller_input_action_queue: multiprocessing.Queue):
+def run(device: SerialDevice, stop_event: multiprocessing.Event, controller_input_action_queue: multiprocessing.Queue):
     controller = SwitchProController()
     if not controller.open(device):
         exit(-1)
 
-    # 定义信号处理函数
-    def signal_handler(signum, frame):
-        controller.close()
-        exit(0)
-
-    # 注册信号处理函数
-    signal.signal(signal.SIGINT, signal_handler)
-
-    # 循环读取队列内容
-    action = None
-    while True:
-        try:
+    try:
+        # 循环读取队列内容
+        action = None
+        while True:
+            if stop_event.is_set():
+                raise InterruptedError
             while not controller_input_action_queue.empty():
                 action = controller_input_action_queue.get()
             if action:
@@ -32,6 +24,6 @@ def run(device: SerialDevice, controller_input_action_queue: multiprocessing.Que
                 action = None
             else:
                 action = controller_input_action_queue.get()
-        except KeyboardInterrupt:
-            # 处理键盘中断信号
-            signal_handler(signal.SIGINT, None)
+    except InterruptedError:
+        controller.close()
+        exit(0)

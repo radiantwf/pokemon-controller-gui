@@ -8,7 +8,7 @@ from . import action
 _Min_Key_Send_Span = 0.001
 
 
-def _run_macro(name: str, summary: str, controller_input_action_queue: multiprocessing.Queue, loop: int = 1, paras: dict = dict()):
+def _run_macro(name: str, stop_event: multiprocessing.Event, controller_input_action_queue: multiprocessing.Queue, summary: str, loop: int = 1, paras: dict = dict(), log = True):
     joystick = JoyStick(controller_input_action_queue)
     # msg = "开始运行{}脚本，循环次数：{}".format(name, loop)
     times = 0
@@ -23,15 +23,21 @@ def _run_macro(name: str, summary: str, controller_input_action_queue: multiproc
         act = _get_action(name, paras)
         if act == None:
             _result_info = "不存在名称为{}的脚本".format(name)
-            send_log(_result_info)
-            return
+            if log:
+                send_log(_result_info)
+                return
         _result_info = ""
         _current_info = "正在运行 [{}] 脚本，已运行{}次，计划运行{}次\n".format(
             summary, times, loop)
-        send_log(_current_info)
+        if log:
+            send_log(_current_info)
         last_send_log_ts = time.monotonic()
         while True:
+            if stop_event.is_set():
+                raise InterruptedError
             while True:
+                if stop_event.is_set():
+                    raise InterruptedError
                 ret = act.pop()
                 # print(ret[0])
                 if ret[0] != None:
@@ -43,7 +49,8 @@ def _run_macro(name: str, summary: str, controller_input_action_queue: multiproc
                 span = int(time.monotonic() - start_ts)
                 _current_info = "正在运行 [{}] 脚本，持续运行{:.0f}小时{:.0f}分{:.0f}秒，已运行{}次，计划运行{}次\n".format(
                     summary,  span/3600, (span % 3600)/60, span % 60, times, loop)
-                send_log(_current_info)
+                if log:
+                    send_log(_current_info)
                 last_send_log_ts = time.monotonic()
             if loop > 0 and times >= loop:
                 break
@@ -52,13 +59,15 @@ def _run_macro(name: str, summary: str, controller_input_action_queue: multiproc
         span = int(time.monotonic() - start_ts)
         _result_info = "[{}] 脚本运行完成，实际运行{}次\n持续运行时间：{:.0f}小时{:.0f}分{:.0f}秒".format(
             summary, times, span/3600, (span % 3600)/60, span % 60)
-        send_log(_result_info)
+        if log:
+            send_log(_result_info)
     except InterruptedError:
         # msg = "脚本{}运行中止，当前运行次数：{}".format(name, times)
         span = int(time.monotonic() - start_ts)
         _result_info = "[{}] 脚本停止，实际运行{}次，计划运行{}次\n持续运行时间：{:.0f}小时{:.0f}分{:.0f}秒".format(
             summary, times, loop, span/3600, (span % 3600)/60, span % 60)
-        send_log(_result_info)
+        if log:
+            send_log(_result_info)
     finally:
         _start_time = None
         _current_info = ""

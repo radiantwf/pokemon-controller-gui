@@ -246,7 +246,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             paras = dict()
             for para in script["paras"]:
                 paras[para["name"]] = para["value"]
-            self._macro_launcher.macro_start(script["name"],script["summary"],self._controller_input_action_queue,script["loop"],paras)
+            self._macro_launcher.macro_start(script["name"], self._controller_input_action_queue, script["loop"], paras)
 
     def macro_refresh(self):
         self.build_macro_list_listView()
@@ -379,9 +379,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             msg_box.addButton('取消', QMessageBox.ButtonRole.RejectRole)
             ret = msg_box.exec_()
             if ret == QMessageBox.ButtonRole.ActionRole.value:
-                self._macro_launcher.macro_stop()
+                if not self._macro_launcher.macro_stop():
+                    send_log("已强行终止运行中脚本")
                 self.on_serial_changed()
-                send_log("已强行终止运行中脚本")
                 return True
             return False
         return True
