@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-import asyncio
 import multiprocessing
 import sys
 import time
@@ -122,6 +121,7 @@ class BaseScript(ABC):
                 return self.macro_stop(timeout=None)
         self._macro_stop_event = None
         return True
+
     # 停止宏命令
     @final
     def macro_stop(self, block=True, timeout = None):
@@ -191,7 +191,7 @@ class BaseScript(ABC):
                         return
                     frame = self._frame_queue.get()
                 if frame is None or time.monotonic() - self._last_set_frame_time_monotonic < 1.0/self._fps:
-                    asyncio.sleep(0.001)
+                    time.sleep(0.001)
                     continue
 
                 # 设置准备状态
