@@ -1191,7 +1191,7 @@
        </property>
       </widget>
      </widget>
-     <widget class="QWidget" name="page_recognize">
+     <widget class="QWidget" name="page_recognition">
       <property name="geometry">
        <rect>
         <x>0</x>
@@ -1203,7 +1203,7 @@
       <attribute name="label">
        <string>图像识别脚本</string>
       </attribute>
-      <widget class="QPushButton" name="btn_recognize_opt">
+      <widget class="QPushButton" name="btn_recognition_opt">
        <property name="geometry">
         <rect>
          <x>192</x>
@@ -1216,7 +1216,7 @@
         <string>启动</string>
        </property>
       </widget>
-      <widget class="QListWidget" name="listWidget_recognize">
+      <widget class="QListWidget" name="listWidget_recognition">
        <property name="geometry">
         <rect>
          <x>0</x>

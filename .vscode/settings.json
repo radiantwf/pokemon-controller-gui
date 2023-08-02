@@ -12,7 +12,8 @@
 	],
 	"circuitpython.board.version": null,
 	"cSpell.words": [
-		"baudrate"
+		"baudrate",
+		"Swsh"
 	],
 	"[python]": {
 		"editor.defaultFormatter": "ms-python.autopep8"

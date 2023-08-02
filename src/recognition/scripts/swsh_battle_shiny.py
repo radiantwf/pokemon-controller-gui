@@ -1,13 +1,13 @@
 import multiprocessing
 import time
-from recognize.scripts.base import BaseScript, WorkflowEnum
+from recognition.scripts.base import BaseScript, WorkflowEnum
 import cv2
 import numpy as np
 
 
 class SwshBattleShiny(BaseScript):
-    def __init__(self, frame_queue: multiprocessing.Queue):
-        super().__init__("剑盾定点刷闪" ,frame_queue)
+    def __init__(self, stop_event: multiprocessing.Event, frame_queue: multiprocessing.Queue, controller_input_action_queue: multiprocessing.Queue):
+        super().__init__(SwshBattleShiny.script_name, stop_event, frame_queue, controller_input_action_queue)
         self._prepare_steps = self.init_prepare_steps()
         self._prepare_step_index = -1
         self._circle_steps = self.init_circle_steps()
@@ -15,6 +15,11 @@ class SwshBattleShiny(BaseScript):
         self._template = cv2.imread("resources/img/battle_shiny.jpg")
         self._template = cv2.cvtColor(self._template, cv2.COLOR_BGR2GRAY)
         self._template_p = (865,430)
+
+    @staticmethod
+    @property
+    def script_name():
+        return "剑盾定点刷闪"
 
     def process_frame(self):
         if self.running_status ==  WorkflowEnum.Preparation:

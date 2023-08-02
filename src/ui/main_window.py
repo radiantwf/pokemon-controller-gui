@@ -74,6 +74,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             start_color, end_color, steps)
         self._macro_list = []
         self._macro_launcher = MacroLauncher()
+        self._recognition_list = []
+        self._recognition_launcher = MacroLauncher()
         self._controller_launcher = ControllerLauncher()
         self._camera_launcher = CameraLauncher()
 
