@@ -29,6 +29,7 @@ from ui.macro.dialog import LaunchMacroParasDialog
 from ui.macro.launcher import MacroLauncher
 
 from ui.qthread.video import VideoThread
+from ui.recognition.launcher import RecognitionLauncher
 Ui_MainWindow, QMainWindowBase = loadUiType("./resources/ui/main_form.ui")
 
 
@@ -75,7 +76,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._macro_list = []
         self._macro_launcher = MacroLauncher()
         self._recognition_list = []
-        self._recognition_launcher = MacroLauncher()
+        self._recognition_launcher = RecognitionLauncher()
         self._controller_launcher = ControllerLauncher()
         self._camera_launcher = CameraLauncher()
 
@@ -115,7 +116,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._timer.start(1)
 
         self.build_macro_list_listView()
+        self.build_recognition_list_listView()
+
         self.btn_macro_opt.clicked.connect(self.macro_opt)
+        self.btn_macro_opt.clicked.connect(self.recognition_opt)
         self.btn_macro_refresh.clicked.connect(self.macro_refresh)
         
 
@@ -253,6 +257,25 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def macro_refresh(self):
         self.build_macro_list_listView()
 
+    def build_recognition_list_listView(self):
+        self._recognition_list = self._recognition_launcher.list_recognition()
+        self.listWidget_recognition.clear()
+        for recognition in self._recognition_list:
+            item = QListWidgetItem(recognition)
+            self.listWidget_recognition.addItem(item)
+
+    def recognition_opt(self):
+        if self._recognition_list.currentRow() < 0:
+            return
+        if not self.check_recognition_thread_running():
+            return
+        
+        self.on_serial_changed()
+
+        if not self._controller_input_action_queue:
+            return
+        recognition = self._recognition_list[self.listWidget_recognition.currentRow()]
+            
     def play_audio(self):
         self.stop_audio()
         if self.cbxAudioList.currentIndex == 0:
@@ -360,6 +383,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if index != 1:
             if not self.check_macro_thread_running():
                 self.toolBox.setCurrentIndex(1)
+        elif index != 2:
+            if not self.check_recognition_thread_running():
+                self.toolBox.setCurrentIndex(2)
 
     def pop_switch_pro_controller_err_dialog(self):
         msg_box = QMessageBox(self)
@@ -388,6 +414,25 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             return False
         return True
     
+    def check_recognition_thread_running(self):
+        if self._recognition_launcher.recognition_running():
+            msg_box = QMessageBox(self)
+            msg_box.setIcon(QMessageBox.Icon.Information)
+            msg_box.setText("图像识别脚本正在运行")
+            msg_box.setInformativeText("是否停止正在运行脚本")
+            msg_box.setWindowTitle("提示")
+            msg_box.addButton('确定', QMessageBox.ButtonRole.ActionRole)
+            msg_box.addButton('取消', QMessageBox.ButtonRole.RejectRole)
+            ret = msg_box.exec_()
+            if ret == QMessageBox.ButtonRole.ActionRole.value:
+                if not self._recognition_launcher.recognition_stop():
+                    send_log("已强行终止运行中图像识别脚本")
+                self.on_serial_changed()
+                return True
+            return False
+        return True
+
+
     def on_capture_clicked(self):
         self._capture = True
         # self._camera_launcher.put_nowait("camera")

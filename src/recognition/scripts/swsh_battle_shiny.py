@@ -7,7 +7,7 @@ import numpy as np
 
 class SwshBattleShiny(BaseScript):
     def __init__(self, stop_event: multiprocessing.Event, frame_queue: multiprocessing.Queue, controller_input_action_queue: multiprocessing.Queue):
-        super().__init__(SwshBattleShiny.script_name, stop_event, frame_queue, controller_input_action_queue)
+        super().__init__(SwshBattleShiny.script_name(), stop_event, frame_queue, controller_input_action_queue)
         self._prepare_steps = self.init_prepare_steps()
         self._prepare_step_index = -1
         self._circle_steps = self.init_circle_steps()
@@ -17,8 +17,7 @@ class SwshBattleShiny(BaseScript):
         self._template_p = (865,430)
 
     @staticmethod
-    @property
-    def script_name():
+    def script_name()->str:
         return "剑盾定点刷闪"
 
     def process_frame(self):
