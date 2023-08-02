@@ -3,6 +3,10 @@ import multiprocessing
 import sys
 import time
 from typing import final
+import cv2
+
+import numpy
+from datatype.frame import Frame
 from log import send_log
 from const import ConstClass
 
@@ -29,9 +33,9 @@ class BaseScript(ABC):
         self._controller_input_action_queue = controller_input_action_queue
         self._script_name = script_name
         self._my_const = ConstClass()
-        self._width = self.__my_const.RecognizeVideoWidth
-        self._height = self.__my_const.RecognizeVideoHeight
-        self._fps = self.__my_const.RecognizeVideoFps
+        self._width = self._my_const.RecognizeVideoWidth
+        self._height = self._my_const.RecognizeVideoHeight
+        self._fps = self._my_const.RecognizeVideoFps
         
         # 宏进程
         self._macro_process = None
@@ -59,7 +63,7 @@ class BaseScript(ABC):
         # 循环跳出时间
         self._circle_break_time_monotonic = 0
         # 结束标志
-        self._stop_flag = True
+        self._stop_flag = False
         # 上一帧获取时间
         self._last_set_frame_time_monotonic = 0
 
@@ -82,8 +86,14 @@ class BaseScript(ABC):
     # 当前帧
     @final
     @property
-    def current_frame(self):
-        return self._current_frame
+    def current_frame(self) -> cv2.Mat:
+        np_array = numpy.frombuffer(
+            self._current_frame.bytes(), dtype=numpy.uint8)
+        mat = np_array.reshape(
+            (self._current_frame.height, self._current_frame.width, self._current_frame.channels))
+        frame_mat = cv2.resize(
+            mat, (self._width, self._height))
+        return frame_mat
     
     # 运行状态
     @final
@@ -178,7 +188,7 @@ class BaseScript(ABC):
     def run(self):
         self._on_start()
         try:
-            while not self._frame_queue.close():
+            while True:
                 if self._stop_event.is_set():
                     raise InterruptedError
                 if self._stop_flag:
@@ -221,11 +231,10 @@ class BaseScript(ABC):
                     self._on_circle_break()
                 
                 # 抽取一帧后，如果队列中还有帧，则清空队列堆积数据
-                if not self._frame_queue.close():
-                    while not self._frame_queue.empty():
-                        if self._stop_flag:
-                            return
-                        self._frame_queue.get()
+                while not self._frame_queue.empty():
+                    if self._stop_flag:
+                        return
+                    self._frame_queue.get()
         except InterruptedError:
             return
         except Exception as e:

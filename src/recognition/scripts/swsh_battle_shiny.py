@@ -22,7 +22,7 @@ class SwshBattleShiny(BaseScript):
 
     def process_frame(self):
         if self.running_status ==  WorkflowEnum.Preparation:
-            if self._prepare_step_index > 0 and self._prepare_step_index < len(self._prepare_steps):
+            if self._prepare_step_index >= 0 and self._prepare_step_index < len(self._prepare_steps):
                 self._prepare_steps[self._prepare_step_index]()
             return
         if self.running_status == WorkflowEnum.Circle:
@@ -90,12 +90,7 @@ class SwshBattleShiny(BaseScript):
             self._circle_step_index += 1
             return
 
-        data = self.current_frame
-        image = (
-            np
-            .frombuffer(data, np.uint8)
-            .reshape([self._frame.height, self._frame.width, 3])
-        )
+        image = self.current_frame
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         match = cv2.matchTemplate(gray, self._template, cv2.TM_CCOEFF_NORMED)
         _,max_val,_,p=cv2.minMaxLoc(match)

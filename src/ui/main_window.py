@@ -77,6 +77,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._macro_launcher = MacroLauncher()
         self._recognition_list = []
         self._recognition_launcher = RecognitionLauncher()
+        self._recognition_frame_queue = None
         self._controller_launcher = ControllerLauncher()
         self._camera_launcher = CameraLauncher()
 
@@ -119,7 +120,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.build_recognition_list_listView()
 
         self.btn_macro_opt.clicked.connect(self.macro_opt)
-        self.btn_macro_opt.clicked.connect(self.recognition_opt)
+        self.btn_recognition_opt.clicked.connect(self.recognition_opt)
         self.btn_macro_refresh.clicked.connect(self.macro_refresh)
         
 
@@ -265,7 +266,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.listWidget_recognition.addItem(item)
 
     def recognition_opt(self):
-        if self._recognition_list.currentRow() < 0:
+        if self.listWidget_recognition.currentRow() < 0:
             return
         if not self.check_recognition_thread_running():
             return
@@ -275,6 +276,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if not self._controller_input_action_queue:
             return
         recognition = self._recognition_list[self.listWidget_recognition.currentRow()]
+        self._recognition_frame_queue = multiprocessing.Queue(1)
+        self._recognition_launcher.recognition_start(recognition, self._recognition_frame_queue, self._controller_input_action_queue)
             
     def play_audio(self):
         self.stop_audio()
@@ -369,6 +372,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.chkJoystickButtonSwitch.isChecked())
 
     def on_serial_changed(self):
+        self._macro_launcher.macro_stop()
+        self._recognition_launcher.recognition_stop()
         self._controller_launcher.controller_stop()
         if self.cbxSerialList.currentIndex() == 0:
             return
@@ -425,6 +430,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             msg_box.addButton('取消', QMessageBox.ButtonRole.RejectRole)
             ret = msg_box.exec_()
             if ret == QMessageBox.ButtonRole.ActionRole.value:
+                self._recognition_frame_queue = None
                 if not self._recognition_launcher.recognition_stop():
                     send_log("已强行终止运行中图像识别脚本")
                 self.on_serial_changed()
@@ -455,6 +461,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def closeEvent(self, event):
         self._camera_launcher.camera_stop()
         self._macro_launcher.macro_stop()
+        self._recognition_launcher.recognition_stop()
         self._controller_launcher.controller_stop()
         if self._current_joystick:
             self._current_joystick.stop()
@@ -501,6 +508,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.lblCameraFrame.clear()
 
     def on_receive_frame(self, frame):
+        try:
+            if self._recognition_frame_queue and self._recognition_frame_queue.empty():
+                self._recognition_frame_queue.put_nowait(frame)
+        except e:
+            self._recognition_frame_queue = None
         if self._display_frame_queue.empty():
             self._display_frame_queue.put_nowait(frame)
         if self._capture:
