@@ -56,6 +56,8 @@ class BaseScript(ABC):
         self._current_circle_begin_time_monotonic = 0
         # 当前循环帧数
         self._current_circle_frame_count = -1
+        # 当前循环次数
+        self._circle_times = 0
         # 循环重新开始标志
         self._circle_continue_flag = False
         # 循环跳出标志
@@ -77,6 +79,10 @@ class BaseScript(ABC):
 
     @abstractmethod
     def on_stop(self):
+        pass
+
+    @abstractmethod
+    def on_circle(self):
         pass
 
     @abstractmethod
@@ -112,6 +118,28 @@ class BaseScript(ABC):
             return self._after_cycle_frame_count   
         elif self._running_status == WorkflowEnum.End:
             return 0
+
+    # 循环次数
+    @final
+    @property
+    def circle_times(self)->float:
+        return self._circle_times
+    
+    # 当前循环持续时间
+    @final
+    @property
+    def current_circle_time_span(self)->float:
+        if self._running_status != WorkflowEnum.Circle:
+            return -1
+        return time.monotonic() - self._current_circle_begin_time_monotonic
+    
+    # 首次循环持续时间
+    @final
+    @property
+    def first_circle_time_span(self)->float:
+        if self._running_status != WorkflowEnum.Circle:
+            return -1
+        return time.monotonic() - self._first_circle_begin_time_monotonic
     
     # 运行宏命令
     @final
@@ -246,9 +274,12 @@ class BaseScript(ABC):
 
     @final
     def _on_circle(self):
+        if self._running_status == WorkflowEnum.Circle:
+            self.on_circle()
         self._running_status = WorkflowEnum.Circle
         self._current_circle_begin_time_monotonic = time.monotonic()
         self._current_circle_frame_count = 0
+        self._circle_times += 1
 
     @final
     def _on_circle_break(self):

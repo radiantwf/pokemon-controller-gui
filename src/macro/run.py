@@ -25,7 +25,7 @@ def _run_macro(name: str, stop_event: multiprocessing.Event, controller_input_ac
             _result_info = "不存在名称为{}的脚本".format(name)
             if log:
                 send_log(_result_info)
-                return
+            return
         _result_info = ""
         _current_info = "正在运行 [{}] 脚本，已运行{}次，计划运行{}次\n".format(
             summary, times, loop)

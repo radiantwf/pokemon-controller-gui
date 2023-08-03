@@ -43,7 +43,7 @@ def run(camera_device: CameraDevice, stop_event: multiprocessing.Event, frame_qu
                         camera_device.width, camera_device.height, 3, cv2.CAP_PVAPI_PIXELFORMAT_BGR24, frame.tobytes())
                     try:
                         if frame_queue.empty():
-                            frame_queue.put_nowait(send_frame)
+                            frame_queue.put(send_frame)
                     except:
                         pass
             else:

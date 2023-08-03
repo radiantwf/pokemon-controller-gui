@@ -441,7 +441,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def on_capture_clicked(self):
         self._capture = True
-        # self._camera_launcher.put_nowait("camera")
 
     def on_rescan_clicked(self):
         self.build_camera_list_comboBox()
@@ -509,12 +508,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def on_receive_frame(self, frame):
         try:
-            if self._recognition_frame_queue and self._recognition_frame_queue.empty():
-                self._recognition_frame_queue.put_nowait(frame)
-        except e:
+            if self._recognition_frame_queue is not None and self._recognition_frame_queue.empty():
+                self._recognition_frame_queue.put(frame)
+        except:
             self._recognition_frame_queue = None
         if self._display_frame_queue.empty():
-            self._display_frame_queue.put_nowait(frame)
+            self._display_frame_queue.put(frame)
         if self._capture:
             np_array = numpy.frombuffer(
                 frame.bytes(), dtype=numpy.uint8)
