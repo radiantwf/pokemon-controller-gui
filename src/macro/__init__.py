@@ -12,7 +12,7 @@ def published():
         return "{}"
 
 
-def run(macro_name: str, stop_event: multiprocessing.Event, controller_input_action_queue: multiprocessing.Queue, loop: int = 1, paras: dict = dict(), log = True):
+def run(macro_name: str, stop_event, controller_input_action_queue: multiprocessing.Queue, loop: int = 1, paras: dict = dict(), log = True):
     m = macro.Macro()
     m.reload()
     summary = macro_name

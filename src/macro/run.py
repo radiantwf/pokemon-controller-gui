@@ -8,7 +8,7 @@ from . import action
 _Min_Key_Send_Span = 0.001
 
 
-def _run_macro(name: str, stop_event: multiprocessing.Event, controller_input_action_queue: multiprocessing.Queue, summary: str, loop: int = 1, paras: dict = dict(), log = True):
+def _run_macro(name: str, stop_event, controller_input_action_queue: multiprocessing.Queue, summary: str, loop: int = 1, paras: dict = dict(), log = True):
     joystick = JoyStick(controller_input_action_queue)
     # msg = "开始运行{}脚本，循环次数：{}".format(name, loop)
     times = 0
@@ -41,7 +41,7 @@ def _run_macro(name: str, stop_event: multiprocessing.Event, controller_input_ac
                 ret = act.pop()
                 # print(ret[0])
                 if ret[0] != None:
-                    _run_line(joystick, ret[0])
+                    _run_line(joystick, stop_event, ret[0])
                 if ret[1]:
                     break
             times += 1
@@ -81,7 +81,7 @@ def _get_action(name: str, paras: dict = dict()) -> action.Action:
     return act
 
 
-def _run_line(joystick: JoyStick, action_line: str):
+def _run_line(joystick: JoyStick, stop_event, action_line: str):
     inputs = []
     actions = action_line.split("->")
     for action in actions:
@@ -102,16 +102,16 @@ def _run_line(joystick: JoyStick, action_line: str):
             except:
                 pass
         inputs.append((p1, p2))
-    _key_press(joystick, inputs)
+    _key_press(joystick, stop_event, inputs)
 
 
-def _key_press(joystick: JoyStick, inputs=[]):
+def _key_press(joystick: JoyStick, stop_event, inputs=[]):
     last_action = ""
     for input_line in inputs:
         last_action = input_line[0]
         if input_line[0] == "~":
             continue
-        _send(joystick, input_line[0], input_line[1])
+        _send(joystick, stop_event, input_line[0], input_line[1])
     if last_action != "~":
         release(joystick)
 
@@ -120,10 +120,12 @@ def release(joystick: JoyStick):
     _send(joystick)
 
 
-def _send(joystick: JoyStick, input_line: str = "", delay: float = 0):
+def _send(joystick: JoyStick, stop_event = None, input_line: str = "", delay: float = 0):
     # print("{}\t{}".format(time.monotonic() - _start_time, input_line))
     first = True
     while True:
+        if stop_event is not None and stop_event.is_set():
+            raise InterruptedError
         if first:
             first = False
             joystick.send_action(input_line)

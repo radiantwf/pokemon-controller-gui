@@ -46,12 +46,15 @@ class SwshBattleShiny(BaseScript):
 
     def on_circle(self):
         if self.circle_times > 0 and self.circle_times % 10 == 0:
-            circle_span = self.first_circle_time_span
+            circle_span = self.run_time_span
             self.send_log("闪光检测中，已经运行{}次，耗时{}小时{}分{}秒".format(self.circle_times, math.floor(
                 circle_span/3600), math.floor(circle_span/60), math.floor(circle_span % 60)))
 
     def on_stop(self):
-        pass
+        span = self.run_time_span
+        _result_info = "[{}] 脚本停止，实际运行{}次\n持续运行时间：{:.0f}小时{:.0f}分{:.0f}秒".format(
+            '宝可梦剑盾定点闪图像识别检测脚本', self.circle_times, span/3600, (span % 3600)/60, span % 60)
+        self.send_log(_result_info)
 
     def on_error(self):
         pass
@@ -75,13 +78,14 @@ class SwshBattleShiny(BaseScript):
 
     def circle_init(self):
         self._circle_step_2_start_time_monotonic = 0
+        self._circle_step_2_time_monotonic_check_1_temp = 0
         self._circle_step_2_time_monotonic_check_1 = 0
         self._circle_step_2_frame_count_check_1 = 0
         pass
 
     def circle_step_0(self):
         if self.current_frame_count == 1:
-            self.macro_run("pokemon.swsh.common.restart_game",
+            self.macro_run("recognition.pokemon.swsh.common.restart_game",
                            1, {"secondary": "True"}, True, None)
             self._circle_step_index += 1
         else:
@@ -107,23 +111,24 @@ class SwshBattleShiny(BaseScript):
         _, max_val, _, p = cv2.minMaxLoc(match)
         if max_val > 0.75 and abs(p[0] - self._template_p[0]) <= 10 and abs(p[1] - self._template_p[1]) <= 10:
             if self._circle_step_2_time_monotonic_check_1 == 0:
-                # self.send_log("开始检测闪光,帧数:{},时长{}".format(self.current_frame_count,self.current_circle_time_span))
-                self._circle_step_2_time_monotonic_check_1 = time.monotonic()
-                self._circle_step_2_frame_count_check_1 = self.current_frame_count
-                self.macro_stop(block=False)
+                if self._circle_step_2_time_monotonic_check_1_temp == 0:
+                    self.macro_stop(block=False)
+                self._circle_step_2_time_monotonic_check_1_temp = time.monotonic()
             else:
                 span = time.monotonic() - self._circle_step_2_time_monotonic_check_1
-                if span <= 0.15:
-                    return
-                elif span < 2:
+                if span < 0.8:
                     self._circle_step_index += 1
                     return
                 elif span < 3:
-                    self.macro_stop()
-                    circle_span = self.first_circle_time_span
+                    self.macro_stop(block=False)
+                    circle_span = self.run_time_span
                     self.send_log("检测到闪光，请人工核查，已运行{}次，耗时{}小时{}分{}秒".format(self.circle_times, math.floor(
                         circle_span/3600), math.floor((circle_span % 3600) / 60), math.floor(circle_span % 60)))
                     self.stop_work()
+        elif self._circle_step_2_time_monotonic_check_1_temp > 0 and self._circle_step_2_time_monotonic_check_1 == 0:
+                self._circle_step_2_time_monotonic_check_1 = self._circle_step_2_time_monotonic_check_1_temp
+                self._circle_step_2_frame_count_check_1 = self.current_frame_count
+
 
     def circle_step_3(self):
         self.macro_stop()

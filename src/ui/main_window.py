@@ -388,7 +388,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if index != 1:
             if not self.check_macro_thread_running():
                 self.toolBox.setCurrentIndex(1)
-        elif index != 2:
+        if index != 2:
             if not self.check_recognition_thread_running():
                 self.toolBox.setCurrentIndex(2)
 

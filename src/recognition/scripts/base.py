@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import threading
 import multiprocessing
 import sys
 import time
@@ -38,7 +39,7 @@ class BaseScript(ABC):
         self._fps = self._my_const.RecognizeVideoFps
         
         # 宏进程
-        self._macro_process = None
+        self._macro_thread = None
         self._macro_stop_event = None
         # 当前帧
         self._current_frame = None
@@ -141,19 +142,25 @@ class BaseScript(ABC):
             return -1
         return time.monotonic() - self._first_circle_begin_time_monotonic
     
+    # 运行持续时间
+    @final
+    @property
+    def run_time_span(self)->float:
+        return time.monotonic() - self._run_start_time_monotonic
+    
     # 运行宏命令
     @final
     def macro_run(self, macro_name, loop=1, paras={}, block:bool=True, timeout:float=None):
         self.macro_stop()
 
-        self._macro_stop_event = multiprocessing.Event()
-        self._macro_process = multiprocessing.Process(
+        self._macro_stop_event = threading.Event()
+        self._macro_thread = threading.Thread(
             target=macro.run, args=(macro_name, self._macro_stop_event, self._controller_input_action_queue, loop, paras, False))
-        self._macro_process.start()
+        self._macro_thread.start()
         if not block:
             return True
         start_monotonic = time.monotonic()
-        while self._macro_process.is_alive():
+        while self._macro_thread.is_alive():
             time.sleep(0.1)
             if timeout != None and timeout > 0 and time.monotonic() - start_monotonic > timeout:
                 return self.macro_stop(timeout=None)
@@ -163,26 +170,23 @@ class BaseScript(ABC):
     # 停止宏命令
     @final
     def macro_stop(self, block=True, timeout = None):
-        if self._macro_process != None:
-            if self._macro_process.is_alive():
+        if self._macro_thread != None:
+            if self._macro_thread.is_alive():
                 if block:
                     try:
                         self._macro_stop_event.set()
-                        self._macro_process.join(timeout)
-                        if self._macro_process.is_alive():
-                            self._macro_process.terminate()
-                        else:
-                            self._macro_process = None
+                        self._macro_thread.join(timeout)
+                        if not self._macro_thread.is_alive():
+                            self._macro_thread = None
                             return True
                     except:
-                        self._macro_process.terminate()
-                    self._macro_process = None
+                        pass
                     return False
                 else:
                     self._macro_stop_event.set()
-                    return True
+                    return False
             else:
-                self._macro_process = None
+                self._macro_thread = None
         return True
     
     # 发送日志
