@@ -20,7 +20,6 @@ class RecognitionLauncher(object):
             RecognitionLauncher._first = False
             self._recognition_process = None
             self._stop_event = None
-            self._frame_queue = None
 
     def list_recognition(self):
         scripts = recognition.list_recognition_script()
@@ -29,16 +28,12 @@ class RecognitionLauncher(object):
     def recognition_start(self, script_name: str, frame_queue: multiprocessing.Queue, controller_input_action_queue: multiprocessing.Queue):
         self.recognition_stop()
         self._stop_event = multiprocessing.Event()
-        self._frame_queue = frame_queue
         self._recognition_process = multiprocessing.Process(
-            target=recognition.run, args=(script_name, self._stop_event, self._frame_queue, controller_input_action_queue, ))
+            target=recognition.run, args=(script_name, self._stop_event, frame_queue, controller_input_action_queue, ))
         self._recognition_process.start()
-        return frame_queue
+        return
 
     def recognition_stop(self, timeout=10):
-        if self._frame_queue != None:
-            self._frame_queue.close()
-            self._frame_queue = None
         if self._recognition_process != None:
             try:
                 self._stop_event.set()

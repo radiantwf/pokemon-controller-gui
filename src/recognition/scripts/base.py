@@ -28,8 +28,11 @@ class BaseScript(ABC):
     def __init__(self, script_name, stop_event: multiprocessing.Event, frame_queue: multiprocessing.Queue, controller_input_action_queue: multiprocessing.Queue):
         # 停止事件
         self._stop_event = stop_event
+        
         # 帧队列
         self._frame_queue = frame_queue
+        while not self._frame_queue.empty():
+            self._frame_queue.get_nowait()
         # 控制器输入队列
         self._controller_input_action_queue = controller_input_action_queue
         self._script_name = script_name
@@ -161,6 +164,8 @@ class BaseScript(ABC):
             return True
         start_monotonic = time.monotonic()
         while self._macro_thread.is_alive():
+            if self._stop_event is not None and self._stop_event.is_set():
+                raise InterruptedError
             time.sleep(0.1)
             if timeout != None and timeout > 0 and time.monotonic() - start_monotonic > timeout:
                 return self.macro_stop(timeout=None)
@@ -175,10 +180,16 @@ class BaseScript(ABC):
                 if block:
                     try:
                         self._macro_stop_event.set()
-                        self._macro_thread.join(timeout)
-                        if not self._macro_thread.is_alive():
-                            self._macro_thread = None
-                            return True
+                        start_monotonic = time.monotonic()
+                        while time.monotonic() - start_monotonic < timeout:
+                            if self._stop_event is not None and self._stop_event.is_set():
+                                raise InterruptedError
+                            time.sleep(0.1)
+                            if not self._macro_thread.is_alive():
+                                self._macro_thread = None
+                                return True
+                    except InterruptedError:
+                        raise
                     except:
                         pass
                     return False
@@ -221,17 +232,17 @@ class BaseScript(ABC):
         self._on_start()
         try:
             while True:
-                if self._stop_event.is_set():
-                    raise InterruptedError
                 if self._stop_flag:
                     return
+                if self._stop_event.is_set():
+                    raise InterruptedError
                 frame = None
                 while not self._frame_queue.empty():
-                    if self._stop_event.is_set():
-                        raise InterruptedError
+                    frame = self._frame_queue.get()
                     if self._stop_flag:
                         return
-                    frame = self._frame_queue.get()
+                    if self._stop_event.is_set():
+                        raise InterruptedError
                 if frame is None or time.monotonic() - self._last_set_frame_time_monotonic < 1.0/self._fps:
                     time.sleep(0.001)
                     continue
@@ -264,16 +275,19 @@ class BaseScript(ABC):
                 
                 # 抽取一帧后，如果队列中还有帧，则清空队列堆积数据
                 while not self._frame_queue.empty():
+                    self._frame_queue.get()
                     if self._stop_flag:
                         return
-                    self._frame_queue.get()
+                    if self._stop_event.is_set():
+                        raise InterruptedError
         except InterruptedError:
             return
         except Exception as e:
             self.on_error()
             raise e
         finally:
-            self.macro_stop(timeout=1)
+            self._stop_event = None
+            self.macro_stop(timeout=0.5, block=True)
             self._on_stop()
 
     @final

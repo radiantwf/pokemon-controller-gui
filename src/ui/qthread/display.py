@@ -17,10 +17,10 @@ class DisplayThread(QThread):
             if self._stop_signal:
                 break
             frame = None
-            try:
-                frame = self._queue.get(True,0.5)
-            except queue.Empty:
-                continue
+            while not self._queue.empty():
+                frame = self._queue.get()
+                if self._stop_signal:
+                    break
             if frame == None:
                 time.sleep(0.01)
                 continue

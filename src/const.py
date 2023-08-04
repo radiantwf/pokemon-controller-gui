@@ -18,7 +18,7 @@ class ConstClass(object):
     
     RecognizeVideoWidth = 960
     RecognizeVideoHeight = 540
-    RecognizeVideoFps = 5
+    RecognizeVideoFps = 10
 
     LogSocketPort = 39008
     ActionDisplaySocketPort = 39009

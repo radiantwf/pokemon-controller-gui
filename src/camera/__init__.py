@@ -9,7 +9,7 @@ import platform
 system = platform.system()
 
 
-def run(camera_device: CameraDevice, stop_event: multiprocessing.Event, frame_queue: multiprocessing.Queue):
+def run(camera_device: CameraDevice, stop_event: multiprocessing.Event, frame_queue: multiprocessing.Queue, recognition_frame_queue: multiprocessing.Queue):
     id = -1
     cameras = QMediaDevices.videoInputs()
     cameras.sort(key=lambda x: x.id().data())
@@ -36,16 +36,12 @@ def run(camera_device: CameraDevice, stop_event: multiprocessing.Event, frame_qu
             if cap.isOpened():
                 ret, frame = cap.read()
                 if ret:
-                    if frame_queue.full():
-                        time.sleep(0.001)
-                        continue
                     send_frame = Frame(
                         camera_device.width, camera_device.height, 3, cv2.CAP_PVAPI_PIXELFORMAT_BGR24, frame.tobytes())
-                    try:
-                        if frame_queue.empty():
-                            frame_queue.put(send_frame)
-                    except:
-                        pass
+                    if frame_queue.empty():
+                        frame_queue.put(send_frame)
+                    if recognition_frame_queue.empty():
+                        recognition_frame_queue.put(send_frame)
             else:
                 break
         except InterruptedError:

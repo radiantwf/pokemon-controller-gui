@@ -28,7 +28,6 @@ from ui.joystick.joystick import Joystick
 from ui.macro.dialog import LaunchMacroParasDialog
 from ui.macro.launcher import MacroLauncher
 
-from ui.qthread.video import VideoThread
 from ui.recognition.launcher import RecognitionLauncher
 Ui_MainWindow, QMainWindowBase = loadUiType("./resources/ui/main_form.ui")
 
@@ -54,7 +53,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._serial_devices = []
         self._current_joystick = None
         self._current_camera = None
-        self.th_video = None
         self.th_log = None
         self.th_action_display = None
         self._display_frame_queue = None
@@ -73,11 +71,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         steps = 1001
         self._stick_label_gradient_colors = self._gradient(
             start_color, end_color, steps)
+        
+        self._display_frame_queue = multiprocessing.Queue(1)
+        self._recognition_frame_queue = multiprocessing.Queue(1)
+
         self._macro_list = []
         self._macro_launcher = MacroLauncher()
         self._recognition_list = []
         self._recognition_launcher = RecognitionLauncher()
-        self._recognition_frame_queue = None
         self._controller_launcher = ControllerLauncher()
         self._camera_launcher = CameraLauncher()
 
@@ -98,7 +99,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.th_log = LogThread(self)
         self.th_log.log.connect(self.setLog)
         self.th_log.start()
-        self._display_frame_queue = queue.Queue(1)
+
         self.th_display = DisplayThread(self, self._display_frame_queue)
         self.th_display.display_frame.connect(self.display_frame)
         self.th_display.start()
@@ -276,7 +277,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if not self._controller_input_action_queue:
             return
         recognition = self._recognition_list[self.listWidget_recognition.currentRow()]
-        self._recognition_frame_queue = multiprocessing.Queue(1)
         self._recognition_launcher.recognition_start(recognition, self._recognition_frame_queue, self._controller_input_action_queue)
             
     def play_audio(self):
@@ -321,17 +321,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if self._current_camera != None:
             self._current_camera.setFps(int(self.cbxFps.currentText()))
         self._camera_launcher.camera_stop()
-        if self.th_video:
-            self.th_video.stop()
-            if not self.th_video.wait(1000):
-                self.th_video.terminate()
-            self.th_video = None
         if self._current_camera:
             self._capture = False
-            frame_queue = self._camera_launcher.camera_start(self._current_camera)
-            self.th_video = VideoThread(self, frame_queue)
-            self.th_video.on_recv_frame.connect(self.on_receive_frame)
-            self.th_video.start()
+            self._camera_launcher.camera_start(self._current_camera, self._display_frame_queue, self._recognition_frame_queue)
 
     def on_mute_changed(self):
         self.play_audio()
@@ -430,7 +422,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             msg_box.addButton('取消', QMessageBox.ButtonRole.RejectRole)
             ret = msg_box.exec_()
             if ret == QMessageBox.ButtonRole.ActionRole.value:
-                self._recognition_frame_queue = None
                 if not self._recognition_launcher.recognition_stop():
                     send_log("已强行终止运行中图像识别脚本")
                 self.on_serial_changed()
@@ -471,8 +462,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if self._timer:
             self._timer.stop()
         self.stop_audio()
-        if self.th_video:
-            self.th_video.terminate()
         if self.th_display:
             self.th_display.terminate()
         if self.th_log:
@@ -489,6 +478,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     @Slot(Frame)
     def display_frame(self, frame):
+        if self._capture:
+            np_array = numpy.frombuffer(
+                frame.bytes(), dtype=numpy.uint8)
+            mat = np_array.reshape(
+                (frame.height, frame.width, frame.channels))
+            if not os.path.exists("./Captures"):
+                os.mkdir("./Captures")
+            time_str = time.strftime(
+                "%Y%m%d%H%M%S", time.localtime())
+            cv2.imwrite("./Captures/"+time_str+".jpg", mat)
+            self._capture = False
+
         np_array = numpy.frombuffer(
             frame.bytes(), dtype=numpy.uint8)
         mat = np_array.reshape(
@@ -506,25 +507,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         else:
             self.lblCameraFrame.clear()
 
-    def on_receive_frame(self, frame):
-        try:
-            if self._recognition_frame_queue is not None and self._recognition_frame_queue.empty():
-                self._recognition_frame_queue.put(frame)
-        except:
-            self._recognition_frame_queue = None
-        if self._display_frame_queue.empty():
-            self._display_frame_queue.put(frame)
-        if self._capture:
-            np_array = numpy.frombuffer(
-                frame.bytes(), dtype=numpy.uint8)
-            mat = np_array.reshape(
-                (frame.height, frame.width, frame.channels))
-            if not os.path.exists("./Captures"):
-                os.mkdir("./Captures")
-            time_str = time.strftime(
-                "%Y%m%d%H%M%S", time.localtime())
-            cv2.imwrite("./Captures/"+time_str+".jpg", mat)
-            self._capture = False
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.Type.KeyPress:
