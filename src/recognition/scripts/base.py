@@ -241,7 +241,7 @@ class BaseScript(ABC):
                         raise InterruptedError
                 delay = 1.0/self._fps - (time.monotonic() - self._last_set_frame_time_monotonic)
                 if frame is None or delay > 0:
-                    if delay > 0.001:
+                    if frame is None or delay > 0.001:
                         delay = 0.001
                     time.sleep(delay)
                     continue
