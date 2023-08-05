@@ -1,12 +1,7 @@
 
-import json
 import multiprocessing
-import sys
-import time
-
 from controller.device import SerialDevice
 
-sys.path.append('./src')
 import controller
 
 class ControllerLauncher(object):

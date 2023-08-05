@@ -1,10 +1,6 @@
 
 import multiprocessing
-import sys
-
 from camera.device import CameraDevice
-
-sys.path.append('./src')
 import camera
 
 class CameraLauncher(object):

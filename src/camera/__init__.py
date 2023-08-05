@@ -38,10 +38,10 @@ def run(camera_device: CameraDevice, stop_event: multiprocessing.Event, frame_qu
                 if ret:
                     send_frame = Frame(
                         camera_device.width, camera_device.height, 3, cv2.CAP_PVAPI_PIXELFORMAT_BGR24, frame.tobytes())
-                    if frame_queue.empty():
-                        frame_queue.put(send_frame)
-                    if recognition_frame_queue.empty():
-                        recognition_frame_queue.put(send_frame)
+                    if not frame_queue.full():
+                        frame_queue.put_nowait(send_frame)
+                    if not recognition_frame_queue.full():
+                        recognition_frame_queue.put_nowait(send_frame)
             else:
                 break
         except InterruptedError:

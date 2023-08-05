@@ -1,11 +1,6 @@
 
 import recognition
-import json
 import multiprocessing
-import sys
-
-sys.path.append('./src')
-
 
 class RecognitionLauncher(object):
     def __new__(cls, *args, **kwargs):

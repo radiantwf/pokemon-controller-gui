@@ -5,15 +5,11 @@ import sys
 import time
 from typing import final
 import cv2
-
 import numpy
 from datatype.frame import Frame
 from log import send_log
 from const import ConstClass
-
 from enum import Enum
-
-sys.path.append('./src')
 import macro
 
 class WorkflowEnum(Enum):
@@ -243,9 +239,15 @@ class BaseScript(ABC):
                         return
                     if self._stop_event.is_set():
                         raise InterruptedError
-                if frame is None or time.monotonic() - self._last_set_frame_time_monotonic < 1.0/self._fps:
-                    time.sleep(0.001)
+                delay = 1.0/self._fps - (time.monotonic() - self._last_set_frame_time_monotonic)
+                if frame is None or delay > 0:
+                    if delay > 0.001:
+                        delay = 0.001
+                    time.sleep(delay)
                     continue
+
+                self._last_set_frame_time_monotonic = time.monotonic()
+                self._current_frame = frame
 
                 # 设置准备状态
                 if self._running_status == WorkflowEnum.Begin:
@@ -255,13 +257,9 @@ class BaseScript(ABC):
                     self._preparation_frame_count += 1
                 elif self._running_status == WorkflowEnum.Circle:
                     self._current_circle_frame_count += 1
-                elif self._running_status == WorkflowEnum.Circle:
-                    self._current_circle_frame_count += 1
                 elif self._running_status == WorkflowEnum.AfterCircle:
                     self._after_cycle_frame_count += 1
 
-                self._last_set_frame_time_monotonic = time.monotonic()
-                self._current_frame = frame
                 self.process_frame()
 
                 if self._running_status == WorkflowEnum.Preparation and self._first_circle_begin_time_monotonic > 0:
@@ -273,13 +271,6 @@ class BaseScript(ABC):
                 elif self._running_status == WorkflowEnum.Circle and self._circle_break_flag:
                     self._on_circle_break()
                 
-                # 抽取一帧后，如果队列中还有帧，则清空队列堆积数据
-                while not self._frame_queue.empty():
-                    self._frame_queue.get()
-                    if self._stop_flag:
-                        return
-                    if self._stop_event.is_set():
-                        raise InterruptedError
         except InterruptedError:
             return
         except Exception as e:

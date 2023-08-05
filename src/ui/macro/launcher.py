@@ -1,9 +1,6 @@
 
 import json
 import multiprocessing
-import sys
-
-sys.path.append('./src')
 import macro
 
 class MacroLauncher(object):
