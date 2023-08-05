@@ -116,11 +116,13 @@ class SwshBattleShiny(BaseScript):
                 self._circle_step_2_time_monotonic_check_1_temp = time.monotonic()
             else:
                 span = time.monotonic() - self._circle_step_2_time_monotonic_check_1
-                if span < 0.8:
+                if span < 0.9:
+                    # self.send_log("time_span:{:.2f}, frames_span:{}".format(span, self.current_frame_count - self._circle_step_2_frame_count_check_1))
                     self._circle_step_index += 1
                     return
                 elif span < 3:
                     self.macro_stop(block=False)
+                    # self.send_log("time_span:{:.2f}, frames_span:{}".format(span, self.current_frame_count - self._circle_step_2_frame_count_check_1))
                     circle_span = self.run_time_span
                     self.send_log("检测到闪光，请人工核查，已运行{}次，耗时{}小时{}分{}秒".format(self.circle_times, math.floor(
                         circle_span/3600), math.floor((circle_span % 3600) / 60), math.floor(circle_span % 60)))
