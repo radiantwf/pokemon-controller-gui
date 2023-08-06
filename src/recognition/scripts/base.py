@@ -168,6 +168,14 @@ class BaseScript(ABC):
         self._macro_stop_event = None
         return True
 
+    # 宏命令线程是否正在运行
+    @final
+    @property
+    def macro_running(self):
+        if self._macro_thread == None:
+            return False
+        return self._macro_thread.is_alive()
+    
     # 停止宏命令
     @final
     def macro_stop(self, block=True, timeout = None):
