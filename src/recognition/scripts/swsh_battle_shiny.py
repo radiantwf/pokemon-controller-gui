@@ -116,14 +116,11 @@ class SwshBattleShiny(BaseScript):
             else:
                 span = time.monotonic() - self._circle_step_2_time_monotonic_check_1
                 if span < 1.1:
-                    if span > 0.7:
-                        self.send_log("time_span:{:.2f}, frames_span:{}".format(
-                            span, self.current_frame_count - self._circle_step_2_frame_count_check_1))
                     self._circle_step_index += 1
                     return
-                elif span < 3:
-                    self.send_log("time_span:{:.2f}, frames_span:{}".format(
-                        span, self.current_frame_count - self._circle_step_2_frame_count_check_1))
+                elif span < 5:
+                    # self.send_log("time_span:{:.2f}, frames_span:{}".format(
+                    #     span, self.current_frame_count - self._circle_step_2_frame_count_check_1))
                     run_time_span = self.run_time_span
                     if self.current_frame_count - self._circle_step_2_frame_count_check_1 <= 4:
                         self._circle_step_index += 1
