@@ -90,9 +90,14 @@ class SVArea0Station4(BaseScript):
     def circle_step_0(self):
         self.macro_run("recognition.pokemon.sv.area0.area0_station4",
                        1, {}, False, None)
+        self._bg_frame = None
+        self._bg_frame_blur = None
         self._circle_step_index += 1
 
     def circle_step_1(self):
+        # img = self.current_frame
+        # cv2.imshow('Video', img)
+        # cv2.waitKey(1)
         if self.current_circle_time_span >= 20:
             img = self.current_frame
             cv2.imwrite("./Captures/{}-{}.jpg".format(time.strftime(
@@ -108,12 +113,24 @@ class SVArea0Station4(BaseScript):
                 img, self._template, cv2.TM_CCOEFF_NORMED)
             _, max_val, _, p = cv2.minMaxLoc(match)
             if max_val > 0.4:
-                print(max_val, self.current_frame_count,
-                    self.current_circle_time_span)
+                # print(max_val, self.current_frame_count,
+                #     self.current_circle_time_span)
                 self.macro_stop(block=False)
             return
-        if not self.macro_running and self.current_circle_time_span >= 4.0 and time.monotonic() - self.last_capture_time >= 4.0:
-            self.last_capture_time = time.monotonic()
+        if not self.macro_running and self.current_circle_time_span >= 4.0:
+            img = self.current_frame
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            if self._bg_frame is None:
+                self._bg_frame = img
+                self._bg_frame_blur = cv2.GaussianBlur(img, (21, 21), 0)
+            else:
+                frame_blur = cv2.GaussianBlur(img, (21, 21), 0)
+                # 计算背景图像和当前帧图像的差分图像
+                diff = cv2.absdiff(self._bg_frame_blur, frame_blur)
+                # 对差分图像进行二值化处理
+                thresh = cv2.threshold(diff, 25, 255, cv2.THRESH_BINARY)[1]
+                cv2.imshow('Video', thresh)
+                cv2.waitKey(1)
         pass
 
     def circle_step_2(self):
