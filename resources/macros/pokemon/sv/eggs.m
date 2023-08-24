@@ -128,7 +128,7 @@ A:0.01->0.008->A:0.05
 
 --朱紫野餐取蛋--
 <get_eggs|朱紫野餐|1--get_eggs_times|取蛋次数（每次等待2分钟）|15>
-[pokemon.scarletviolet.common.restart_game]
+[pokemon.sv.common.restart_game]
 X:0.1
 0.8
 LStick@127,0:0.05
