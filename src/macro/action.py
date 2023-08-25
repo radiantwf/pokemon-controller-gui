@@ -1,12 +1,17 @@
-from . import macro, paras
+from . import macro, paras, node
 
 
 class Action(object):
-    def __init__(self, macro_name: str, in_paras: dict = dict()):
+    def __init__(self, macro_name: str, macro_text: str = None, in_paras: dict = dict()):
         self._macro = macro.Macro()
-        n = self._macro.get_node(macro_name)
-        self._head = n[0]
-        self._paras = paras.Paras(n[1], in_paras)
+        n = None
+        if macro_name != None:
+            n = self._macro.get_node(macro_name)
+        elif macro_text != None:
+            n = self._macro.get_temp_script_node(macro_text)
+        if n != None and isinstance(n, tuple) and len(n) == 2:
+            self._head = n[0]
+            self._paras = paras.Paras(n[1], in_paras)
         self._current = self._head
         self._current_node_link_cycle_times = 1
         self._waiting_node = []

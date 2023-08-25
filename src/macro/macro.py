@@ -32,7 +32,7 @@ class Macro(object):
         self._default_paras = dict()
         self._dic_macros = self._get_macros()
 
-    def get_node(self, name: str) -> node.Node:
+    def get_node(self, name: str) -> tuple[node.Node, dict]:
         try:
             macro_name = name
             for p in self._publish:
@@ -41,6 +41,19 @@ class Macro(object):
             return (self._dic_macros.get(macro_name), self._default_paras.get(macro_name))
         except:
             return None
+
+    def get_temp_script_node(self, text: str) -> tuple[node.Node, dict]:
+        dic = self._read_text(text, dict(), "temp_script")
+        rows = dic.get("temp_script")
+        if rows == None or len(rows) < 1:
+            return None
+        action = None
+        for row in rows:
+            if action == None:
+                action = node.Node(row)
+            else:
+                action = action.append(row)
+        return (action.head, dict())
 
     def _get_macros(self) -> dict:
         dic_action_lines = dict()
@@ -78,7 +91,6 @@ class Macro(object):
             f = open(filename, "rt")
         except:
             return dic
-
         file_tag = filename[len(_MACRO_BASE_PATH) + 1:(
             len(filename) - len(_MACRO_EXT))].replace("/", ".", -1) + "."
         rows = []
@@ -98,6 +110,23 @@ class Macro(object):
         if len(rows) > 0:
             dic = self._read_segments(rows, dic=dic, file_tag=file_tag)
         f.close()
+        return dic
+
+    def _read_text(self, text: str, dic=dict(), name="temp_script") -> dict:
+        lines = text.splitlines(True)
+        rows = []
+        for row in lines:
+            row = row.strip()
+            if row == "":
+                continue
+            elif row.startswith("--") or row.startswith("#"):
+                continue
+            row = row.replace(" ", "", -1).replace("\t", "", -1)
+            if row.startswith("[") and row.count(".") == 0:
+                row = "[" + file_tag + row[1:]
+            rows.append(row)
+        if len(rows) > 0:
+            dic = self._read_segments(rows, dic=dic, file_tag="", name=name)
         return dic
 
     def _read_segments(self, src_rows, dic=dict(), file_tag: str = "", name: str = "") -> dict:
