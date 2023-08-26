@@ -14,7 +14,7 @@ class SwshBattleShiny(BaseScript):
         self._prepare_step_index = -1
         self._circle_steps = self.init_circle_steps()
         self._circle_step_index = -1
-        self._template = cv2.imread("resources/img/battle_shiny.jpg")
+        self._template = cv2.imread("resources/img/recognition/pokemon/swsh/battle_shiny.jpg")
         self._template = cv2.cvtColor(self._template, cv2.COLOR_BGR2GRAY)
         self._template_p = (865, 430)
 
