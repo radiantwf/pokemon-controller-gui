@@ -28,16 +28,28 @@ A:0.1
 4
 
 --开启团战 获取瓦特等待（脱机）--
-<goto_raid_watts_wait_offline>
+<goto_raid_wait_offline--has_watts|是否包含watts|True>
+{
+    A:0.1
+    0.4
+    A:0.1
+    0.4
+}?has_watts
 A:0.1
 0.8
 A:0.1
 0.8
 
 --开启团战 获取瓦特等待（联机）--
-<goto_raid_watts_wait_online>
+<goto_raid_wait_online--has_watts|是否包含watts|True>
+{
+    A:0.1
+    0.5
+    A:0.1
+    0.5
+}?has_watts
 A:0.1
-1
+1.5
 0.8
 A:0.1
 0.8
@@ -45,13 +57,13 @@ A:0.1
 
 
 --开启团战（脱机）--
-<goto_raid_offline>
-[goto_raid_watts_wait_offline]
+<goto_raid_offline--has_watts|是否包含watts|True>
+[goto_raid_wait_offline]
 2.5
 
 --开启团战（联机）--
-<goto_raid_online>
-[goto_raid_watts_wait_online]
+<goto_raid_online--has_watts|是否包含watts|True>
+[goto_raid_wait_online]
 7
 2.5
 
@@ -90,7 +102,7 @@ A:0.1
 <wait_raid>
 A:0.1
 10
-LStick@0,-128:0.1
+LStick@0,-127:0.1
 90
 
 
@@ -124,7 +136,7 @@ Plus:0.1
 A:0.1
 1
 B:0.1
-2
+3
 
 
 --切换网络--
@@ -148,41 +160,44 @@ B:0.1
 <set_date_from_home>
 # 进入设置界面
 LStick@0,127:0.05
-0.05
+0.08
 LStick@127,0:0.05
-0.05
+0.08
 LStick@127,0:0.05
-0.05
+0.08
 LStick@127,0:0.05
-0.05
+0.08
 LStick@127,0:0.05
-0.05
+0.08
 LStick@127,0:0.05
-0.05
+0.08
 A:0.05
 1
 # 进入时间设置界面
 {
-	LStick@127,0:0.05
+	LStick@0,127:0.05
+	0.08
+}*15
+0.05
+A:0.05
+1
+{
+	LStick@0,127:0.05
+	0.08
+}*3
+LStick@0,127:0.3
+0.6
+{
+	LStick@0,127:0.05
 	0.05
-}*14
+}*2
 0.05
 A:0.05
 1
-LStick@0,127:0.05
-0.05
-LStick@0,127:0.05
-0.05
-LStick@0,127:0.05
-0.05
-LStick@0,127:0.05
-0.05
-A:0.05
-1
-LStick@0,127:0.05
-0.05
-LStick@0,127:0.05
-0.05
+{
+	LStick@0,127:0.05
+	0.05
+}*2
 
 
 --首次修改日期--
@@ -195,7 +210,7 @@ A:0.05
 0.05
 A:0.05
 0.05
-LStick@0,-128:0.05
+LStick@0,-127:0.05
 0.05
 A:0.05
 0.05
@@ -207,16 +222,16 @@ A:0.05
 0.12
 
 --后续修改日期--
-<add_one_day_initial>
+<add_one_day_following>
 A:0.05
 0.12
-LStick@-128,0:0.05
+LStick@-127,0:0.05
 0.05
-LStick@-128,0:0.05
+LStick@-127,0:0.05
 0.05
-LStick@-128,0:0.05
+LStick@-127,0:0.05
 0.05
-LStick@0,-128:0.05
+LStick@0,-127:0.05
 0.05
 A:0.05
 0.05
@@ -227,6 +242,30 @@ A:0.05
 A:0.05
 0.12
 
+--向过去调整3天--
+<minus_three_days>
+# 进入设置界面
+A:0.05
+0.5
+# 首次修改日期
+A:0.05
+0.05
+A:0.05
+0.05
+LStick@0,127:0.05
+0.05
+LStick@0,127:0.05
+0.05
+LStick@0,127:0.05
+0.05
+A:0.05
+0.05
+A:0.05
+0.05
+A:0.05
+0.05
+A:0.05
+0.12
 
 <battle_check_shiny>
 7.8
