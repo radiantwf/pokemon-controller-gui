@@ -4,6 +4,10 @@ import time
 from recognition.scripts.base.base_script import BaseScript, WorkflowEnum
 import cv2
 import numpy as np
+from recognition.scripts.base.base_sub_step import SubStepRunningStatus
+from recognition.scripts.sv.common.menu.enter_item import SVEnterMenuItem, SVMenuItems
+
+from recognition.scripts.sv.common.menu.open import SVOpenMenu
 
 
 class SVEggs(BaseScript):
@@ -13,8 +17,7 @@ class SVEggs(BaseScript):
         self._prepare_step_index = -1
         self._circle_step_index = -1
         self._jump_next_frame = False
-        self._menu_arrow_template = cv2.imread("resources/img/recognition/pokemon/sv/menu_arrow.jpg")
-        self._menu_arrow_template = cv2.cvtColor(self._menu_arrow_template, cv2.COLOR_BGR2GRAY)
+
     @staticmethod
     def script_name() -> str:
         return "宝可梦朱紫孵蛋"
@@ -70,69 +73,39 @@ class SVEggs(BaseScript):
         ]
 
     def prepare_step_0(self):
+        self._sv_open_menu = SVOpenMenu(self)
+        self._sv_enter_menu_box = SVEnterMenuItem(
+            self, menu_item=SVMenuItems.Box)
         self._prepare_step_index += 1
 
     @property
     def cycle_step_list(self):
         return [
-            self.hatching,
+            self.open_menu,
+            self.enter_box,
         ]
 
     def circle_init(self):
         self.hatching_step_index = 0
         pass
 
-    def hatching(self):
-        if self.hatching_step_index >= 0:
-            if self.hatching_step_index >= len(self.hatching_step_list):
-                self._circle_step_index += 1
-                return
-            self.hatching_step_list[self.hatching_step_index]()
+    def open_menu(self):
+        status = self._sv_open_menu.run()
+        if status == SubStepRunningStatus.Running:
+            return
+        elif status == SubStepRunningStatus.OK:
+            self._circle_step_index += 1
         else:
-            self.hatching_step_index = 0
-            self.hatching()
+            self.send_log("{}函数返回状态为{}".format("open_menu",status.name))
+            self.stop_work()
 
-    # 包包 0.9837725162506104 (648, 121)
-    # 盒子 0.9873440265655518 (649, 161)            
-    # 野餐 0.9854351282119751 (648, 201)
-    # 宝可入口站 0.9781053066253662 (648, 241)
-    # 设置 0.9854401350021362 (648, 281)
-    # 记录 0.9784520864486694 (648, 321)
-    # 付费新增内容 0.9627913236618042 (649, 419)
-
-    # 宝可梦1 0.9802355170249939 (23, 91)
-    # 宝可梦2 0.9705981016159058 (23, 154)
-    # 宝可梦3 0.9855178594589233 (23, 217)
-    # 宝可梦4 0.9850992560386658 (23, 280)
-    # 宝可梦5 0.9853918552398682 (23, 343)
-    # 宝可梦6 0.9780521988868713 (23, 406)
-    # 坐骑 0.9853339195251465 (23, 491)
-
-
-    @property
-    def hatching_step_list(self):
-        return [
-            self.hatching_0,
-            self.hatching_1,
-            self.hatching_2,
-            self.hatching_3,
-        ]
-
-    def hatching_0(self):
-        # 连续点击B 持续2秒
-        self.macro_text_run("B:0.1\n0.1", loop=10, block=True)
-        time.sleep(2)
-        self.hatching_step_index += 1
-
-    def hatching_1(self):
-        self.macro_run("recognition.pokemon.sv.eggs.hatching_run", -1, {}, False, None)
-        self.hatching_step_index += 1
-    
-    
-    def hatching_2(self):
-        # self.hatching_step_index += 1
-        pass
-        
-    def hatching_3(self):
-        self.hatching_step_index += 1
-
+    def enter_box(self):
+        status = self._sv_enter_menu_box.run()
+        if status == SubStepRunningStatus.Running:
+            return
+        elif status == SubStepRunningStatus.OK:
+            self._circle_step_index += 1
+            self.stop_work()
+        else:
+            self.send_log("{}函数返回状态为{}".format("enter_box",status.name))
+            self.stop_work()
