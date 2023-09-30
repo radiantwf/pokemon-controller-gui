@@ -1,7 +1,7 @@
 import math
 import multiprocessing
 import time
-from recognition.scripts.base import BaseScript, WorkflowEnum
+from recognition.scripts.base.base_script import BaseScript, WorkflowEnum
 import cv2
 import numpy as np
 
