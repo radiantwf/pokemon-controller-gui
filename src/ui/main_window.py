@@ -38,7 +38,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         Ui_MainWindow.__init__(self)
 
         # 控制器输入命令队列
-        self._controller_input_action_queue:multiprocessing.Queue = None
+        self._controller_input_action_queue: multiprocessing.Queue = None
 
         pygame.init()
         pygame.joystick.init()
@@ -71,7 +71,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         steps = 1001
         self._stick_label_gradient_colors = self._gradient(
             start_color, end_color, steps)
-        
+
         self._display_frame_queue = multiprocessing.Queue(1)
         self._recognition_frame_queue = multiprocessing.Queue(1)
 
@@ -103,7 +103,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.th_display = DisplayThread(self, self._display_frame_queue)
         self.th_display.display_frame.connect(self.display_frame)
         self.th_display.start()
-        
+
         self.th_action_display = ActionDisplayThread(self)
         self.th_action_display.action.connect(self.displayAction)
         self.th_action_display.start()
@@ -123,7 +123,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.btn_macro_opt.clicked.connect(self.macro_opt)
         self.btn_recognition_opt.clicked.connect(self.recognition_opt)
         self.btn_macro_refresh.clicked.connect(self.macro_refresh)
-        
 
     def build_serial_device_list_comboBox(self):
         try:
@@ -235,26 +234,27 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         for macro in self._macro_list:
             item = QListWidgetItem(macro["summary"])
             self.listWidget_macro.addItem(item)
-            
+
     def macro_opt(self):
         if self.listWidget_macro.currentRow() < 0:
             return
         if not self.check_macro_thread_running():
             return
-        
+
         self.on_serial_changed()
 
         if not self._controller_input_action_queue:
             return
         macro = self._macro_list[self.listWidget_macro.currentRow()]
-        dialog = LaunchMacroParasDialog(self,macro)
+        dialog = LaunchMacroParasDialog(self, macro)
         ret = dialog.exec_()
         if ret == QtWidgets.QDialog.Accepted:
             script = dialog.get_macro_script()
             paras = dict()
             for para in script["paras"]:
                 paras[para["name"]] = para["value"]
-            self._macro_launcher.macro_start(script["name"], self._controller_input_action_queue, script["loop"], paras)
+            self._macro_launcher.macro_start(
+                script["name"], self._controller_input_action_queue, script["loop"], paras)
 
     def macro_refresh(self):
         self.build_macro_list_listView()
@@ -271,14 +271,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             return
         if not self.check_recognition_thread_running():
             return
-        
+
         self.on_serial_changed()
 
         if not self._controller_input_action_queue:
             return
-        recognition = self._recognition_list[self.listWidget_recognition.currentRow()]
-        self._recognition_launcher.recognition_start(recognition, self._recognition_frame_queue, self._controller_input_action_queue)
-            
+        recognition = self._recognition_list[self.listWidget_recognition.currentRow(
+        )]
+        self._recognition_launcher.recognition_start(
+            recognition, self._recognition_frame_queue, self._controller_input_action_queue)
+
     def play_audio(self):
         self.stop_audio()
         if self.cbxAudioList.currentIndex == 0:
@@ -323,7 +325,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._camera_launcher.camera_stop()
         if self._current_camera:
             self._capture = False
-            self._camera_launcher.camera_start(self._current_camera, self._display_frame_queue, self._recognition_frame_queue)
+            self._camera_launcher.camera_start(
+                self._current_camera, self._display_frame_queue, self._recognition_frame_queue)
 
     def on_mute_changed(self):
         self.play_audio()
@@ -369,7 +372,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._controller_launcher.controller_stop()
         if self.cbxSerialList.currentIndex() == 0:
             return
-        self._controller_input_action_queue = self._controller_launcher.controller_start(self._serial_devices[self.cbxSerialList.currentIndex() - 1])
+        self._controller_input_action_queue = self._controller_launcher.controller_start(
+            self._serial_devices[self.cbxSerialList.currentIndex() - 1])
         time.sleep(0.5)
         if not self._controller_launcher.controller_running():
             self._controller_launcher.controller_stop()
@@ -410,7 +414,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 return True
             return False
         return True
-    
+
     def check_recognition_thread_running(self):
         if self._recognition_launcher.recognition_running():
             msg_box = QMessageBox(self)
@@ -428,7 +432,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 return True
             return False
         return True
-
 
     def on_capture_clicked(self):
         self._capture = True
@@ -488,6 +491,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             time_str = time.strftime(
                 "%Y%m%d%H%M%S", time.localtime())
             cv2.imwrite("./Captures/"+time_str+".jpg", mat)
+
+            recognize_mat = cv2.resize(
+                mat, (self._my_const.RecognizeVideoWidth, self._my_const.RecognizeVideoHeight), interpolation=cv2.INTER_AREA)
+            cv2.imwrite("./Captures/{}-recognize.jpg".format(time_str),
+                        recognize_mat)
             self._capture = False
 
         np_array = numpy.frombuffer(
@@ -497,16 +505,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         display_mat = cv2.resize(
             mat, (self._my_const.DisplayCameraWidth, self._my_const.DisplayCameraHeight), interpolation=cv2.INTER_AREA)
         display_frame = Frame(self._my_const.DisplayCameraWidth, self._my_const.DisplayCameraHeight,
-                                    frame.channels, frame.format, display_mat)
+                              frame.channels, frame.format, display_mat)
         img = QImage(display_frame.bytes(), display_frame.width, display_frame.height,
-                        display_frame.channels*display_frame.width, QImage.Format_BGR888)
+                     display_frame.channels*display_frame.width, QImage.Format_BGR888)
         if self._current_camera != None:
             # .scaled(self.lblCameraFrame.size(), aspectMode=Qt.KeepAspectRatio)
             pixmap = QPixmap.fromImage(img)
             self.lblCameraFrame.setPixmap(pixmap)
         else:
             self.lblCameraFrame.clear()
-
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.Type.KeyPress:
@@ -770,10 +777,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @Slot(str)
     def setLog(self, log):
         now_str = datetime.datetime.now().strftime('%H:%M:%S')
-        self.textBrowserLog.append("{}\t{}".format(now_str,log))
+        self.textBrowserLog.append("{}\t{}".format(now_str, log))
 
     @Slot(ControllerInput)
     def displayAction(self, action):
         self._set_joystick_labels(action)
-
-        
