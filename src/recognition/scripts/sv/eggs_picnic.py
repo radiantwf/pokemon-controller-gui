@@ -52,13 +52,13 @@ class SVEggsPicnic(BaseScript):
     def on_circle(self):
         pass
         # run_time_span = self.run_time_span
-        # self.send_log("脚本运行中，已经运行{}次，耗时{}小时{}分{}秒".format(self.circle_times, math.floor(
-        #     run_time_span/3600), math.floor((run_time_span % 3600) / 60), math.floor(run_time_span % 60)))
+        # self.send_log("脚本运行中，已经运行{}次，耗时{}小时{}分{}秒".format(self.circle_times, int(
+        #     run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
 
     def on_stop(self):
         run_time_span = self.run_time_span
-        self.send_log("开始运行[{}] 脚本停止，实际运行{}次，耗时{}小时{}分{}秒".format(SVEggsPicnic.script_name(), self.circle_times, math.floor(
-            run_time_span/3600), math.floor((run_time_span % 3600) / 60), math.floor(run_time_span % 60)))
+        self.send_log("开始运行[{}] 脚本停止，实际运行{}次，耗时{}小时{}分{}秒".format(SVEggsPicnic.script_name(), self.circle_times, int(
+            run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
 
     def on_error(self):
         pass

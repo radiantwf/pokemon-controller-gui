@@ -47,13 +47,13 @@ class SwshBattleShiny(BaseScript):
     def on_circle(self):
         if self.circle_times > 0 and self.circle_times % 10 == 0:
             run_time_span = self.run_time_span
-            self.send_log("闪光检测中，已经运行{}次，耗时{}小时{}分{}秒".format(self.circle_times, math.floor(
-                run_time_span/3600), math.floor((run_time_span % 3600) / 60), math.floor(run_time_span % 60)))
+            self.send_log("闪光检测中，已经运行{}次，耗时{}小时{}分{}秒".format(self.circle_times, int(
+                run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
 
     def on_stop(self):
         run_time_span = self.run_time_span
-        self.send_log("[{}] 脚本停止，实际运行{}次，耗时{}小时{}分{}秒".format('宝可梦剑盾定点闪图像识别检测脚本', self.circle_times, math.floor(
-            run_time_span/3600), math.floor((run_time_span % 3600) / 60), math.floor(run_time_span % 60)))
+        self.send_log("[{}] 脚本停止，实际运行{}次，耗时{}小时{}分{}秒".format('宝可梦剑盾定点闪图像识别检测脚本', self.circle_times, int(
+            run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
 
     def on_error(self):
         pass
@@ -126,8 +126,8 @@ class SwshBattleShiny(BaseScript):
                         self._circle_step_index += 1
                         return
                     self.macro_stop(block=False)
-                    self.send_log("检测到闪光，请人工核查，已运行{}次，耗时{}小时{}分{}秒".format(self.circle_times, math.floor(
-                        run_time_span/3600), math.floor((run_time_span % 3600) / 60), math.floor(run_time_span % 60)))
+                    self.send_log("检测到闪光，请人工核查，已运行{}次，耗时{}小时{}分{}秒".format(self.circle_times, int(
+                        run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
                     self.stop_work()
         elif self._circle_step_2_time_monotonic_check_1_temp > 0 and self._circle_step_2_time_monotonic_check_1 == 0:
             self._circle_step_2_time_monotonic_check_1 = self._circle_step_2_time_monotonic_check_1_temp

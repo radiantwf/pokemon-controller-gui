@@ -49,8 +49,8 @@ def _run_macro_text(text: str, stop_event, controller_input_action_queue: multip
             times += 1
             if time.monotonic() - last_send_log_ts >= 5 * 60:
                 span = int(time.monotonic() - start_ts)
-                _current_info = "正在运行 [{}] 脚本，持续运行{:.0f}小时{:.0f}分{:.0f}秒，已运行{}次，计划运行{}次\n".format(
-                    summary,  span/3600, (span % 3600)/60, span % 60, times, loop)
+                _current_info = "正在运行 [{}] 脚本，持续运行{}小时{}分{}秒，已运行{}次，计划运行{}次\n".format(
+                    summary, int(span/3600), int((span % 3600)/60), int(span % 60), times, loop)
                 if log:
                     send_log(_current_info)
                 last_send_log_ts = time.monotonic()
@@ -59,15 +59,15 @@ def _run_macro_text(text: str, stop_event, controller_input_action_queue: multip
             act.cycle_reset()
         # msg = "脚本{}运行完成，当前运行次数：{}".format(name, times)
         span = int(time.monotonic() - start_ts)
-        _result_info = "[{}] 脚本运行完成，实际运行{}次\n持续运行时间：{:.0f}小时{:.0f}分{:.0f}秒".format(
-            summary, times, span/3600, (span % 3600)/60, span % 60)
+        _result_info = "[{}] 脚本运行完成，实际运行{}次\n持续运行时间：{}小时{}分{}秒".format(
+            summary, times, int(span/3600), int((span % 3600)/60), int(span % 60))
         if log:
             send_log(_result_info)
     except InterruptedError:
         # msg = "脚本{}运行中止，当前运行次数：{}".format(name, times)
         span = int(time.monotonic() - start_ts)
-        _result_info = "[{}] 脚本停止，实际运行{}次，计划运行{}次\n持续运行时间：{:.0f}小时{:.0f}分{:.0f}秒".format(
-            summary, times, loop, span/3600, (span % 3600)/60, span % 60)
+        _result_info = "[{}] 脚本停止，实际运行{}次，计划运行{}次\n持续运行时间：{}小时{}分{}秒".format(
+            summary, times, loop, int(span/3600), int((span % 3600)/60), int(span % 60))
         if log:
             send_log(_result_info)
     finally:
@@ -115,8 +115,8 @@ def _run_macro(name: str, stop_event, controller_input_action_queue: multiproces
             times += 1
             if time.monotonic() - last_send_log_ts >= 5 * 60:
                 span = int(time.monotonic() - start_ts)
-                _current_info = "正在运行 [{}] 脚本，持续运行{:.0f}小时{:.0f}分{:.0f}秒，已运行{}次，计划运行{}次\n".format(
-                    summary,  span/3600, (span % 3600)/60, span % 60, times, loop)
+                _current_info = "正在运行 [{}] 脚本，持续运行{}小时{}分{}秒，已运行{}次，计划运行{}次\n".format(
+                    summary, int(span/3600), int((span % 3600)/60), int(span % 60), times, loop)
                 if log:
                     send_log(_current_info)
                 last_send_log_ts = time.monotonic()
@@ -125,15 +125,15 @@ def _run_macro(name: str, stop_event, controller_input_action_queue: multiproces
             act.cycle_reset()
         # msg = "脚本{}运行完成，当前运行次数：{}".format(name, times)
         span = int(time.monotonic() - start_ts)
-        _result_info = "[{}] 脚本运行完成，实际运行{}次\n持续运行时间：{:.0f}小时{:.0f}分{:.0f}秒".format(
-            summary, times, span/3600, (span % 3600)/60, span % 60)
+        _result_info = "[{}] 脚本运行完成，实际运行{}次\n持续运行时间：{}小时{}分{}秒".format(
+            summary, times, int(span/3600), int((span % 3600)/60), int(span % 60))
         if log:
             send_log(_result_info)
     except InterruptedError:
         # msg = "脚本{}运行中止，当前运行次数：{}".format(name, times)
         span = int(time.monotonic() - start_ts)
-        _result_info = "[{}] 脚本停止，实际运行{}次，计划运行{}次\n持续运行时间：{:.0f}小时{:.0f}分{:.0f}秒".format(
-            summary, times, loop, span/3600, (span % 3600)/60, span % 60)
+        _result_info = "[{}] 脚本停止，实际运行{}次，计划运行{}次\n持续运行时间：{}小时{}分{}秒".format(
+            summary, times, loop, int(span/3600), int((span % 3600)/60), int(span % 60))
         if log:
             send_log(_result_info)
     finally:

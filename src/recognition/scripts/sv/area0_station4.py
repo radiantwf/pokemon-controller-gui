@@ -49,13 +49,13 @@ class SVArea0Station4(BaseScript):
     def on_circle(self):
         if self.circle_times > 0 and self.circle_times % 10 == 0:
             run_time_span = self.run_time_span
-            self.send_log("闪光检测中，已经运行{}次，耗时{}小时{}分{}秒".format(self.circle_times, math.floor(
-                run_time_span/3600), math.floor((run_time_span % 3600) / 60), math.floor(run_time_span % 60)))
+            self.send_log("闪光检测中，已经运行{}次，耗时{}小时{}分{}秒".format(self.circle_times, int(
+                run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
 
     def on_stop(self):
         run_time_span = self.run_time_span
-        self.send_log("[{}] 脚本停止，实际运行{}次，耗时{}小时{}分{}秒".format('宝可梦剑盾定点闪图像识别检测脚本', self.circle_times, math.floor(
-            run_time_span/3600), math.floor((run_time_span % 3600) / 60), math.floor(run_time_span % 60)))
+        self.send_log("[{}] 脚本停止，实际运行{}次，耗时{}小时{}分{}秒".format('宝可梦剑盾定点闪图像识别检测脚本', self.circle_times, int(
+            run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
 
     def on_error(self):
         pass
