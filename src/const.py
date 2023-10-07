@@ -15,7 +15,7 @@ def singleton(cls):
 class ConstClass(object):
     DisplayCameraWidth = 640
     DisplayCameraHeight = 360
-    
+
     RecognizeVideoWidth = 960
     RecognizeVideoHeight = 540
     RecognizeVideoFps = 10

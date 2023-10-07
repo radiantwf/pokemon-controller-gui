@@ -1,7 +1,8 @@
 import socket
 from const import ConstClass
 
-def send_log(log:str):
+
+def send_log(log: str):
     _my_const = ConstClass()
     if _my_const.AF_UNIX_FLAG:
         client = socket.socket(
