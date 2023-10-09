@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import tkinter as tk
 
 def get_main_colors(image_path, k=5):
     # Load the image
@@ -27,7 +28,20 @@ def get_main_colors(image_path, k=5):
 
     return result
 
+def show_colors(result):
+    # 创建一个新窗口
+    window = tk.Tk()
+
+    # 创建一个标签，用于显示每个颜色和计数
+    for color, count in result:
+        color_hex = '#{:02x}{:02x}{:02x}'.format(*color)
+        label = tk.Label(window, text='Count: {}  Color: {}'.format(count, color_hex), bg=color_hex, fg='white')
+        label.pack()
+
+    # 运行窗口
+    window.mainloop()
+
 # 测试代码
-result = get_main_colors('CapturesTest/test.png', k=5)
-for color, count in result:
-    print('color:', color, 'count:', count)
+# result = get_main_colors('CapturesTest/background-14.jpg', k=5)
+result = get_main_colors('CapturesTest/20231006134925-recognize.jpg', k=1)
+show_colors(result)

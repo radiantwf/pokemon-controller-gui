@@ -16,7 +16,7 @@ class SubStepRunningStatus(Enum):
 
 
 class BaseSubStep(ABC):
-    def __init__(self, script: BaseScript,timeout:float = 0.0) -> None:
+    def __init__(self, script: BaseScript, timeout: float = 0.0) -> None:
         if not isinstance(script, BaseScript):
             raise TypeError("script must be an instance of BaseScript")
         if not script:
@@ -27,21 +27,31 @@ class BaseSubStep(ABC):
         self._begin_time_monotonic = 0
         self._begin_frame_count = 0
         self._finish_time_monotonic = 0
+        self._jump_next_frame = False
 
     @final
     @property
     def script(self) -> BaseScript:
         return self._script
-    
+
     @final
     @property
     def running_status(self) -> SubStepRunningStatus:
         return self._running_status
-    
+
     # @final
     # @running_status.setter
     # def running_status(self, value):
     #     self._running_status = value
+
+    @final
+    def jump_next_frame(self):
+        self._jump_next_frame = True
+
+    @final
+    def time_sleep(self, seconds: float):
+        time.sleep(seconds)
+        self.jump_next_frame()
 
     @final
     def run(self) -> SubStepRunningStatus:
@@ -56,6 +66,9 @@ class BaseSubStep(ABC):
             self._running_status = SubStepRunningStatus.Timeout
             return self._running_status
         try:
+            if self._jump_next_frame:
+                self._jump_next_frame = False
+                return self._running_status
             self._running_status = self._process()
             return self._running_status
         except Exception as e:
