@@ -1,6 +1,9 @@
+import sys
 import cv2
 import numpy as np
 import colorsys
+sys.path.append('./src')
+from recognition.scripts.sv.common.image_match.box_match import BoxMatch
 
 
 def find_matches(template_gray, gray, threshold=0.95, min_distance=10):
@@ -52,19 +55,21 @@ def get_main_color(image, region=None):
 
 def main():
     egg_template = cv2.imread(
-        "resources/img/recognition/pokemon/sv/eggs/box/box-egg.png")
+        "resources/img/recognition/pokemon/sv/eggs/box/box-space-selected.png")
     template_gray = cv2.cvtColor(
         egg_template, cv2.COLOR_BGR2GRAY)
 
     mat = cv2.imread(
-        "CapturesTest/41.jpg")
+        "CapturesTest/1.jpg")
+    box = BoxMatch().match(mat)
+    print(box)
     gray = cv2.cvtColor(mat, cv2.COLOR_BGR2GRAY)
 
     main_color = get_main_color(mat, (226, 290, 6, 6))
     print(main_color)
     
     # 查找所有匹配的位置
-    locations = find_matches(template_gray, gray)
+    locations = find_matches(template_gray, gray,0.6)
 
     # 在目标图片中标记所有匹配的位置
     for loc in locations:

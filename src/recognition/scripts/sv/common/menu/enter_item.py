@@ -1,7 +1,7 @@
 from enum import IntEnum
 from recognition.scripts.base.base_script import BaseScript
 from recognition.scripts.base.base_sub_step import BaseSubStep, SubStepRunningStatus
-from recognition.scripts.sv.common.image_match.menu_cursor_match import MenuCursorMatch
+from recognition.scripts.sv.common.image_match.menu_match import MenuCursorMatch
 
 
 class SVMenuItems(IntEnum):
@@ -81,16 +81,6 @@ class SVEnterMenuItem(BaseSubStep):
         ret = MenuCursorMatch().match(image, 0.5)
 
         if ret is None:
-            self._status = SubStepRunningStatus.Failed
-            return
-        if len(ret) != 3:
-            self._status = SubStepRunningStatus.Failed
-            return
-        if ret[0] == -1 or ret[1] == -1:
-            self._status = SubStepRunningStatus.Failed
-            return
-        
-        if ret[0] == 1 and ret[1] == self._target_item_index:
             self._process_step_index += 1
         else:
             self._process_step_index -= 1

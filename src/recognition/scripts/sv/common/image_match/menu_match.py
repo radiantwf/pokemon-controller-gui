@@ -1,4 +1,6 @@
 import cv2
+from cv2 import typing
+
 
 class MenuCursorMatch:
     __instance = None
@@ -50,14 +52,14 @@ class MenuCursorMatch:
     CURRENT_PARTY_6_Y = 406
     CURRENT_PARTY_MOUNT_Y = 491
 
-    def match(self, image, max_value_threshold=0.5) -> tuple(int, int, tuple[float, float, cv2.typing.Point, cv2.typing.Point]):
+    def match(self, image, max_value_threshold=0.5) -> tuple[int, int, tuple[float, float, typing.Point, typing.Point]]:
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         match = cv2.matchTemplate(
             gray, self._menu_arrow_template, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, p = cv2.minMaxLoc(match)
         if max_val < max_value_threshold:
             return None
-        
+
         x = -1
         y = -1
 
