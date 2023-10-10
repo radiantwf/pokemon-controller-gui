@@ -8,6 +8,7 @@ from recognition.scripts.base.base_sub_step import SubStepRunningStatus
 from recognition.scripts.sv.common.menu.enter_item import SVEnterMenuItem, SVMenuItems
 
 from recognition.scripts.sv.common.menu.open import SVOpenMenu
+from recognition.scripts.sv.eggs_hatch.box_opt import SVBoxOptPokemon
 
 
 class SVEggs(BaseScript):
@@ -76,6 +77,7 @@ class SVEggs(BaseScript):
         self._sv_open_menu = SVOpenMenu(self)
         self._sv_enter_menu_box = SVEnterMenuItem(
             self, menu_item=SVMenuItems.Box)
+        self._sv_box_opt = SVBoxOptPokemon(self)
         self._prepare_step_index += 1
 
     @property
@@ -83,6 +85,7 @@ class SVEggs(BaseScript):
         return [
             self.open_menu,
             self.enter_box,
+            self.box_opt,
         ]
 
     def circle_init(self):
@@ -105,7 +108,17 @@ class SVEggs(BaseScript):
             return
         elif status == SubStepRunningStatus.OK:
             self._circle_step_index += 1
-            self.stop_work()
         else:
             self.send_log("{}函数返回状态为{}".format("enter_box",status.name))
+            self.stop_work()
+
+    def box_opt(self):
+        status = self._sv_box_opt.run()
+        if status == SubStepRunningStatus.Running:
+            return
+        elif status == SubStepRunningStatus.OK:
+            self._circle_step_index += 1
+            self.stop_work()
+        else:
+            self.send_log("{}函数返回状态为{}".format("box_opt",status.name))
             self.stop_work()

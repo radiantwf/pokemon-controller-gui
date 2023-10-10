@@ -37,6 +37,18 @@ class BoxMatch:
             "resources/img/recognition/pokemon/sv/eggs/box/box-arrow.png")
         self._box_arrow_template = cv2.cvtColor(
             self._box_arrow_template, cv2.COLOR_BGR2GRAY)
+        
+        self._release_tag_template = cv2.imread(
+            "resources/img/recognition/pokemon/sv/eggs/box/release-tag.png")
+        self._release_tag_template = cv2.cvtColor(
+            self._release_tag_template, cv2.COLOR_BGR2GRAY)
+        
+        self._shiny_icon_template = cv2.imread(
+            "resources/img/recognition/pokemon/sv/eggs/box/shiny-icon.png")
+        self._shiny_icon_template = cv2.cvtColor(
+            self._shiny_icon_template, cv2.COLOR_BGR2GRAY)
+        
+        
 
     CURRENT_PARTY_RECT = (180, 60)
     CURRENT_PARTY_1 = (18, 98)
@@ -112,7 +124,8 @@ class BoxMatch:
         if box is None:
             box = self._init_box_list()
         cropped_gray = gray[:, self.BOX_SPLIT_X:]
-        locations = find_matches(cropped_gray, self._box_space_template, threshold=0.8)
+        locations = find_matches(
+            cropped_gray, self._box_space_template, threshold=0.8)
         for loc in locations:
             loc_x = loc[0] + self.BOX_SPLIT_X
             for i in range(len(self.BOX_POINT)):
@@ -145,7 +158,8 @@ class BoxMatch:
         if box is None:
             box = self._init_box_list()
         cropped_gray = gray[:, :self.BOX_SPLIT_X]
-        locations = find_matches(cropped_gray, self._current_party_space_template, 0.8)
+        locations = find_matches(
+            cropped_gray, self._current_party_space_template, 0.8)
         for loc in locations:
             i = 0
             for j in range(len(self.BOX_POINT[i])):
@@ -158,8 +172,10 @@ class BoxMatch:
 
     def _match_arrow(self, gray) -> tuple[int, int]:
         arrow = None
+        crop_x, crop_y, crop_w, crop_h = 15, 90, 590, 325
+        crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
         match = cv2.matchTemplate(
-            gray, self._box_arrow_template, cv2.TM_CCOEFF_NORMED)
+            crop_gray, self._box_arrow_template, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, p = cv2.minMaxLoc(match)
         if max_val < 0.4:
             return None
@@ -171,12 +187,11 @@ class BoxMatch:
                 width = self.UNIT_BOX_RECT[0]
             for j in range(len(self.BOX_POINT[i])):
                 if self.BOX_POINT[i][j] is not None:
-                    x = self.BOX_POINT[i][j][0]
-                    y = self.BOX_POINT[i][j][1]
-                    if p[0] > x - 5 and p[1] > y - 5 and p[0] < x + width and p[1] < y + 5:
+                    x = self.BOX_POINT[i][j][0] - crop_x
+                    y = self.BOX_POINT[i][j][1] - crop_y
+                    if p[0] > x - 10 and p[1] > y - 10 and p[0] < x + width and p[1] < y + 10:
                         arrow = (i, j)
                         break
-
         return arrow
 
     def match(self, image) -> tuple[list[list[int]], tuple[int, int]]:
@@ -186,3 +201,23 @@ class BoxMatch:
         box = self._match_current_party_space(gray, box)
         p = self._match_arrow(gray)
         return (box, p)
+
+    def release_tag_check(self, image, threshold=0.95) -> bool:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        match = cv2.matchTemplate(
+            gray, self._release_tag_template, cv2.TM_CCOEFF_NORMED)
+        _, max_val, _, _ = cv2.minMaxLoc(match)
+        if max_val >= threshold:
+            return True
+        return False
+
+    def shiny_tag_check(self, image, threshold=0.9) -> bool:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        x, y, w, h = 625, 40, 335, 30
+        crop_gray = gray[y:y+h, x:x+w]
+        match = cv2.matchTemplate(
+            crop_gray, self._shiny_icon_template, cv2.TM_CCOEFF_NORMED)
+        _, max_val, _, _ = cv2.minMaxLoc(match)
+        if max_val >= threshold:
+            return True
+        return False

@@ -73,14 +73,14 @@ class SVEnterMenuItem(BaseSubStep):
 
     def step_1(self):
         self.script.macro_text_run("A", block=True)
-        self.time_sleep(0.5)
+        self.time_sleep(0.3)
         self._process_step_index += 1
 
     def step_2(self):
         image = self.script.current_frame
         ret = MenuCursorMatch().match(image, 0.5)
-
         if ret is None:
+            self.time_sleep(0.3)
             self._process_step_index += 1
         else:
             self._process_step_index -= 1
