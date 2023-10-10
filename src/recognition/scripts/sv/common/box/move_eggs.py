@@ -1,9 +1,9 @@
 from recognition.scripts.base.base_script import BaseScript
 from recognition.scripts.base.base_sub_step import BaseSubStep, SubStepRunningStatus
-from recognition.scripts.sv.common.image_match.menu_match import MenuCursorMatch
+from recognition.scripts.sv.common.image_match.box_match import BoxMatch
 
 
-class SVOpenMenu(BaseSubStep):
+class SVMoveEggsPokemon(BaseSubStep):
     def __init__(self, script: BaseScript, timeout: float = 6) -> None:
         super().__init__(script, timeout)
         self._process_step_index = 0
@@ -32,21 +32,12 @@ class SVOpenMenu(BaseSubStep):
         ]
 
     def step_0(self):
-        self.script.macro_text_run(
-            "B:0.05\n0.05", loop=-1, timeout=2.5, block=True)
-        self.time_sleep(0.1)
+        image = self.script.current_frame
+        box, current_cursor = BoxMatch().match(image)
         self._process_step_index += 1
 
     def step_1(self):
-        self.script.macro_text_run("X", block=True)
-        self.time_sleep(0.5)
         self._process_step_index += 1
 
     def step_2(self):
-        image = self.script.current_frame
-        ret = MenuCursorMatch().match(image, 0.5)
-        if ret is None:
-            self._process_step_index = 0
-            return
-        self.time_sleep(0.5)
         self._process_step_index += 1
