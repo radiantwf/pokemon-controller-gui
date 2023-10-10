@@ -55,12 +55,12 @@ def get_main_color(image, region=None):
 
 def main():
     egg_template = cv2.imread(
-        "resources/img/recognition/pokemon/sv/eggs/box/box-space-selected.png")
+        "resources/img/recognition/pokemon/sv/eggs/box/box-arrow.png")
     template_gray = cv2.cvtColor(
         egg_template, cv2.COLOR_BGR2GRAY)
 
     mat = cv2.imread(
-        "CapturesTest/1.jpg")
+        "CapturesTest/20231006171334-recognize.jpg")
     box = BoxMatch().match(mat)
     print(box)
     gray = cv2.cvtColor(mat, cv2.COLOR_BGR2GRAY)

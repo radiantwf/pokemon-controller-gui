@@ -33,6 +33,11 @@ class BoxMatch:
         self._current_party_space_template = cv2.cvtColor(
             self._current_party_space_template, cv2.COLOR_BGR2GRAY)
 
+        self._box_arrow_template = cv2.imread(
+            "resources/img/recognition/pokemon/sv/eggs/box/box-arrow.png")
+        self._box_arrow_template = cv2.cvtColor(
+            self._box_arrow_template, cv2.COLOR_BGR2GRAY)
+
     CURRENT_PARTY_RECT = (180, 60)
     CURRENT_PARTY_1 = (18, 98)
     CURRENT_PARTY_2 = (18, 161)
@@ -154,8 +159,33 @@ class BoxMatch:
                         box[i][j] = 0
         return box
 
-    def match(self, image) -> list[list[int]]:
+    def _match_arrow(self, image) -> tuple[int, int]:
+        arrow = None
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        match = cv2.matchTemplate(
+            gray, self._box_arrow_template, cv2.TM_CCOEFF_NORMED)
+        _, max_val, _, p = cv2.minMaxLoc(match)
+        if max_val < 0.4:
+            return None
+
+        for i in range(len(self.BOX_POINT)):
+            if i == 0:
+                width = self.CURRENT_PARTY_RECT[0]
+            else:
+                width = self.UNIT_BOX_RECT[0]
+            for j in range(len(self.BOX_POINT[i])):
+                if self.BOX_POINT[i][j] is not None:
+                    x = self.BOX_POINT[i][j][0]
+                    y = self.BOX_POINT[i][j][1]
+                    if p[0] > x - 5 and p[1] > y - 5 and p[0] < x + width and p[1] < y + 5:
+                        arrow = (i, j)
+                        break
+
+        return arrow
+
+    def match(self, image) -> tuple[list[list[int]], tuple[int, int]]:
         box = self._match_eggs(image, None)
         box = self._match_box_space(image, box)
         box = self._match_current_party_space(image, box)
-        return box
+        p = self._match_arrow(image)
+        return (box, p)
