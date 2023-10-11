@@ -4,7 +4,7 @@ from recognition.scripts.sv.common.image_match.menu_match import MenuCursorMatch
 
 
 class SVOpenMenu(BaseSubStep):
-    def __init__(self, script: BaseScript, timeout: float = 6) -> None:
+    def __init__(self, script: BaseScript, timeout: float = 8) -> None:
         super().__init__(script, timeout)
         self._process_step_index = 0
         self._status = None
@@ -34,7 +34,9 @@ class SVOpenMenu(BaseSubStep):
     def step_0(self):
         self.script.macro_text_run(
             "B:0.05\n0.05", loop=-1, timeout=2.5, block=True)
-        self.time_sleep(0.1)
+        self.time_sleep(1.5)
+        self.script.macro_text_run(
+            "L:0.05\n0.05", loop=1, block=True)
         self._process_step_index += 1
 
     def step_1(self):

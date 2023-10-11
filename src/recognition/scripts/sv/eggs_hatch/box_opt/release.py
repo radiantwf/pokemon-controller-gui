@@ -39,7 +39,7 @@ class SVBoxReleasePokemon(BaseSubStep):
         image = self.script.current_frame
         box, current_cursor = BoxMatch().match(image)
         print(box)
-        self.script.save_temp_image()
+        # self.script.save_temp_image()
         if box[0][self.target_release_pokemon_index] == 0:
             self._status = SubStepRunningStatus.OK
             return
