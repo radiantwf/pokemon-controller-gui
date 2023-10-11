@@ -1,6 +1,7 @@
 from recognition.scripts.base.base_script import BaseScript
 from recognition.scripts.base.base_sub_step import BaseSubStep, SubStepRunningStatus
 from recognition.scripts.sv.common.image_match.box_match import BoxMatch
+from recognition.scripts.sv.eggs_hatch.box_opt.function import move_cursor
 
 
 class SVBoxReleasePokemon(BaseSubStep):
@@ -8,7 +9,7 @@ class SVBoxReleasePokemon(BaseSubStep):
         super().__init__(script, timeout)
         self._process_step_index = 0
         self._status = None
-        self.target_release_index = 1
+        self.target_release_pokemon_index = 1
 
     def _process(self) -> SubStepRunningStatus:
         self._status = self.running_status
@@ -35,38 +36,27 @@ class SVBoxReleasePokemon(BaseSubStep):
     def release_step_0(self):
         image = self.script.current_frame
         box, current_cursor = BoxMatch().match(image)
-        print(box, current_cursor)
-        if box[0][self.target_release_index] == 0:
+        if box[0][self.target_release_pokemon_index] == 0:
             self._status = SubStepRunningStatus.OK
             return
         if current_cursor is None:
             self._status = SubStepRunningStatus.Failed
             return
-        x = 0 - current_cursor[0]
-        y = self.target_release_index - current_cursor[1]
-        if x == 0 and y == 0:
+    
+        target:tuple[int,int] = (0,self.target_release_pokemon_index)
+        if current_cursor[0] == target[0] and current_cursor[1] == target[1]:
             self._process_step_index += 1
             return
-        while x != 0 or y != 0:
-            if x > 0:
-                self.script.macro_text_run("RIGHT:0.05", block=True)
-                x -= 1
-            elif x < 0:
-                self.script.macro_text_run("LEFT:0.05", block=True)
-                x += 1
-            elif y > 0:
-                self.script.macro_text_run("BOTTOM:0.05", block=True)
-                y -= 1
-            elif y < 0:
-                self.script.macro_text_run("TOP:0.05", block=True)
-                y += 1
+        move_cursor(self,
+            current_cursor, target)
         self.time_sleep(0.5)
+
 
     def release_step_1(self):
         image = self.script.current_frame
         ret = BoxMatch().shiny_tag_check(image)
         if ret:
-            self.target_release_index = self.target_release_index + 1
+            self.target_release_pokemon_index = self.target_release_pokemon_index + 1
             self._process_step_index = 0
             return
         self.script.macro_text_run(

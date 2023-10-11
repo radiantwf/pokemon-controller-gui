@@ -37,18 +37,16 @@ class BoxMatch:
             "resources/img/recognition/pokemon/sv/eggs/box/box-arrow.png")
         self._box_arrow_template = cv2.cvtColor(
             self._box_arrow_template, cv2.COLOR_BGR2GRAY)
-        
+
         self._release_tag_template = cv2.imread(
             "resources/img/recognition/pokemon/sv/eggs/box/release-tag.png")
         self._release_tag_template = cv2.cvtColor(
             self._release_tag_template, cv2.COLOR_BGR2GRAY)
-        
+
         self._shiny_icon_template = cv2.imread(
             "resources/img/recognition/pokemon/sv/eggs/box/shiny-icon.png")
         self._shiny_icon_template = cv2.cvtColor(
             self._shiny_icon_template, cv2.COLOR_BGR2GRAY)
-        
-        
 
     CURRENT_PARTY_RECT = (180, 60)
     CURRENT_PARTY_1 = (18, 98)
@@ -201,6 +199,11 @@ class BoxMatch:
         box = self._match_current_party_space(gray, box)
         p = self._match_arrow(gray)
         return (box, p)
+
+    def match_arrow(self, image) -> tuple[int, int]:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        p = self._match_arrow(gray)
+        return p
 
     def release_tag_check(self, image, threshold=0.95) -> bool:
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
