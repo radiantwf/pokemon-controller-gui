@@ -41,7 +41,7 @@ class SVBoxOptPokemon(BaseSubStep):
             self._process_step_index += 1
             return
         else:
-            self.script.send_log("{}函数返回状态为{}".format("box_opt", status.name))
+            self.script.send_log("{}函数返回状态为{}".format("release", status.name))
             self._status = SubStepRunningStatus.Failed
             return
 

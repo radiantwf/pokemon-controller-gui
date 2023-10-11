@@ -1,3 +1,5 @@
+import time
+import cv2
 from recognition.scripts.base.base_script import BaseScript
 from recognition.scripts.base.base_sub_step import BaseSubStep, SubStepRunningStatus
 from recognition.scripts.sv.common.image_match.box_match import BoxMatch
@@ -36,21 +38,24 @@ class SVBoxReleasePokemon(BaseSubStep):
     def release_step_0(self):
         image = self.script.current_frame
         box, current_cursor = BoxMatch().match(image)
+        print(box)
+        self.script.save_temp_image()
         if box[0][self.target_release_pokemon_index] == 0:
             self._status = SubStepRunningStatus.OK
             return
         if current_cursor is None:
+            self.script.send_log("{}函数返回状态为{}".format(
+                "release_step_0", SubStepRunningStatus.Failed))
             self._status = SubStepRunningStatus.Failed
             return
-    
-        target:tuple[int,int] = (0,self.target_release_pokemon_index)
+
+        target: tuple[int, int] = (0, self.target_release_pokemon_index)
         if current_cursor[0] == target[0] and current_cursor[1] == target[1]:
             self._process_step_index += 1
             return
         move_cursor(self,
-            current_cursor, target)
+                    current_cursor, target)
         self.time_sleep(0.5)
-
 
     def release_step_1(self):
         image = self.script.current_frame
@@ -73,5 +78,7 @@ class SVBoxReleasePokemon(BaseSubStep):
             self.time_sleep(1)
             self._process_step_index = 0
         else:
+            self.script.send_log("{}函数返回状态为{}".format(
+                "release_step_2", SubStepRunningStatus.Failed))
             self._status = SubStepRunningStatus.Failed
             return

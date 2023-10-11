@@ -58,6 +58,7 @@ class SVBoxMoveShinyPokemon(BaseSubStep):
         ret = BoxMatch().shiny_tag_check(image)
         if ret:
             self._status = SubStepRunningStatus.Failed
+            self.script.send_log("{}函数返回状态为{}".format("move_step_1",SubStepRunningStatus.Failed))
             return
         self._process_step_index += 1
 
@@ -71,6 +72,7 @@ class SVBoxMoveShinyPokemon(BaseSubStep):
                     self._move_target = (x, y)
                     break
         if self._move_target[0] == -1 or self._move_target[1] == -1:
+            self.script.send_log("{}函数返回状态为{}".format("move_step_2",SubStepRunningStatus.Failed))
             self._status = SubStepRunningStatus.Failed
             return
         current_cursor = (0, 1)
@@ -85,6 +87,7 @@ class SVBoxMoveShinyPokemon(BaseSubStep):
         image = self.script.current_frame
         current_cursor = BoxMatch().match_arrow(image)
         if current_cursor is None:
+            self.script.send_log("{}函数返回状态为{}".format("move_step_3",SubStepRunningStatus.Failed))
             self._status = SubStepRunningStatus.Failed
             return
         if current_cursor[0] == self._move_target[0] and current_cursor[1] == self._move_target[1]:

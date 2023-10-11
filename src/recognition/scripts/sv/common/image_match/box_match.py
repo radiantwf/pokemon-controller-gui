@@ -33,6 +33,15 @@ class BoxMatch:
         self._current_party_space_template = cv2.cvtColor(
             self._current_party_space_template, cv2.COLOR_BGR2GRAY)
 
+        self._current_party_space_selected_1_template = cv2.imread(
+            "resources/img/recognition/pokemon/sv/eggs/box/current-party-space-selected-1.png")
+        self._current_party_space_selected_1_template = cv2.cvtColor(
+            self._current_party_space_selected_1_template, cv2.COLOR_BGR2GRAY)
+        self._current_party_space_selected_2_template = cv2.imread(
+            "resources/img/recognition/pokemon/sv/eggs/box/current-party-space-selected-2.png")
+        self._current_party_space_selected_2_template = cv2.cvtColor(
+            self._current_party_space_selected_2_template, cv2.COLOR_BGR2GRAY)
+
         self._box_arrow_template = cv2.imread(
             "resources/img/recognition/pokemon/sv/eggs/box/box-arrow.png")
         self._box_arrow_template = cv2.cvtColor(
@@ -166,6 +175,33 @@ class BoxMatch:
                     y = self.BOX_POINT[i][j][1]
                     if loc[0] > x - 5 and loc[1] > y - 5 and loc[0] < x + 5 and loc[1] < y + 5:
                         box[i][j] = 0
+
+        match = cv2.matchTemplate(
+            cropped_gray, self._current_party_space_selected_1_template, cv2.TM_CCOEFF_NORMED)
+        _, max_val, _, p = cv2.minMaxLoc(match)
+        if max_val >= 0.7:
+            i = 0
+            for j in range(len(self.BOX_POINT[i])):
+                if self.BOX_POINT[i][j] is not None:
+                    x = self.BOX_POINT[i][j][0]
+                    y = self.BOX_POINT[i][j][1]
+                    if p[0] > x - 10 and p[1] > y - 10 and p[0] < x + 10 and p[1] < y + 10:
+                        box[i][j] = 0
+                        return box
+
+        match = cv2.matchTemplate(
+            cropped_gray, self._current_party_space_selected_2_template, cv2.TM_CCOEFF_NORMED)
+        _, max_val, _, p = cv2.minMaxLoc(match)
+        if max_val >= 0.7:
+            i = 0
+            for j in range(len(self.BOX_POINT[i])):
+                if self.BOX_POINT[i][j] is not None:
+                    x = self.BOX_POINT[i][j][0]
+                    y = self.BOX_POINT[i][j][1]
+                    if p[0] > x - 10 and p[1] > y - 10 and p[0] < x + 10 and p[1] < y + 10:
+                        box[i][j] = 0
+                        return box
+
         return box
 
     def _match_arrow(self, gray) -> tuple[int, int]:

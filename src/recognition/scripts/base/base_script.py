@@ -148,6 +148,12 @@ class BaseScript(ABC):
     def run_time_span(self) -> float:
         return time.monotonic() - self._run_start_time_monotonic
 
+    @final
+    def save_temp_image(self):
+        time_str = time.strftime(
+            "%Y%m%d%H%M%S", time.localtime())
+        cv2.imwrite("./temp_"+time_str+".jpg", self.current_frame)
+
     # 运行宏命令
     @final
     def macro_run(self, macro_name, loop=1, paras={}, block: bool = True, timeout: float = None):
