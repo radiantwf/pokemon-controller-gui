@@ -55,18 +55,23 @@ class SVBoxMoveEggs(BaseSubStep):
             return
         for x in range(len(box)):
             if x == 0:
-                continue
+                for y in range(len(box[x])):
+                    if box[x][y] == 9:
+                        self._status = SubStepRunningStatus.OK
+                        return
             for y in range(len(box[x])):
                 if box[x][y] == 9:
                     self._target_col = x
                     break
+            if self._target_col > 0:
+                break
 
         if self._target_col > 0:
             self._process_step_index += 1
         else:
             global global_page_turns_count
             if global_page_turns_count >= 36:
-                self._status = SubStepRunningStatus.OK
+                self._status = SubStepRunningStatus.Finished
                 return
             self.script.macro_text_run("R:0.05", block=True)
             self.script.send_log(f"翻页{global_page_turns_count}次")
@@ -95,7 +100,7 @@ class SVBoxMoveEggs(BaseSubStep):
         self._process_step_index += 1
 
     def move_step_3(self):
-        move_target = (self._target_col, 5)
+        move_target = (self._target_col, 4)
         image = self.script.current_frame
         current_cursor = BoxMatch().match_arrow(image)
         if current_cursor is None:

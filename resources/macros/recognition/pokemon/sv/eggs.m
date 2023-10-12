@@ -43,6 +43,6 @@ A:0.1
 L:0.1
 0.8
 LStick@-127,10:0.5->~
-LStick@-127,10|LPRESS:0.5->~
+LStick@-127,10|RStick@-127,0|LPRESS:0.5->~
 body:
-LStick@-127,10|LPRESS:1->~
+LStick@-127,10|RStick@-127,0|LPRESS:1->~

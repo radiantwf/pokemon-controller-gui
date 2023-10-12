@@ -38,8 +38,7 @@ class SVBoxReleasePokemon(BaseSubStep):
     def release_step_0(self):
         image = self.script.current_frame
         box, current_cursor = BoxMatch().match(image)
-        print(box)
-        # self.script.save_temp_image()
+        # print(box)
         if box[0][self.target_release_pokemon_index] == 0:
             self._status = SubStepRunningStatus.OK
             return
@@ -59,8 +58,9 @@ class SVBoxReleasePokemon(BaseSubStep):
 
     def release_step_1(self):
         image = self.script.current_frame
+        box, _ = BoxMatch().match(image)
         ret = BoxMatch().shiny_tag_check(image)
-        if ret:
+        if box[0][self.target_release_pokemon_index] == 9 or ret:
             self.target_release_pokemon_index = self.target_release_pokemon_index + 1
             if self.target_release_pokemon_index > 5:
                 self._status = SubStepRunningStatus.OK

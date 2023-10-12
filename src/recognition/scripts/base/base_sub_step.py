@@ -10,9 +10,10 @@ class SubStepRunningStatus(Enum):
     NotStarted = -1
     Running = 0
     OK = 1
-    Failed = 2
-    Exception = 3
-    Timeout = 4
+    Finished = 2
+    Failed = 3
+    Exception = 4
+    Timeout = 5
 
 
 class BaseSubStep(ABC):

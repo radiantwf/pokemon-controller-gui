@@ -41,10 +41,15 @@ class SVBoxMoveShinyPokemon(BaseSubStep):
         if box[target_shiny_pokemon[0]][target_shiny_pokemon[1]] == 0:
             self._status = SubStepRunningStatus.OK
             return
+        if box[target_shiny_pokemon[0]][target_shiny_pokemon[1]] == 9:
+            self._status = SubStepRunningStatus.OK
+            return
         elif box[target_shiny_pokemon[0]][target_shiny_pokemon[1]] != 1:
+            self.script.send_log("{}函数返回状态为{}".format("move_step_0",SubStepRunningStatus.Failed))
             self._status = SubStepRunningStatus.Failed
             return
         if current_cursor is None:
+            self.script.send_log("{}函数返回状态为{}".format("move_step_0",SubStepRunningStatus.Failed))
             self._status = SubStepRunningStatus.Failed
             return
 

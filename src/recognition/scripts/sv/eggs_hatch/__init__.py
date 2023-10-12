@@ -9,6 +9,7 @@ from recognition.scripts.sv.common.menu.enter_item import SVEnterMenuItem, SVMen
 
 from recognition.scripts.sv.common.menu.open import SVOpenMenu
 from recognition.scripts.sv.eggs_hatch.box_opt import SVBoxOptPokemon
+from recognition.scripts.sv.eggs_hatch.hatch import SVHatchPokemon
 
 
 class SVEggs(BaseScript):
@@ -80,6 +81,7 @@ class SVEggs(BaseScript):
         self._sv_enter_menu_box = SVEnterMenuItem(
             self, menu_item=SVMenuItems.Box)
         self._sv_box_opt = SVBoxOptPokemon(self)
+
         self._prepare_step_index += 1
 
     @property
@@ -88,6 +90,7 @@ class SVEggs(BaseScript):
             self.open_menu,
             self.enter_box,
             self.box_opt,
+            self.hatch,
         ]
 
     def circle_init(self):
@@ -97,6 +100,9 @@ class SVEggs(BaseScript):
     def open_menu(self):
         status = self._sv_open_menu.run()
         if status == SubStepRunningStatus.Running:
+            return
+        elif status == SubStepRunningStatus.Finished:
+            self.finished_process()
             return
         elif status == SubStepRunningStatus.OK:
             self._circle_step_index += 1
@@ -108,6 +114,9 @@ class SVEggs(BaseScript):
         status = self._sv_enter_menu_box.run()
         if status == SubStepRunningStatus.Running:
             return
+        elif status == SubStepRunningStatus.Finished:
+            self.finished_process()
+            return
         elif status == SubStepRunningStatus.OK:
             self._circle_step_index += 1
         else:
@@ -118,9 +127,29 @@ class SVEggs(BaseScript):
         status = self._sv_box_opt.run()
         if status == SubStepRunningStatus.Running:
             return
+        elif status == SubStepRunningStatus.Finished:
+            self.finished_process()
+            return
         elif status == SubStepRunningStatus.OK:
+            self._sv_hatch_opt = SVHatchPokemon(self, 5)
             self._circle_step_index += 1
-            self.stop_work()
         else:
             self.send_log("{}函数返回状态为{}".format("box_opt", status.name))
             self.stop_work()
+
+    def hatch(self):
+        status = self._sv_hatch_opt.run()
+        if status == SubStepRunningStatus.Running:
+            return
+        elif status == SubStepRunningStatus.Finished:
+            self.finished_process()
+            return
+        elif status == SubStepRunningStatus.OK:
+            self._circle_step_index = 0
+
+    def finished_process(self):
+        run_time_span = self.run_time_span
+        self.macro_stop(block=False)
+        self.send_log("检测到闪光，请人工核查，已运行{}次，耗时{}小时{}分{}秒".format(self.circle_times, int(
+            run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
+        self.stop_work()

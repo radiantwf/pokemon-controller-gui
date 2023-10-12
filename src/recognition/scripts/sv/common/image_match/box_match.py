@@ -110,7 +110,8 @@ class BoxMatch:
     def _match_eggs(self, gray, box: list[list[int]]) -> list[list[int]]:
         if box is None:
             box = self._init_box_list()
-        locations = find_matches(gray, self._egg_template, 0.8)
+        # threshold值为0.8时，无法识别队伍栏中选中的蛋
+        locations = find_matches(gray, self._egg_template, 0.7)
         for loc in locations:
             for i in range(len(self.BOX_POINT)):
                 for j in range(len(self.BOX_POINT[i])):
@@ -206,7 +207,7 @@ class BoxMatch:
 
     def _match_arrow(self, gray) -> tuple[int, int]:
         arrow = None
-        crop_x, crop_y, crop_w, crop_h = 15, 90, 590, 325
+        crop_x, crop_y, crop_w, crop_h = 15, 90, 590, 385
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
         match = cv2.matchTemplate(
             crop_gray, self._box_arrow_template, cv2.TM_CCOEFF_NORMED)
