@@ -260,3 +260,15 @@ class BoxMatch:
         if max_val >= threshold:
             return True
         return False
+
+    def current_party_eggs(self, image) -> int:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        box, _ = self._match_eggs(gray, None)
+        num = 0
+        try:
+            for i in range(len(box[0])):
+                if box[0][i] == 9:
+                    num += 1
+        except:
+            pass
+        return num

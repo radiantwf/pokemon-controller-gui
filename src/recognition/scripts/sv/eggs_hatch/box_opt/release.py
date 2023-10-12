@@ -62,6 +62,9 @@ class SVBoxReleasePokemon(BaseSubStep):
         ret = BoxMatch().shiny_tag_check(image)
         if ret:
             self.target_release_pokemon_index = self.target_release_pokemon_index + 1
+            if self.target_release_pokemon_index > 5:
+                self._status = SubStepRunningStatus.OK
+                return
             self._process_step_index = 0
             return
         self.script.macro_text_run(
