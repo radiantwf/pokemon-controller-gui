@@ -7,6 +7,11 @@ from recognition.scripts.sv.eggs_hatch.box_opt.function import move_cursor
 global_page_turns_count = 0
 
 
+def reset_global_page_turns_count():
+    global global_page_turns_count
+    global_page_turns_count = 0
+
+
 class SVBoxMoveEggs(BaseSubStep):
     def __init__(self, script: BaseScript, timeout: float = 20) -> None:
         super().__init__(script, timeout)
@@ -40,7 +45,6 @@ class SVBoxMoveEggs(BaseSubStep):
             self.move_step_5,
             self.move_step_6,
             self.move_step_7,
-            self.move_step_8,
         ]
 
     def move_step_0(self):
@@ -61,7 +65,7 @@ class SVBoxMoveEggs(BaseSubStep):
             self._process_step_index += 1
         else:
             global global_page_turns_count
-            if global_page_turns_count > 36:
+            if global_page_turns_count >= 36:
                 self._status = SubStepRunningStatus.OK
                 return
             self.script.macro_text_run("R:0.05", block=True)
@@ -107,22 +111,30 @@ class SVBoxMoveEggs(BaseSubStep):
         self.time_sleep(0.1)
 
     def move_step_4(self):
-        self.script.macro_text_run("Minus:0.05", block=True)
+        self.script.macro_text_run("A:0.05", block=True)
         self.time_sleep(0.2)
         self._process_step_index += 1
 
     def move_step_5(self):
         self._process_step_index += 1
-        pass
 
     def move_step_6(self):
-        self._process_step_index += 1
-        pass
+        move_target = (0, 1)
+        image = self.script.current_frame
+        current_cursor = BoxMatch().match_arrow(image)
+        if current_cursor is None:
+            self.script.send_log("{}函数返回状态为{}".format(
+                "move_step_6", SubStepRunningStatus.Failed))
+            self._status = SubStepRunningStatus.Failed
+            return
+        if current_cursor[0] == move_target[0] and current_cursor[1] == move_target[1]:
+            self._process_step_index += 1
+            return
+        move_cursor(self,
+                    current_cursor, move_target)
+        self.time_sleep(0.1)
 
     def move_step_7(self):
+        self.script.macro_text_run("A:0.01->0.005->A:0.05", block=True)
+        self.time_sleep(0.2)
         self._process_step_index += 1
-        pass
-
-    def move_step_8(self):
-        self._process_step_index += 1
-        pass

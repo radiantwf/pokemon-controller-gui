@@ -19,6 +19,8 @@ class SVEggs(BaseScript):
         self._circle_step_index = -1
         self._jump_next_frame = False
 
+        SVBoxOptPokemon.initial()
+
     @staticmethod
     def script_name() -> str:
         return "宝可梦朱紫孵蛋"
@@ -99,7 +101,7 @@ class SVEggs(BaseScript):
         elif status == SubStepRunningStatus.OK:
             self._circle_step_index += 1
         else:
-            self.send_log("{}函数返回状态为{}".format("open_menu",status.name))
+            self.send_log("{}函数返回状态为{}".format("open_menu", status.name))
             self.stop_work()
 
     def enter_box(self):
@@ -109,7 +111,7 @@ class SVEggs(BaseScript):
         elif status == SubStepRunningStatus.OK:
             self._circle_step_index += 1
         else:
-            self.send_log("{}函数返回状态为{}".format("enter_box",status.name))
+            self.send_log("{}函数返回状态为{}".format("enter_box", status.name))
             self.stop_work()
 
     def box_opt(self):
@@ -120,5 +122,5 @@ class SVEggs(BaseScript):
             self._circle_step_index += 1
             self.stop_work()
         else:
-            self.send_log("{}函数返回状态为{}".format("box_opt",status.name))
+            self.send_log("{}函数返回状态为{}".format("box_opt", status.name))
             self.stop_work()
