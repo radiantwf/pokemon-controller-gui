@@ -61,7 +61,7 @@ def main():
         egg_template, cv2.COLOR_BGR2GRAY)
 
     mat = cv2.imread(
-        "temp_20231013013150.jpg")
+        "temp_20231013233603.jpg")
     box, cursor = BoxMatch().match(mat)
     print(box, cursor)
     gray = cv2.cvtColor(mat, cv2.COLOR_BGR2GRAY)
@@ -70,7 +70,7 @@ def main():
     print(main_color)
 
     # 查找所有匹配的位置
-    locations = find_matches(template_gray, gray, 0.5)
+    locations = find_matches(template_gray, gray, 0.4)
 
     # 在目标图片中标记所有匹配的位置
     for loc in locations:

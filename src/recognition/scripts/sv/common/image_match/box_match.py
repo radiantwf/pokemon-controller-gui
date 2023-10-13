@@ -227,6 +227,32 @@ class BoxMatch:
                     if p[0] > x - 10 and p[1] > y - 10 and p[0] < x + width and p[1] < y + 10:
                         arrow = (i, j)
                         break
+        if arrow is None:
+            arrow = self._match_arrow_2(gray)
+        return arrow
+
+    def _match_arrow_2(self, gray) -> tuple[int, int]:
+        arrow = None
+        crop_x, crop_y, crop_w, crop_h = 15, 90, 590, 325
+        crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
+        match = cv2.matchTemplate(
+            crop_gray, self._box_arrow_template, cv2.TM_CCOEFF_NORMED)
+        _, max_val, _, p = cv2.minMaxLoc(match)
+        if max_val < 0.4:
+            return None
+
+        for i in range(len(self.BOX_POINT)):
+            if i == 0:
+                width = self.CURRENT_PARTY_RECT[0]
+            else:
+                width = self.UNIT_BOX_RECT[0]
+            for j in range(len(self.BOX_POINT[i])):
+                if self.BOX_POINT[i][j] is not None:
+                    x = self.BOX_POINT[i][j][0] - crop_x
+                    y = self.BOX_POINT[i][j][1] - crop_y
+                    if p[0] > x - 10 and p[1] > y - 10 and p[0] < x + width and p[1] < y + 10:
+                        arrow = (i, j)
+                        break
         return arrow
 
     def match(self, image) -> tuple[list[list[int]], tuple[int, int]]:
@@ -264,7 +290,7 @@ class BoxMatch:
 
     def current_party_eggs(self, image) -> int:
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        box, _ = self._match_eggs(gray, None)
+        box = self._match_eggs(gray, None)
         num = 0
         try:
             for i in range(len(box[0])):

@@ -116,7 +116,7 @@ class SVBoxMoveEggs(BaseSubStep):
         self.time_sleep(0.1)
 
     def move_step_4(self):
-        self.script.macro_text_run("A:0.05", block=True)
+        self.script.macro_text_run("A:0.01->0.005->A:0.05", block=True)
         self.time_sleep(0.2)
         self._process_step_index += 1
 

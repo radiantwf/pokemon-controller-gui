@@ -78,11 +78,6 @@ class SVEggs(BaseScript):
         ]
 
     def prepare_step_0(self):
-        self._sv_open_menu = SVOpenMenu(self)
-        self._sv_enter_menu_box = SVEnterMenuItem(
-            self, menu_item=SVMenuItems.Box)
-        self._sv_box_opt = SVBoxOptPokemon(self)
-
         self._prepare_step_index += 1
 
     @property
@@ -95,6 +90,10 @@ class SVEggs(BaseScript):
         ]
 
     def circle_init(self):
+        self._sv_open_menu = SVOpenMenu(self)
+        self._sv_enter_menu_box = SVEnterMenuItem(
+            self, menu_item=SVMenuItems.Box)
+        self._sv_box_opt = SVBoxOptPokemon(self)
         self.hatching_step_index = 0
         pass
 
@@ -151,6 +150,8 @@ class SVEggs(BaseScript):
             self.finished_process()
             return
         elif status == SubStepRunningStatus.OK:
+            self.macro_stop()
+            self.set_circle_continue()
             self._circle_step_index = 0
 
     def finished_process(self):

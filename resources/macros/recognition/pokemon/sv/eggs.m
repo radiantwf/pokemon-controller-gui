@@ -42,7 +42,8 @@ A:0.1
 <hatching_run|孵蛋跑圈|-1>
 L:0.1
 0.8
-LStick@-127,10:0.5->~
-LStick@-127,10|RStick@-127,0|LPRESS:0.5->~
+LStick@-127,0|RStick@-127,0:0.5->~
+LStick@-127,0|RStick@-127,0|LPRESS:0.1->~
 body:
-LStick@-127,10|RStick@-127,0|LPRESS:1->~
+LStick@-127,0|RStick@-127,0|LPRESS:0.1->~
+LStick@-127,0|RStick@-127,0:1->~

@@ -68,8 +68,8 @@ class SVBoxReleasePokemon(BaseSubStep):
             self._process_step_index = 0
             return
         self.script.macro_text_run(
-            "A:0.05\n0.3\nTOP:0.05\n0.1\nTOP:0.05", block=True)
-        self.time_sleep(0.01)
+            "A:0.01->0.005->A:0.05\n0.3\nTOP:0.05\n0.1\nTOP:0.05", block=True)
+        self.time_sleep(0.05)
         self._process_step_index += 1
 
     def release_step_2(self):
@@ -77,7 +77,7 @@ class SVBoxReleasePokemon(BaseSubStep):
         ret = BoxMatch().release_tag_check(image)
         if ret:
             self.script.macro_text_run(
-                "A:0.05\n0.6\nTOP:0.05\n0.1\nA:0.05\n1.6\nA:0.05\n", block=True)
+                "A:0.01->0.005->A:0.05\n0.6\nTOP:0.05\n0.1\nA:0.01->0.005->A:0.05\n1.6\nA:0.01->0.005->A:0.05\n", block=True)
             self.time_sleep(1)
             self._process_step_index = 0
         else:
