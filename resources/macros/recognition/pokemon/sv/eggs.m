@@ -1,4 +1,4 @@
-<picnic_3|野餐制作三明治|1>
+<picnic_3>
 A:0.1
 0.1
 9
@@ -39,7 +39,7 @@ A:0.1
 A:0.1
 2
 
-<hatching_run|孵蛋跑圈|-1>
+<hatching_run>
 L:0.1
 0.8
 LStick@-127,0|RStick@-127,0:0.5->~
