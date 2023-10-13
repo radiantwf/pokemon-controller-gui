@@ -5,6 +5,7 @@ from recognition.scripts.base.base_script import BaseScript, WorkflowEnum
 import cv2
 import numpy as np
 from recognition.scripts.base.base_sub_step import SubStepRunningStatus
+from recognition.scripts.sv.common.image_match.box_match import BoxMatch
 from recognition.scripts.sv.common.menu.enter_item import SVEnterMenuItem, SVMenuItems
 
 from recognition.scripts.sv.common.menu.open import SVOpenMenu
@@ -131,7 +132,12 @@ class SVEggs(BaseScript):
             self.finished_process()
             return
         elif status == SubStepRunningStatus.OK:
-            self._sv_hatch_opt = SVHatchPokemon(self, 5)
+            image = self.current_frame
+            eggs = BoxMatch().current_party_eggs(image)
+            if eggs <= 0:
+                self._circle_step_index = 0
+                return
+            self._sv_hatch_opt = SVHatchPokemon(self, eggs)
             self._circle_step_index += 1
         else:
             self.send_log("{}函数返回状态为{}".format("box_opt", status.name))

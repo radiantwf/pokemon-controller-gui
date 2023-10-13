@@ -404,10 +404,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             msg_box.setText("脚本正在运行")
             msg_box.setInformativeText("是否停止正在运行脚本")
             msg_box.setWindowTitle("提示")
-            msg_box.addButton('确定', QMessageBox.ButtonRole.ActionRole)
+            msg_box.addButton('确定', QMessageBox.ButtonRole.AcceptRole)
             msg_box.addButton('取消', QMessageBox.ButtonRole.RejectRole)
             ret = msg_box.exec_()
-            if ret == QMessageBox.ButtonRole.ActionRole.value:
+            if ret == QMessageBox.ButtonRole.AcceptRole.value:
                 if not self._macro_launcher.macro_stop():
                     send_log("已强行终止运行中脚本")
                 self.on_serial_changed()
@@ -422,10 +422,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             msg_box.setText("图像识别脚本正在运行")
             msg_box.setInformativeText("是否停止正在运行脚本")
             msg_box.setWindowTitle("提示")
-            msg_box.addButton('确定', QMessageBox.ButtonRole.ActionRole)
+            msg_box.addButton('确定', QMessageBox.ButtonRole.AcceptRole)
             msg_box.addButton('取消', QMessageBox.ButtonRole.RejectRole)
             ret = msg_box.exec_()
-            if ret == QMessageBox.ButtonRole.ActionRole.value:
+            if ret == QMessageBox.ButtonRole.AcceptRole.value:
                 if not self._recognition_launcher.recognition_stop():
                     send_log("已强行终止运行中图像识别脚本")
                 self.on_serial_changed()
