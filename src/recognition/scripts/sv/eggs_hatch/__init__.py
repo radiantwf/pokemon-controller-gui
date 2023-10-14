@@ -100,9 +100,10 @@ class SVEggs(BaseScript):
         status = self._sv_open_menu.run()
         if status == SubStepRunningStatus.Running:
             return
+        elif status == SubStepRunningStatus.Failed:
+            self.re_circle()
         elif status == SubStepRunningStatus.Finished:
-            self.re_circel()
-            # self.finished_process()
+            self.finished_process()
             return
         elif status == SubStepRunningStatus.OK:
             self._circle_step_index += 1
@@ -114,9 +115,10 @@ class SVEggs(BaseScript):
         status = self._sv_enter_menu_box.run()
         if status == SubStepRunningStatus.Running:
             return
+        elif status == SubStepRunningStatus.Failed:
+            self.re_circle()
         elif status == SubStepRunningStatus.Finished:
-            self.re_circel()
-            # self.finished_process()
+            self.finished_process()
             return
         elif status == SubStepRunningStatus.OK:
             self._circle_step_index += 1
@@ -128,9 +130,10 @@ class SVEggs(BaseScript):
         status = self._sv_box_opt.run()
         if status == SubStepRunningStatus.Running:
             return
+        elif status == SubStepRunningStatus.Failed:
+            self.re_circle()
         elif status == SubStepRunningStatus.Finished:
-            self.re_circel()
-            # self.finished_process()
+            self.finished_process()
             return
         elif status == SubStepRunningStatus.OK:
             image = self.current_frame
@@ -148,12 +151,13 @@ class SVEggs(BaseScript):
         status = self._sv_hatch_opt.run()
         if status == SubStepRunningStatus.Running:
             return
+        elif status == SubStepRunningStatus.Failed:
+            self.re_circle()
         elif status == SubStepRunningStatus.Finished:
-            self.re_circel()
-            # self.finished_process()
+            self.finished_process()
             return
         elif status == SubStepRunningStatus.OK:
-            self.re_circel()
+            self.re_circle()
 
     def finished_process(self):
         run_time_span = self.run_time_span
@@ -162,7 +166,7 @@ class SVEggs(BaseScript):
             run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
         self.stop_work()
 
-    def re_circel(self):
+    def re_circle(self):
         self.macro_stop()
         self.set_circle_continue()
         self._circle_step_index = 0
