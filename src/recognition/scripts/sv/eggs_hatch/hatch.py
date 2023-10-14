@@ -59,7 +59,7 @@ class SVHatchPokemon(BaseSubStep):
             return
 
     def hatch_step_3(self):
-        self.script.macro_text_run("A:0.01->0.005->A:0.05\n0.1", loop=5 * 16, block=True)
+        self.script.macro_text_run("A:0.01->0.005->A:0.05\n0.1", loop=5 * 17, block=True)
         self._hatched_eggs += 1
         if self._hatched_eggs < self._eggs:
             self._process_step_index = 1

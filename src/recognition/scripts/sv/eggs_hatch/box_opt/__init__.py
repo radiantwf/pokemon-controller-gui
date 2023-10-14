@@ -45,6 +45,9 @@ class SVBoxOptPokemon(BaseSubStep):
         status = self._sv_box_release.run()
         if status == SubStepRunningStatus.Running:
             return
+        elif status == SubStepRunningStatus.Finished:
+            self._status = SubStepRunningStatus.Finished
+            return
         elif status == SubStepRunningStatus.OK:
             self._process_step_index += 1
             return
@@ -56,6 +59,9 @@ class SVBoxOptPokemon(BaseSubStep):
     def move_shiny(self):
         status = self._sv_box_move_shiny.run()
         if status == SubStepRunningStatus.Running:
+            return
+        elif status == SubStepRunningStatus.Finished:
+            self._status = SubStepRunningStatus.Finished
             return
         elif status == SubStepRunningStatus.OK:
             self._process_step_index += 1
@@ -69,6 +75,9 @@ class SVBoxOptPokemon(BaseSubStep):
     def move_eggs_to_current_party(self):
         status = self._sv_box_move_eggs.run()
         if status == SubStepRunningStatus.Running:
+            return
+        elif status == SubStepRunningStatus.Finished:
+            self._status = SubStepRunningStatus.Finished
             return
         elif status == SubStepRunningStatus.OK:
             self._process_step_index += 1
