@@ -20,7 +20,6 @@ class SVEggs(BaseScript):
         self._prepare_step_index = -1
         self._circle_step_index = -1
         self._jump_next_frame = False
-
         SVBoxOptPokemon.initial()
 
     @staticmethod
@@ -102,7 +101,8 @@ class SVEggs(BaseScript):
         if status == SubStepRunningStatus.Running:
             return
         elif status == SubStepRunningStatus.Finished:
-            self.finished_process()
+            self.re_circel()
+            # self.finished_process()
             return
         elif status == SubStepRunningStatus.OK:
             self._circle_step_index += 1
@@ -115,7 +115,8 @@ class SVEggs(BaseScript):
         if status == SubStepRunningStatus.Running:
             return
         elif status == SubStepRunningStatus.Finished:
-            self.finished_process()
+            self.re_circel()
+            # self.finished_process()
             return
         elif status == SubStepRunningStatus.OK:
             self._circle_step_index += 1
@@ -128,7 +129,8 @@ class SVEggs(BaseScript):
         if status == SubStepRunningStatus.Running:
             return
         elif status == SubStepRunningStatus.Finished:
-            self.finished_process()
+            self.re_circel()
+            # self.finished_process()
             return
         elif status == SubStepRunningStatus.OK:
             image = self.current_frame
@@ -147,12 +149,11 @@ class SVEggs(BaseScript):
         if status == SubStepRunningStatus.Running:
             return
         elif status == SubStepRunningStatus.Finished:
-            self.finished_process()
+            self.re_circel()
+            # self.finished_process()
             return
         elif status == SubStepRunningStatus.OK:
-            self.macro_stop()
-            self.set_circle_continue()
-            self._circle_step_index = 0
+            self.re_circel()
 
     def finished_process(self):
         run_time_span = self.run_time_span
@@ -160,3 +161,8 @@ class SVEggs(BaseScript):
         self.send_log("检测到闪光，请人工核查，已运行{}次，耗时{}小时{}分{}秒".format(self.circle_times, int(
             run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
         self.stop_work()
+
+    def re_circel(self):
+        self.macro_stop()
+        self.set_circle_continue()
+        self._circle_step_index = 0

@@ -70,6 +70,7 @@ class SVBoxMoveEggs(BaseSubStep):
             self._process_step_index += 1
         else:
             global global_page_turns_count
+            global_page_turns_count += 1
             if global_page_turns_count >= 36:
                 self._status = SubStepRunningStatus.Finished
                 return
