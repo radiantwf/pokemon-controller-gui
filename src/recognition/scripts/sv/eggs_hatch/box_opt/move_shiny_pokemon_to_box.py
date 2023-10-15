@@ -74,10 +74,14 @@ class SVBoxMoveShinyPokemon(BaseSubStep):
         image = self.script.current_frame
         box, _ = BoxMatch().match(image)
         for x in range(0, len(box)):
+            if x == 0:
+                continue
             for y in range(0, len(box[x])):
                 if box[x][y] == 0:
                     self._move_target = (x, y)
                     break
+            if self._move_target[0] != -1 and self._move_target[1] != -1:
+                break
         if self._move_target[0] == -1 or self._move_target[1] == -1:
             self.script.send_log("{}函数返回状态为{}".format("move_step_2",SubStepRunningStatus.Failed))
             self._status = SubStepRunningStatus.Failed

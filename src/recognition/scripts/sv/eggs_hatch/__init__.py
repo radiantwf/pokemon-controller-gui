@@ -101,6 +101,10 @@ class SVEggs(BaseScript):
         if status == SubStepRunningStatus.Running:
             return
         elif status == SubStepRunningStatus.Failed:
+            self.send_log("{}函数返回状态为{}".format("open_menu", status.name))
+            self.re_circle()
+        elif status == SubStepRunningStatus.Timeout:
+            self.send_log("{}函数返回状态为{}".format("open_menu", status.name))
             self.re_circle()
         elif status == SubStepRunningStatus.Finished:
             self.finished_process()
@@ -116,6 +120,10 @@ class SVEggs(BaseScript):
         if status == SubStepRunningStatus.Running:
             return
         elif status == SubStepRunningStatus.Failed:
+            self.send_log("{}函数返回状态为{}".format("enter_box", status.name))
+            self.re_circle()
+        elif status == SubStepRunningStatus.Timeout:
+            self.send_log("{}函数返回状态为{}".format("enter_box", status.name))
             self.re_circle()
         elif status == SubStepRunningStatus.Finished:
             self.finished_process()
@@ -131,6 +139,10 @@ class SVEggs(BaseScript):
         if status == SubStepRunningStatus.Running:
             return
         elif status == SubStepRunningStatus.Failed:
+            self.send_log("{}函数返回状态为{}".format("box_opt", status.name))
+            self.re_circle()
+        elif status == SubStepRunningStatus.Timeout:
+            self.send_log("{}函数返回状态为{}".format("box_opt", status.name))
             self.re_circle()
         elif status == SubStepRunningStatus.Finished:
             self.finished_process()
@@ -152,12 +164,19 @@ class SVEggs(BaseScript):
         if status == SubStepRunningStatus.Running:
             return
         elif status == SubStepRunningStatus.Failed:
+            self.send_log("{}函数返回状态为{}".format("hatch", status.name))
+            self.re_circle()
+        elif status == SubStepRunningStatus.Timeout:
+            self.send_log("{}函数返回状态为{}".format("hatch", status.name))
             self.re_circle()
         elif status == SubStepRunningStatus.Finished:
             self.finished_process()
             return
         elif status == SubStepRunningStatus.OK:
             self.re_circle()
+        else:
+            self.send_log("{}函数返回状态为{}".format("hatch", status.name))
+            self.stop_work()
 
     def finished_process(self):
         run_time_span = self.run_time_span
