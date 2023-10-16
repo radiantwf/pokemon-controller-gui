@@ -2,9 +2,10 @@ import sys
 import cv2
 import numpy as np
 import colorsys
-sys.path.append('./src')
 
+sys.path.append('./src')
 from recognition.scripts.sv.common.image_match.box_match import BoxMatch
+from recognition.scripts.sv.common.image_match.combat_match import CombatMatch
 
 
 def find_matches(template_gray, gray, threshold=0.95, min_distance=10):
@@ -56,14 +57,18 @@ def get_main_color(image, region=None):
 
 def main():
     egg_template = cv2.imread(
-        "resources/img/recognition/pokemon/sv/eggs/box/box-arrow.png")
+        "resources/img/recognition/pokemon/sv/combat/combat_action_icon_1.png")
     template_gray = cv2.cvtColor(
         egg_template, cv2.COLOR_BGR2GRAY)
+# Captures/20231016101856-recognize.jpg
+# Captures/20231016105433-recognize.jpg
+# Captures/20231016105434-recognize.jpg
+# Captures/20231016105436-recognize.jpg
 
     mat = cv2.imread(
-        "temp_20231013233603.jpg")
-    box, cursor = BoxMatch().match(mat)
-    print(box, cursor)
+        "Captures/20231016105433-recognize.jpg")
+    ret = CombatMatch().combat_check(mat)
+    print(ret)
     gray = cv2.cvtColor(mat, cv2.COLOR_BGR2GRAY)
 
     main_color = get_main_color(mat, (226, 290, 6, 6))

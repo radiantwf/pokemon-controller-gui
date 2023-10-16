@@ -1,6 +1,7 @@
 from recognition.scripts.base.base_script import BaseScript
 from recognition.scripts.base.base_sub_step import BaseSubStep, SubStepRunningStatus
 from recognition.scripts.sv.common.image_match.box_match import BoxMatch
+from recognition.scripts.sv.common.image_match.combat_match import CombatMatch
 from recognition.scripts.sv.common.image_match.hatch_match import HatchMatch
 from recognition.scripts.sv.eggs_hatch.box_opt.function import move_cursor
 
@@ -54,12 +55,19 @@ class SVHatchPokemon(BaseSubStep):
             self.script.macro_stop(True)
             self._process_step_index += 1
             return
+        ret = CombatMatch().combat_check(image)
+        if ret:
+            self._status = SubStepRunningStatus.Interrupted
+            self.script.send_log("{}函数返回状态为{}，检测到遭遇战斗".format(
+                "hatch_step_2", self._status.name))
+            return
         if not self.script.macro_running:
             self._status = SubStepRunningStatus.Failed
             return
 
     def hatch_step_3(self):
-        self.script.macro_text_run("A:0.01->0.005->A:0.05\n0.1", loop=5 * 17, block=True)
+        self.script.macro_text_run(
+            "A:0.01->0.005->A:0.05\n0.1", loop=5 * 17, block=True)
         self._hatched_eggs += 1
         if self._hatched_eggs < self._eggs:
             self._process_step_index = 1

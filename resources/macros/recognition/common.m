@@ -25,11 +25,19 @@ A:0.1
 5
 
 --连续点击A--
-<press_button_a|连续点击A>
+<press_button_a>
 A:0.1
 0.2
 
 --连续点击B--
-<press_button_b|连续点击B>
+<press_button_b>
 B:0.1
 0.2
+
+--进入休眠--
+<switch_sleep>
+HOME:4
+1
+A:0.1
+0.5
+A:0.1

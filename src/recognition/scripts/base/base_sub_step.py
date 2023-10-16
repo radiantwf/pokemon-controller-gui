@@ -14,6 +14,7 @@ class SubStepRunningStatus(Enum):
     Failed = 3
     Exception = 4
     Timeout = 5
+    Interrupted = 6
 
 
 class BaseSubStep(ABC):

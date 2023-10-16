@@ -113,7 +113,7 @@ class SVEggs(BaseScript):
             self._circle_step_index += 1
         else:
             self.send_log("{}函数返回状态为{}".format("open_menu", status.name))
-            self.stop_work()
+            self.finished_process()
 
     def enter_box(self):
         status = self._sv_enter_menu_box.run()
@@ -132,7 +132,7 @@ class SVEggs(BaseScript):
             self._circle_step_index += 1
         else:
             self.send_log("{}函数返回状态为{}".format("enter_box", status.name))
-            self.stop_work()
+            self.finished_process()
 
     def box_opt(self):
         status = self._sv_box_opt.run()
@@ -157,7 +157,7 @@ class SVEggs(BaseScript):
             self._circle_step_index += 1
         else:
             self.send_log("{}函数返回状态为{}".format("box_opt", status.name))
-            self.stop_work()
+            self.finished_process()
 
     def hatch(self):
         status = self._sv_hatch_opt.run()
@@ -176,12 +176,14 @@ class SVEggs(BaseScript):
             self.re_circle()
         else:
             self.send_log("{}函数返回状态为{}".format("hatch", status.name))
-            self.stop_work()
+            self.finished_process()
 
     def finished_process(self):
         run_time_span = self.run_time_span
-        self.macro_stop(block=False)
-        self.send_log("检测到闪光，请人工核查，已运行{}次，耗时{}小时{}分{}秒".format(self.circle_times, int(
+        self.macro_stop(block=True)
+        self.macro_run("recognition.switch_sleep",
+                       loop=1, paras={}, block=True, timeout=10)
+        self.send_log("[{}] 脚本完成，已运行{}次，耗时{}小时{}分{}秒".format(SVEggs.script_name(), self.circle_times, int(
             run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
         self.stop_work()
 
