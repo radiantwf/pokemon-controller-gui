@@ -59,6 +59,12 @@ class SVBoxReleasePokemon(BaseSubStep):
     def release_step_1(self):
         image = self.script.current_frame
         box, _ = BoxMatch().match(image)
+        ret = BoxMatch().sv_tag_check(image)
+        if ret and box[0][self.target_release_pokemon_index] == 1:
+            self._status = SubStepRunningStatus.Interrupted
+            self.script.send_log("{}函数返回状态为{}，宝可梦朱紫标志检测错误，请尝试手动按+键切换宝可梦显示模式，再次运行脚本，或确认同行宝可梦是否是有朱紫标志。".format(
+                "release_step_1", self._status.name))
+            return
         ret = BoxMatch().shiny_tag_check(image)
         if box[0][self.target_release_pokemon_index] == 9 or ret:
             self.target_release_pokemon_index = self.target_release_pokemon_index + 1

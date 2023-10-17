@@ -57,6 +57,11 @@ class BoxMatch:
         self._shiny_icon_template = cv2.cvtColor(
             self._shiny_icon_template, cv2.COLOR_BGR2GRAY)
 
+        self._sv_icon_template = cv2.imread(
+            "resources/img/recognition/pokemon/sv/eggs/box/sv-icon.png")
+        self._sv_icon_template = cv2.cvtColor(
+            self._sv_icon_template, cv2.COLOR_BGR2GRAY)
+
     CURRENT_PARTY_RECT = (180, 60)
     CURRENT_PARTY_1 = (18, 98)
     CURRENT_PARTY_2 = (18, 161)
@@ -272,6 +277,17 @@ class BoxMatch:
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         match = cv2.matchTemplate(
             gray, self._release_tag_template, cv2.TM_CCOEFF_NORMED)
+        _, max_val, _, _ = cv2.minMaxLoc(match)
+        if max_val >= threshold:
+            return True
+        return False
+
+    def sv_tag_check(self, image, threshold=0.9) -> bool:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        x, y, w, h = 625, 40, 335, 30
+        crop_gray = gray[y:y+h, x:x+w]
+        match = cv2.matchTemplate(
+            crop_gray, self._sv_icon_template, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, _ = cv2.minMaxLoc(match)
         if max_val >= threshold:
             return True
