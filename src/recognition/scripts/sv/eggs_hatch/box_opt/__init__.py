@@ -53,7 +53,10 @@ class SVBoxOptPokemon(BaseSubStep):
             return
         else:
             self.script.send_log("{}函数返回状态为{}".format("release", status.name))
-            self._status = SubStepRunningStatus.Failed
+            if status == SubStepRunningStatus.Timeout:
+                self._status = SubStepRunningStatus.Failed
+            else:
+                self._status = status
             return
 
     def move_shiny(self):
@@ -69,7 +72,10 @@ class SVBoxOptPokemon(BaseSubStep):
         else:
             self.script.send_log(
                 "{}函数返回状态为{}".format("move_shiny", status.name))
-            self._status = SubStepRunningStatus.Failed
+            if status == SubStepRunningStatus.Timeout:
+                self._status = SubStepRunningStatus.Failed
+            else:
+                self._status = status
             return
 
     def move_eggs_to_current_party(self):
@@ -85,5 +91,8 @@ class SVBoxOptPokemon(BaseSubStep):
         else:
             self.script.send_log("{}函数返回状态为{}".format(
                 "move_eggs_to_current_party", status.name))
-            self._status = SubStepRunningStatus.Failed
+            if status == SubStepRunningStatus.Timeout:
+                self._status = SubStepRunningStatus.Failed
+            else:
+                self._status = status
             return

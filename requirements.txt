@@ -1,4 +1,6 @@
 # opencv-python-headless
+torch
+torchvision
 opencv-python
 pillow
 PySide6
