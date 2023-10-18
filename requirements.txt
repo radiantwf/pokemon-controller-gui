@@ -1,6 +1,7 @@
 # opencv-python-headless
 torch
 torchvision
+scikit-learn
 opencv-python
 pillow
 PySide6
