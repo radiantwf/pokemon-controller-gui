@@ -5,5 +5,7 @@ include
 Captures
 yolo_training/data/labels
 yolo_training/data/images/**/temp
+**/*.cache
 **/*.mp4
 **/.DS_Store
+runs

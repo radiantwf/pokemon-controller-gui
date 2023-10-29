@@ -1,4 +1,5 @@
-train:  /Users/wangfeng/workspace/pokemon/pokemon-controller-gui/yolo_training/train.txt
-val: /Users/wangfeng/workspace/pokemon/pokemon-controller-gui/yolo_training/val.txt
+path: ../pokemon-controller-gui/yolo_training  
+train: data/train
+val: data/val
 names:
   0: Great Tusk

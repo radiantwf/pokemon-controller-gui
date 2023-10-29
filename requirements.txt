@@ -5,7 +5,7 @@ PySide6
 pyserial
 pygame
 torch
-torchvision
 ultralytics
-scikit-learn
-auto-py-to-exe
+#torchvision
+#scikit-learn
+#auto-py-to-exe
