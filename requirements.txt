@@ -1,10 +1,11 @@
 # opencv-python-headless
-torch
-torchvision
-scikit-learn
 opencv-python
 pillow
 PySide6
 pyserial
 pygame
+torch
+torchvision
+ultralytics
+scikit-learn
 auto-py-to-exe

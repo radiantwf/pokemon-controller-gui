@@ -3,4 +3,7 @@ __pycache__
 lib
 include
 Captures
+yolo_training/data/labels
+yolo_training/data/images/**/temp
+**/*.mp4
 **/.DS_Store
