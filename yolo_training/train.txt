@@ -1,0 +1,4 @@
+./data/images/0984-Great Tusk/0984-Great Tusk-0001.jpg
+./data/images/0984-Great Tusk/0984-Great Tusk-0002.jpg
+./data/images/0984-Great Tusk/0984-Great Tusk-0003.jpg
+./data/images/0984-Great Tusk/0984-Great Tusk-0004.jpg
