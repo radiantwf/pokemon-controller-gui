@@ -1,0 +1,4 @@
+torch
+ultralytics
+#torchvision
+#scikit-learn

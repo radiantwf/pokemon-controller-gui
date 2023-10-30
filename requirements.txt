@@ -4,8 +4,8 @@ pillow
 PySide6
 pyserial
 pygame
-torch
-ultralytics
+# torch
+# ultralytics
 #torchvision
 #scikit-learn
 #auto-py-to-exe
