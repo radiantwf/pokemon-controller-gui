@@ -32,7 +32,7 @@
       <x>20</x>
       <y>10</y>
       <width>640</width>
-      <height>420</height>
+      <height>421</height>
      </rect>
     </property>
     <property name="title">
@@ -55,22 +55,6 @@
      </property>
      <property name="text">
       <string/>
-     </property>
-    </widget>
-    <widget class="QSlider" name="slider_video_process_bar">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>390</y>
-       <width>640</width>
-       <height>25</height>
-      </rect>
-     </property>
-     <property name="cursor">
-      <cursorShape>PointingHandCursor</cursorShape>
-     </property>
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
      </property>
     </widget>
    </widget>

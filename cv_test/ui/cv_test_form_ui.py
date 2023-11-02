@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'cv_test_form.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.5.3
+## Created by: Qt User Interface Compiler version 6.6.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -17,8 +17,8 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
 from PySide6.QtWidgets import (QApplication, QFrame, QGroupBox, QLabel,
-    QMainWindow, QPushButton, QSizePolicy, QSlider,
-    QStatusBar, QWidget)
+    QMainWindow, QPushButton, QSizePolicy, QStatusBar,
+    QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -55,17 +55,12 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName(u"centralwidget")
         self.groupBox = QGroupBox(self.centralwidget)
         self.groupBox.setObjectName(u"groupBox")
-        self.groupBox.setGeometry(QRect(20, 10, 640, 420))
+        self.groupBox.setGeometry(QRect(20, 10, 640, 421))
         self.lblCameraFrame_1 = QLabel(self.groupBox)
         self.lblCameraFrame_1.setObjectName(u"lblCameraFrame_1")
         self.lblCameraFrame_1.setGeometry(QRect(0, 20, 640, 360))
         self.lblCameraFrame_1.setFrameShape(QFrame.StyledPanel)
         self.lblCameraFrame_1.setFrameShadow(QFrame.Plain)
-        self.slider_video_process_bar = QSlider(self.groupBox)
-        self.slider_video_process_bar.setObjectName(u"slider_video_process_bar")
-        self.slider_video_process_bar.setGeometry(QRect(0, 390, 640, 25))
-        self.slider_video_process_bar.setCursor(QCursor(Qt.PointingHandCursor))
-        self.slider_video_process_bar.setOrientation(Qt.Horizontal)
         self.groupBox_2 = QGroupBox(self.centralwidget)
         self.groupBox_2.setObjectName(u"groupBox_2")
         self.groupBox_2.setGeometry(QRect(680, 10, 640, 420))
