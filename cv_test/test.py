@@ -1,28 +1,21 @@
 import cv2
 import numpy as np
 
-# 读取图像
-img = cv2.imread('cv_test/0984-Great Tusk-0001.jpg')
+# 读取视频帧
+cap = cv2.VideoCapture('./yolo_training/data/2023-10-29 01-28-46.mp4')
+# bgsegm = cv2.bgsegm.createBackgroundSubtractorMOG()
+bgsegm = cv2.createBackgroundSubtractorMOG2(history=1, detectShadows=False)
+# bgsegm = cv2.bgsegm.createBackgroundSubtractorGMG()
 
-# 将图像转换为灰度图像
-gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+while True:
+    ret, frame = cap.read()
+    if ret == False:
+        exit(1)
+    fgmask = bgsegm.apply(frame)
+    cv2.imshow('v', fgmask)
+    k = cv2.waitKey(10) & 0xff
+    if k == ord('q'):
+        break
 
-# 自适应阈值二值化
-thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, -30)
-
-# 定义结构元素
-kernel = np.ones((5,5),np.uint8)
-
-# 进行开运算
-opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
-
-# 进行闭运算
-closing = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
-
-# 显示结果
-cv2.imshow('Original Image', img)
-cv2.imshow('Thresholded Image', thresh)
-cv2.imshow('Opening', opening)
-cv2.imshow('Closing', closing)
-cv2.waitKey(0)
+cap.release()
 cv2.destroyAllWindows()

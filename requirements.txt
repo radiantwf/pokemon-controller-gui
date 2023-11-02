@@ -1,5 +1,6 @@
 # opencv-python-headless
 opencv-python
+# opencv-contrib-python
 pillow
 PySide6
 pyserial
