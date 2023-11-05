@@ -62,10 +62,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             (frame.height, frame.width, frame.channels))
         display_mat = cv2.resize(
             mat, (self._my_const.DisplayCameraWidth, self._my_const.DisplayCameraHeight), interpolation=cv2.INTER_AREA)
-        display_frame = Frame(self._my_const.DisplayCameraWidth, self._my_const.DisplayCameraHeight,
-                              frame.channels, frame.format, display_mat)
+        display_frame = Frame(display_mat)
+        if frame.format == cv2.CAP_PVAPI_PIXELFORMAT_MONO8:
+            format = QImage.Format_Grayscale8
+        elif frame.format == cv2.CAP_PVAPI_PIXELFORMAT_BGR24:
+            format = QImage.Format_BGR888
+        else:
+            raise ValueError("Unsupported format")
         img = QImage(display_frame.bytes(), display_frame.width, display_frame.height,
-                     display_frame.channels*display_frame.width, QImage.Format_BGR888)
+                     display_frame.channels*display_frame.width, format)
         # .scaled(self.lblCameraFrame.size(), aspectMode=Qt.KeepAspectRatio)
         pixmap = QPixmap.fromImage(img)
         label.setPixmap(pixmap)

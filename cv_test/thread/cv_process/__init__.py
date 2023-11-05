@@ -6,6 +6,7 @@ import time
 
 import numpy
 from const import ConstClass
+import thread.cv_process.process as cv_process
 from datatype.frame import Frame
 
 
@@ -44,13 +45,10 @@ def run(stop_event: threading.Event, input_frame_queue: queue.Queue, output_fram
             frame_mat = cv2.resize(
                 mat, (_width, _height))
             if not output_frames_queue.full():
-                output_frame_mat_1 = frame_mat.copy()
-                output_frame_mat_2 = output_frame_mat_1.copy()
-                output_frame_mat_3 = output_frame_mat_2.copy()
-                output_frames = (Frame(
-                    _width, _height, 3, cv2.CAP_PVAPI_PIXELFORMAT_BGR24, output_frame_mat_1.tobytes()), Frame(
-                    _width, _height, 3, cv2.CAP_PVAPI_PIXELFORMAT_BGR24, output_frame_mat_2.tobytes()), Frame(
-                    _width, _height, 3, cv2.CAP_PVAPI_PIXELFORMAT_BGR24, output_frame_mat_3.tobytes()))
+                output_frame_mat_1 = cv_process.cv_process_1(1, frame_mat)
+                output_frame_mat_2 = cv_process.cv_process_2(2, output_frame_mat_1)
+                output_frame_mat_3 = cv_process.cv_process_3(3, output_frame_mat_2)
+                output_frames = (Frame(output_frame_mat_1), Frame(output_frame_mat_2), Frame(output_frame_mat_3))
                 output_frames_queue.put_nowait(output_frames)
     except InterruptedError:
         return

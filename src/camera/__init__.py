@@ -36,8 +36,7 @@ def run(camera_device: CameraDevice, stop_event: multiprocessing.Event, frame_qu
             if cap.isOpened():
                 ret, frame = cap.read()
                 if ret:
-                    send_frame = Frame(
-                        camera_device.width, camera_device.height, 3, cv2.CAP_PVAPI_PIXELFORMAT_BGR24, frame.tobytes())
+                    send_frame = Frame(frame)
                     if not frame_queue.full():
                         frame_queue.put_nowait(send_frame)
                     if not recognition_frame_queue.full():

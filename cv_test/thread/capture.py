@@ -42,8 +42,7 @@ def _video(stop_event: threading.Event, frame_queue: queue.Queue, recognition_fr
             last_frame = current_frame
             ret, frame = cap.read()
             if ret:
-                send_frame = Frame(
-                    video_width, video_height, 3, cv2.CAP_PVAPI_PIXELFORMAT_BGR24, frame.tobytes())
+                send_frame = Frame(frame)
                 if not frame_queue.full():
                     frame_queue.put_nowait(send_frame)
                 if not recognition_frame_queue.full():
@@ -76,8 +75,7 @@ def _camera(stop_event: threading.Event, frame_queue: queue.Queue, recognition_f
             if cap.isOpened():
                 ret, frame = cap.read()
                 if ret:
-                    send_frame = Frame(
-                        1920, 1080, 3, cv2.CAP_PVAPI_PIXELFORMAT_BGR24, frame.tobytes())
+                    send_frame = Frame(frame)
                     if not frame_queue.full():
                         frame_queue.put_nowait(send_frame)
                     if not recognition_frame_queue.full():
