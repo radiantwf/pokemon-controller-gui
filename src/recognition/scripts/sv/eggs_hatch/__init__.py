@@ -15,17 +15,6 @@ from recognition.scripts.sv.eggs_hatch.hatch import SVHatchPokemon
 
 
 class SVEggs(BaseScript):
-    @staticmethod
-    def script_name() -> str:
-        return "宝可梦朱紫孵蛋"
-
-    @staticmethod
-    def script_paras() -> dict:
-        paras = dict()
-        paras["durations"] = ScriptParameter(
-            "durations", float, -1, "运行时长（分钟）")
-        return paras
-
     def __init__(self, stop_event: multiprocessing.Event, frame_queue: multiprocessing.Queue, controller_input_action_queue: multiprocessing.Queue, paras: dict() = None):
         super().__init__(SVEggs.script_name(), stop_event,
                          frame_queue, controller_input_action_queue, SVEggs.script_paras())
@@ -36,7 +25,29 @@ class SVEggs(BaseScript):
         self._durations = self.get_para("durations")
         SVBoxOptPokemon.initial()
 
+    @staticmethod
+    def script_name() -> str:
+        return "宝可梦朱紫孵蛋"
+
+    @staticmethod
+    def script_paras() -> dict:
+        paras = dict()
+        paras["durations"] = ScriptParameter(
+            "durations", float, -1, "运行时长（分钟）")
+        return paras
+    
+    def check_durations(self):
+        if self._durations <= 0:
+            return False
+        if self.run_time_span >= self._durations * 60:
+            self.send_log("运行时间已到达设定值，脚本停止")
+            self.finished_process()
+            return True
+        return False
+        
     def process_frame(self):
+        if self.check_durations():
+            return
         if self.running_status == WorkflowEnum.Preparation:
             if self._prepare_step_index >= 0:
                 if self._prepare_step_index >= len(self.prepare_step_list):

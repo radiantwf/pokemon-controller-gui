@@ -9,17 +9,6 @@ from recognition.scripts.parameter_struct import ScriptParameter
 
 
 class SwshBattleShiny(BaseScript):
-    @staticmethod
-    def script_name() -> str:
-        return "剑盾定点刷闪"
-
-    @staticmethod
-    def script_paras() -> dict:
-        paras = dict()
-        paras["durations"] = ScriptParameter(
-            "durations", float, -1, "运行时长（分钟）")
-        return paras
-
     def __init__(self, stop_event: multiprocessing.Event, frame_queue: multiprocessing.Queue, controller_input_action_queue: multiprocessing.Queue, paras: dict() = None):
         super().__init__(SwshBattleShiny.script_name(), stop_event,
                          frame_queue, controller_input_action_queue, SwshBattleShiny.script_paras())
@@ -33,8 +22,33 @@ class SwshBattleShiny(BaseScript):
         self._template_p = (865, 430)
         self.set_paras(paras)
         self._durations = self.get_para("durations")
+        self._secondary = self.get_para("secondary")
+
+    @staticmethod
+    def script_name() -> str:
+        return "剑盾定点刷闪"
+
+    @staticmethod
+    def script_paras() -> dict:
+        paras = dict()
+        paras["secondary"] = ScriptParameter(
+            "secondary", bool, False, "副设备")
+        paras["durations"] = ScriptParameter(
+            "durations", float, -1, "运行时长（分钟）")
+        return paras
+
+    def check_durations(self):
+        if self._durations <= 0:
+            return False
+        if self.run_time_span >= self._durations * 60:
+            self.send_log("运行时间已到达设定值，脚本停止")
+            self.finished_process()
+            return True
+        return False
 
     def process_frame(self):
+        if self.check_durations():
+            return
         if self.running_status == WorkflowEnum.Preparation:
             if self._prepare_step_index >= 0 and self._prepare_step_index < len(self._prepare_steps):
                 self._prepare_steps[self._prepare_step_index]()
@@ -97,7 +111,7 @@ class SwshBattleShiny(BaseScript):
     def circle_step_0(self):
         if self.current_frame_count == 1:
             self.macro_run("recognition.pokemon.swsh.common.restart_game",
-                           1, {"secondary": "True"}, True, None)
+                           1, {"secondary": str(self._secondary)}, True, None)
             self._circle_step_index += 1
         else:
             self.macro_stop()
@@ -140,7 +154,7 @@ class SwshBattleShiny(BaseScript):
                     self.macro_stop(block=False)
                     self.send_log("检测到闪光，请人工核查，已运行{}次，耗时{}小时{}分{}秒".format(self.circle_times, int(
                         run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
-                    self.stop_work()
+                    self.finished_process()
         elif self._circle_step_2_time_monotonic_check_1_temp > 0 and self._circle_step_2_time_monotonic_check_1 == 0:
             self._circle_step_2_time_monotonic_check_1 = self._circle_step_2_time_monotonic_check_1_temp
             self._circle_step_2_frame_count_check_1 = self.current_frame_count
@@ -150,3 +164,12 @@ class SwshBattleShiny(BaseScript):
         self.set_circle_continue()
         # self.send_log("未检测到闪光,帧数:{},时长{}".format(self.current_frame_count,self.current_circle_time_span))
         self._circle_step_index = 0
+
+    def finished_process(self):
+        run_time_span = self.run_time_span
+        self.macro_stop(block=True)
+        self.macro_run("common.switch_sleep",
+                       loop=1, paras={}, block=True, timeout=10)
+        self.send_log("[{}] 脚本完成，已运行{}次，耗时{}小时{}分{}秒".format(SwshBattleShiny.script_name(), self.circle_times, int(
+            run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
+        self.stop_work()
