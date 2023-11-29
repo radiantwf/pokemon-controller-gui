@@ -4,8 +4,8 @@ import numpy as np
 import colorsys
 
 sys.path.append('./src')
-from recognition.scripts.sv.common.image_match.box_match import BoxMatch
-from recognition.scripts.sv.common.image_match.combat_match import CombatMatch
+from recognition.scripts.games.pokemon.sv.common.image_match.box_match import BoxMatch
+from recognition.scripts.games.pokemon.sv.common.image_match.combat_match import CombatMatch
 
 
 def find_matches(template_gray, gray, threshold=0.95, min_distance=10):

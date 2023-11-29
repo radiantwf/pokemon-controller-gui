@@ -1,6 +1,6 @@
 from recognition.scripts.base.base_script import BaseScript
 from recognition.scripts.base.base_sub_step import BaseSubStep, SubStepRunningStatus
-from recognition.scripts.sv.common.image_match.menu_match import MenuCursorMatch
+from recognition.scripts.games.pokemon.sv.common.image_match.menu_match import MenuCursorMatch
 
 
 class SVOpenMenu(BaseSubStep):

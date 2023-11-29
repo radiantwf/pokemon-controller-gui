@@ -1,9 +1,9 @@
 from recognition.scripts.base.base_script import BaseScript
 from recognition.scripts.base.base_sub_step import BaseSubStep, SubStepRunningStatus
-from recognition.scripts.sv.common.image_match.box_match import BoxMatch
-from recognition.scripts.sv.eggs_hatch.box_opt.move_eggs_to_current_party import SVBoxMoveEggs, reset_global_page_turns_count
-from recognition.scripts.sv.eggs_hatch.box_opt.move_shiny_pokemon_to_box import SVBoxMoveShinyPokemon
-from recognition.scripts.sv.eggs_hatch.box_opt.release import SVBoxReleasePokemon
+from recognition.scripts.games.pokemon.sv.common.image_match.box_match import BoxMatch
+from recognition.scripts.games.pokemon.sv.eggs_hatch.box_opt.move_eggs_to_current_party import SVBoxMoveEggs, reset_global_page_turns_count
+from recognition.scripts.games.pokemon.sv.eggs_hatch.box_opt.move_shiny_pokemon_to_box import SVBoxMoveShinyPokemon
+from recognition.scripts.games.pokemon.sv.eggs_hatch.box_opt.release import SVBoxReleasePokemon
 
 
 class SVBoxOptPokemon(BaseSubStep):

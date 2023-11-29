@@ -1,12 +1,14 @@
 import multiprocessing
-from recognition.scripts.sv.eggs_hatch import SVEggs
-from recognition.scripts.swsh.battle_shiny import SwshBattleShiny
+from recognition.scripts.games.dqm3.synthesis import DQM3Synthesis
+from recognition.scripts.games.pokemon.sv.eggs_hatch import SVEggs
+from recognition.scripts.games.pokemon.swsh.battle_shiny import SwshBattleShiny
 
 
 def list_recognition_script():
     scripts = [
         SwshBattleShiny.script_name(),
         SVEggs.script_name(),
+        DQM3Synthesis.script_name(),
     ]
     return scripts
 
@@ -17,6 +19,8 @@ def get_default_parameters(scritp_name: str) -> dict:
         paras = SwshBattleShiny.script_paras()
     elif scritp_name == SVEggs.script_name():
         paras = SVEggs.script_paras()
+    elif scritp_name == DQM3Synthesis.script_name():
+        paras = DQM3Synthesis.script_paras()
     return paras
 
 
@@ -28,6 +32,9 @@ def run(script_name, stop_event: multiprocessing.Event, frame_queue: multiproces
     elif script_name == SVEggs.script_name():
         script = SVEggs(stop_event, frame_queue,
                         controller_input_action_queue, paras)
+    elif script_name == DQM3Synthesis.script_name():
+        script = DQM3Synthesis(stop_event, frame_queue,
+                               controller_input_action_queue, paras)
     else:
         pass
     if script:

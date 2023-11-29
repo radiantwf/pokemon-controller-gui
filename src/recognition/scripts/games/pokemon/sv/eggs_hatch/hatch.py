@@ -1,9 +1,9 @@
 from recognition.scripts.base.base_script import BaseScript
 from recognition.scripts.base.base_sub_step import BaseSubStep, SubStepRunningStatus
-from recognition.scripts.sv.common.image_match.box_match import BoxMatch
-from recognition.scripts.sv.common.image_match.combat_match import CombatMatch
-from recognition.scripts.sv.common.image_match.hatch_match import HatchMatch
-from recognition.scripts.sv.eggs_hatch.box_opt.function import move_cursor
+from recognition.scripts.games.pokemon.sv.common.image_match.box_match import BoxMatch
+from recognition.scripts.games.pokemon.sv.common.image_match.combat_match import CombatMatch
+from recognition.scripts.games.pokemon.sv.common.image_match.hatch_match import HatchMatch
+from recognition.scripts.games.pokemon.sv.eggs_hatch.box_opt.function import move_cursor
 
 
 class SVHatchPokemon(BaseSubStep):

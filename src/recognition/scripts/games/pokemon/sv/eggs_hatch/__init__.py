@@ -6,12 +6,12 @@ from recognition.scripts.base.base_script import BaseScript, WorkflowEnum
 import cv2
 import numpy as np
 from recognition.scripts.base.base_sub_step import SubStepRunningStatus
-from recognition.scripts.sv.common.image_match.box_match import BoxMatch
-from recognition.scripts.sv.common.menu.enter_item import SVEnterMenuItem, SVMenuItems
+from recognition.scripts.games.pokemon.sv.common.image_match.box_match import BoxMatch
+from recognition.scripts.games.pokemon.sv.common.menu.enter_item import SVEnterMenuItem, SVMenuItems
 
-from recognition.scripts.sv.common.menu.open import SVOpenMenu
-from recognition.scripts.sv.eggs_hatch.box_opt import SVBoxOptPokemon
-from recognition.scripts.sv.eggs_hatch.hatch import SVHatchPokemon
+from recognition.scripts.games.pokemon.sv.common.menu.open import SVOpenMenu
+from recognition.scripts.games.pokemon.sv.eggs_hatch.box_opt import SVBoxOptPokemon
+from recognition.scripts.games.pokemon.sv.eggs_hatch.hatch import SVHatchPokemon
 
 
 class SVEggs(BaseScript):
