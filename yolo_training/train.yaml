@@ -1,5 +1,0 @@
-path: ../pokemon-controller-gui/yolo_training  
-train: data/train
-val: data/val
-names:
-  0: Great Tusk
