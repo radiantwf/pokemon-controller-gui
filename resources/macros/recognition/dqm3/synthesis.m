@@ -1,0 +1,125 @@
+--重启勇者斗恶龙怪兽篇3配种--
+<synthesis--secondary|副设备(副设备启动游戏时校验)|False--m1_page|怪兽1页面|2--m1_row|怪兽1所在行|1--m1_col|怪兽1所在列|1--m2_page|怪兽2页面|1--m2_row|怪兽2所在行|1--m2_col|怪兽2所在列|2--m3_target|怪兽3位置|2--m3_talents|怪兽3天赋|1,4,5>
+body:
+EXEC>m1_page=int(m1_page);m1_row=int(m1_row);m1_col=int(m1_col);
+EXEC>m2_page=int(m2_page);m2_row=int(m2_row);m2_col=int(m2_col);
+EXEC>m3_target=int(m3_target);m3_talent_splits=sorted(m3_talents.split(','));
+EXEC>init_page=1;init_col=1;init_row=1;init_m3_target=1;init_m3_talent=1;
+EXEC>move_m1_page=m1_page-init_page;move_m1_col=m1_col-init_col;move_m1_row=m1_row-init_row;
+EXEC>move_m2_page=m2_page-m1_page;move_m2_col=m2_col-(m1_col |space| if |space| move_m2_page==0 |space| else |space| init_col);move_m2_row=m2_row-(m1_row |space| if |space| move_m2_page==0 |space| else |space| init_row);
+EXEC>move_m3_target=m3_target-init_m3_target;
+# 打开配种界面
+A:0.1
+1.3
+A:0.1
+0.8
+A:0.1
+4
+# 选择怪兽1
+{
+    {
+        R:0.1
+        0.8
+    }*abs(move_m1_page)
+}?move_m1_page>0
+{
+    {
+        L:0.1
+        0.8
+    }*abs(move_m1_page)
+}?move_m1_page<0
+{
+    {
+        RIGHT:0.1
+        0.3
+    }*abs(move_m1_col)
+}?move_m1_col>0
+{
+    {
+        LEFT:0.1
+        0.3
+    }*abs(move_m1_col)
+}?move_m1_col<0
+{
+    {
+        BOTTOM:0.1
+        0.3
+    }*abs(move_m1_row)
+}?move_m1_row>0
+{
+    {
+        TOP:0.1
+        0.3
+    }*abs(move_m1_row)
+}?move_m1_row<0
+A:0.1
+0.7
+# 选择怪兽2
+{
+    {
+        R:0.1
+        0.8
+    }*abs(move_m2_page)
+}?move_m2_page>0
+{
+    {
+        L:0.1
+        0.8
+    }*abs(move_m2_page)
+}?move_m2_page<0
+{
+    {
+        RIGHT:0.1
+        0.3
+    }*abs(move_m2_col)
+}?move_m2_col>0
+{
+    {
+        LEFT:0.1
+        0.3
+    }*abs(move_m2_col)
+}?move_m2_col<0
+{
+    {
+        BOTTOM:0.1
+        0.3
+    }*abs(move_m2_row)
+}?move_m2_row>0
+{
+    {
+        TOP:0.1
+        0.3
+    }*abs(move_m2_row)
+}?move_m2_row<0
+A:0.1
+0.7
+# 选择合成怪兽
+{
+    RIGHT:0.1
+    0.5
+}*abs(move_m3_target)
+A:0.1
+0.7
+# 点击确定双亲
+A:0.1
+0.8
+# 选择遗传技能
+EXEC>current_m3_talent=init_m3_talent;i=0;
+{
+    EXEC>move_m3_talent=int(m3_talent_splits[i])-current_m3_talent;
+    {
+        BOTTOM:0.1
+        0.2
+    }*abs(move_m3_talent)
+    A:0.1
+    0.2
+    EXEC>current_m3_talent=int(m3_talent_splits[i]);i+=1;
+}*len(m3_talent_splits)
+0.8
+# 配种
+A:0.1
+0.5
+{
+    PLUS:0.1
+    0.4
+}*7*2

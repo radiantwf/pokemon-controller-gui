@@ -88,7 +88,7 @@ def _run_macro(name: str, stop_event, controller_input_action_queue: multiproces
     start_ts = time.monotonic()
     _start_time = start_ts
     try:
-        act = _get_action(name, paras)
+        act = _get_action(name, None, paras)
         if act == None:
             _result_info = "不存在名称为{}的脚本".format(name)
             if log:
