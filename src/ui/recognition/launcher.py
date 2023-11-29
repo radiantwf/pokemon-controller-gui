@@ -2,6 +2,7 @@
 import recognition
 import multiprocessing
 
+
 class RecognitionLauncher(object):
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, '_instance'):
@@ -19,12 +20,16 @@ class RecognitionLauncher(object):
     def list_recognition(self):
         scripts = recognition.list_recognition_script()
         return scripts
+    
+    def get_default_parameters(self, script_name: str):
+        paras = recognition.get_default_parameters(script_name)
+        return paras
 
-    def recognition_start(self, script_name: str, frame_queue: multiprocessing.Queue, controller_input_action_queue: multiprocessing.Queue):
+    def recognition_start(self, script_name: str, frame_queue: multiprocessing.Queue, controller_input_action_queue: multiprocessing.Queue, paras: dict() = None):
         self.recognition_stop()
         self._stop_event = multiprocessing.Event()
         self._recognition_process = multiprocessing.Process(
-            target=recognition.run, args=(script_name, self._stop_event, frame_queue, controller_input_action_queue, ))
+            target=recognition.run, args=(script_name, self._stop_event, frame_queue, controller_input_action_queue, paras, ))
         self._recognition_process.start()
         return
 

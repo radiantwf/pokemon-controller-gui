@@ -11,7 +11,7 @@ def list_recognition_script():
     return scripts
 
 
-def get_script_parameters(scritp_name: str) -> dict:
+def get_default_parameters(scritp_name: str) -> dict:
     paras = dict()
     if scritp_name == SwshBattleShiny.script_name():
         paras = SwshBattleShiny.script_paras()

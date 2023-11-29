@@ -17,7 +17,7 @@ class SwshBattleShiny(BaseScript):
     def script_paras() -> dict:
         paras = dict()
         paras["durations"] = ScriptParameter(
-            "durations", int, -1, "运行时长（分钟，-1为不限制）")
+            "durations", float, -1, "运行时长（分钟）")
         return paras
 
     def __init__(self, stop_event: multiprocessing.Event, frame_queue: multiprocessing.Queue, controller_input_action_queue: multiprocessing.Queue, paras: dict() = None):

@@ -27,6 +27,7 @@ from ui.joystick.device import JoystickDevice
 from ui.joystick.joystick import Joystick
 from ui.macro.dialog import LaunchMacroParasDialog
 from ui.macro.launcher import MacroLauncher
+from ui.recognition.dialog import LaunchRecognitionParasDialog
 
 from ui.recognition.launcher import RecognitionLauncher
 Ui_MainWindow, QMainWindowBase = loadUiType("./resources/ui/main_form.ui")
@@ -278,8 +279,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             return
         recognition = self._recognition_list[self.listWidget_recognition.currentRow(
         )]
-        self._recognition_launcher.recognition_start(
-            recognition, self._recognition_frame_queue, self._controller_input_action_queue)
+        paras = self._recognition_launcher.get_default_parameters(recognition)
+        dialog = LaunchRecognitionParasDialog(self, paras)
+        ret = dialog.exec_()
+        if ret == QtWidgets.QDialog.Accepted:
+            paras = dialog.get_paras()
+            self._recognition_launcher.recognition_start(
+                recognition, self._recognition_frame_queue, self._controller_input_action_queue, paras)
 
     def play_audio(self):
         self.stop_audio()
