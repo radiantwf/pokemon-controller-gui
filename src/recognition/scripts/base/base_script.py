@@ -22,7 +22,7 @@ class WorkflowEnum(Enum):
 
 
 class BaseScript(ABC):
-    def __init__(self, script_name, stop_event: multiprocessing.Event, frame_queue: multiprocessing.Queue, controller_input_action_queue: multiprocessing.Queue):
+    def __init__(self, script_name, stop_event: multiprocessing.Event, frame_queue: multiprocessing.Queue, controller_input_action_queue: multiprocessing.Queue, paras: dict = dict()):
         # 停止事件
         self._stop_event = stop_event
 
@@ -33,6 +33,8 @@ class BaseScript(ABC):
         # 控制器输入队列
         self._controller_input_action_queue = controller_input_action_queue
         self._script_name = script_name
+        self._paras = paras if paras else dict()
+        self.set_paras(paras)
         self._my_const = ConstClass()
         self._width = self._my_const.RecognizeVideoWidth
         self._height = self._my_const.RecognizeVideoHeight
@@ -89,6 +91,35 @@ class BaseScript(ABC):
     @abstractmethod
     def on_error(self):
         pass
+
+    # 运行参数
+    @final
+    @property
+    def paras(self) -> dict:
+        return self._paras
+
+    # 设置运行参数
+    @final
+    def set_paras(self, paras: dict):
+        if paras is None:
+            return
+        for p in self._paras.values():
+            if p.name in paras:
+                self._paras[p.name].set_value(paras[p.name].value)
+            else:
+                self._paras[p.name].set_value(p.default_value)
+
+    # 获取参数
+    @final
+    def get_para(self, name: str):
+        value = None
+        if name in self._paras:
+            value = self._paras[name].value
+        if value is None:
+            value = self._paras[name].default_value
+        if value is None:
+            raise ValueError("parameter {} not found".format(name))
+        return value
 
     # 当前帧
     @final

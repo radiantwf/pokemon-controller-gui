@@ -5,22 +5,34 @@ from recognition.scripts.base.base_script import BaseScript, WorkflowEnum
 import cv2
 import numpy as np
 
+from recognition.scripts.parameter_struct import ScriptParameter
+
 
 class SwshBattleShiny(BaseScript):
-    def __init__(self, stop_event: multiprocessing.Event, frame_queue: multiprocessing.Queue, controller_input_action_queue: multiprocessing.Queue):
+    @staticmethod
+    def script_name() -> str:
+        return "剑盾定点刷闪"
+
+    @staticmethod
+    def script_paras() -> dict:
+        paras = dict()
+        paras["durations"] = ScriptParameter(
+            "durations", int, -1, "运行时长（分钟，-1为不限制）")
+        return paras
+
+    def __init__(self, stop_event: multiprocessing.Event, frame_queue: multiprocessing.Queue, controller_input_action_queue: multiprocessing.Queue, paras: dict() = None):
         super().__init__(SwshBattleShiny.script_name(), stop_event,
-                         frame_queue, controller_input_action_queue)
+                         frame_queue, controller_input_action_queue, SwshBattleShiny.script_paras())
         self._prepare_steps = self.init_prepare_steps()
         self._prepare_step_index = -1
         self._circle_steps = self.init_circle_steps()
         self._circle_step_index = -1
-        self._template = cv2.imread("resources/img/recognition/pokemon/swsh/battle_shiny.jpg")
+        self._template = cv2.imread(
+            "resources/img/recognition/pokemon/swsh/battle_shiny.jpg")
         self._template = cv2.cvtColor(self._template, cv2.COLOR_BGR2GRAY)
         self._template_p = (865, 430)
-
-    @staticmethod
-    def script_name() -> str:
-        return "剑盾定点刷闪"
+        self.set_paras(paras)
+        self._durations = self.get_para("durations")
 
     def process_frame(self):
         if self.running_status == WorkflowEnum.Preparation:

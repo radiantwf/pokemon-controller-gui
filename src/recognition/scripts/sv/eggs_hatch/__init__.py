@@ -1,6 +1,7 @@
 import math
 import multiprocessing
 import time
+from recognition.scripts.parameter_struct import ScriptParameter
 from recognition.scripts.base.base_script import BaseScript, WorkflowEnum
 import cv2
 import numpy as np
@@ -14,17 +15,26 @@ from recognition.scripts.sv.eggs_hatch.hatch import SVHatchPokemon
 
 
 class SVEggs(BaseScript):
-    def __init__(self, stop_event: multiprocessing.Event, frame_queue: multiprocessing.Queue, controller_input_action_queue: multiprocessing.Queue):
-        super().__init__(SVEggs.script_name(), stop_event,
-                         frame_queue, controller_input_action_queue)
-        self._prepare_step_index = -1
-        self._circle_step_index = -1
-        self._jump_next_frame = False
-        SVBoxOptPokemon.initial()
-
     @staticmethod
     def script_name() -> str:
         return "宝可梦朱紫孵蛋"
+
+    @staticmethod
+    def script_paras() -> dict:
+        paras = dict()
+        paras["durations"] = ScriptParameter(
+            "durations", int, -1, "运行时长（分钟，-1为不限制）")
+        return paras
+
+    def __init__(self, stop_event: multiprocessing.Event, frame_queue: multiprocessing.Queue, controller_input_action_queue: multiprocessing.Queue, paras: dict() = None):
+        super().__init__(SVEggs.script_name(), stop_event,
+                         frame_queue, controller_input_action_queue, SVEggs.script_paras())
+        self._prepare_step_index = -1
+        self._circle_step_index = -1
+        self._jump_next_frame = False
+        self.set_paras(paras)
+        self._durations = self.get_para("durations")
+        SVBoxOptPokemon.initial()
 
     def process_frame(self):
         if self.running_status == WorkflowEnum.Preparation:

@@ -512,7 +512,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             format = QImage.Format_BGR888
         else:
             raise ValueError("Unsupported format")
-        
+
         img = QImage(display_frame.bytes(), display_frame.width, display_frame.height,
                      display_frame.channels*display_frame.width, format)
         if self._current_camera != None:
