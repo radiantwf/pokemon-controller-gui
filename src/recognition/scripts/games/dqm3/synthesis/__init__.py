@@ -121,7 +121,8 @@ class DQM3Synthesis(BaseScript):
         return [
             self.prepare_cycle,
             self.restart_game,
-            self.synthesis
+            self.synthesis,
+            self.check_shiny,
         ]
     
     def circle_init(self):
@@ -157,8 +158,8 @@ class DQM3Synthesis(BaseScript):
             self.send_log("已成功配种闪光怪兽，脚本停止")
             self.finished_process()
             return
-        if self._check_shiny_frame_count >= 10:
-            self._check_shiny_frame_count += 1
+        if self._check_shiny_frame_count >= 6:
+            self._circle_step_index += 1
 
     def finished_process(self):
         run_time_span = self.run_time_span
