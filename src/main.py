@@ -1,7 +1,5 @@
 import multiprocessing
-import sys
 
-sys.path.append('./src')
 import ui
 
 def main():
