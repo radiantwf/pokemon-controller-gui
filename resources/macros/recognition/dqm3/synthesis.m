@@ -30,10 +30,10 @@ A:0.1
 }?move_m1_page<0
 {
     {
-        RIGHT:0.05
+        TOP:0.05
         0.3
-    }*abs(move_m1_col)
-}?move_m1_col>0
+    }*abs(move_m1_row)
+}?move_m1_row<0
 {
     {
         LEFT:0.05
@@ -48,10 +48,10 @@ A:0.1
 }?move_m1_row>0
 {
     {
-        TOP:0.05
+        RIGHT:0.05
         0.3
-    }*abs(move_m1_row)
-}?move_m1_row<0
+    }*abs(move_m1_col)
+}?move_m1_col>0
 A:0.1
 0.7
 # 选择怪兽2
@@ -69,10 +69,10 @@ A:0.1
 }?move_m2_page<0
 {
     {
-        RIGHT:0.05
+        TOP:0.05
         0.3
-    }*abs(move_m2_col)
-}?move_m2_col>0
+    }*abs(move_m2_row)
+}?move_m2_row<0
 {
     {
         LEFT:0.05
@@ -87,10 +87,10 @@ A:0.1
 }?move_m2_row>0
 {
     {
-        TOP:0.05
+        RIGHT:0.05
         0.3
-    }*abs(move_m2_row)
-}?move_m2_row<0
+    }*abs(move_m2_col)
+}?move_m2_col>0
 A:0.1
 0.7
 # 选择合成怪兽
