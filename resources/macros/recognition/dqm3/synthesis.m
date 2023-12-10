@@ -19,36 +19,36 @@ A:0.1
 {
     {
         R:0.1
-        0.8
+        0.5
     }*abs(move_m1_page)
 }?move_m1_page>0
 {
     {
         L:0.1
-        0.8
+        0.5
     }*abs(move_m1_page)
 }?move_m1_page<0
 {
     {
-        RIGHT:0.1
+        RIGHT:0.05
         0.3
     }*abs(move_m1_col)
 }?move_m1_col>0
 {
     {
-        LEFT:0.1
+        LEFT:0.05
         0.3
     }*abs(move_m1_col)
 }?move_m1_col<0
 {
     {
-        BOTTOM:0.1
+        BOTTOM:0.05
         0.3
     }*abs(move_m1_row)
 }?move_m1_row>0
 {
     {
-        TOP:0.1
+        TOP:0.05
         0.3
     }*abs(move_m1_row)
 }?move_m1_row<0
@@ -57,37 +57,37 @@ A:0.1
 # 选择怪兽2
 {
     {
-        R:0.1
-        0.8
+        R:0.05
+        0.3
     }*abs(move_m2_page)
 }?move_m2_page>0
 {
     {
-        L:0.1
-        0.8
+        L:0.05
+        0.3
     }*abs(move_m2_page)
 }?move_m2_page<0
 {
     {
-        RIGHT:0.1
+        RIGHT:0.05
         0.3
     }*abs(move_m2_col)
 }?move_m2_col>0
 {
     {
-        LEFT:0.1
+        LEFT:0.05
         0.3
     }*abs(move_m2_col)
 }?move_m2_col<0
 {
     {
-        BOTTOM:0.1
+        BOTTOM:0.05
         0.3
     }*abs(move_m2_row)
 }?move_m2_row>0
 {
     {
-        TOP:0.1
+        TOP:0.05
         0.3
     }*abs(move_m2_row)
 }?move_m2_row<0
@@ -95,8 +95,8 @@ A:0.1
 0.7
 # 选择合成怪兽
 {
-    RIGHT:0.1
-    0.5
+    RIGHT:0.05
+        0.3
 }*abs(move_m3_target)
 A:0.1
 0.7
