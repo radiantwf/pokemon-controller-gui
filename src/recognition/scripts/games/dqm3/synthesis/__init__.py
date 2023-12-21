@@ -19,7 +19,8 @@ class DQM3Synthesis(BaseScript):
         self._secondary = self.get_para("secondary")
         self._shiny_star_template = cv2.imread("resources/img/recognition/dqm3/synthesis/shiny_star.png")
         self._shiny_star_template = cv2.cvtColor(self._shiny_star_template, cv2.COLOR_BGR2GRAY)
-        crop_x, crop_y, crop_w, crop_h = 300, 300, 360, 240
+        # crop_x, crop_y, crop_w, crop_h = 300, 300, 360, 240
+        crop_x, crop_y, crop_w, crop_h = 350, 240, 260, 300
         self._template_crop = (crop_x, crop_y, crop_w, crop_h)
 
 
@@ -154,6 +155,7 @@ class DQM3Synthesis(BaseScript):
         match = cv2.matchTemplate(crop_gray, self._shiny_star_template, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, _ = cv2.minMaxLoc(match)
         self._check_shiny_frame_count += 1
+        # self.send_log("闪光怪兽检测中，当前帧最大匹配值：{}".format(max_val))
         if max_val >= 0.7:
             self.send_log("已成功配种闪光怪兽，脚本停止")
             self.finished_process()
