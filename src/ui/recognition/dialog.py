@@ -29,7 +29,10 @@ class LaunchRecognitionParasDialog(QDialog):
             edit_widgets = self._edit_widgets[para.name]
             if edit_widgets is None:
                 continue
-            text = edit_widgets.text()
+            if isinstance(edit_widgets, QLineEdit):
+                text = edit_widgets.text()
+            elif isinstance(edit_widgets, QComboBox):
+                text = edit_widgets.currentText()
             if para.value_type == bool:
                 if text.lower() == 'true':
                     para.set_value(True)
@@ -58,7 +61,12 @@ class LaunchRecognitionParasDialog(QDialog):
             para_summary = para.description
             para_default = para.default_value
             para_label = QLabel(f'{para_summary}')
-            para_edit = QLineEdit(str(para_default))
+            if para.items:
+                para_edit = QComboBox()
+                para_edit.addItems(para.items)
+                para_edit.setCurrentText(str(para_default))
+            else:
+                para_edit = QLineEdit(str(para_default))
             self._set_lineEdit_validator(para_edit, para.value_type)
             self.layout.addWidget(para_label, row, 0, 1, 2)
             self.layout.addWidget(para_edit, row, 2, 1, 2)

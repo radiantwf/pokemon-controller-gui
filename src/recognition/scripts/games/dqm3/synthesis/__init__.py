@@ -1,11 +1,11 @@
-import math
 import multiprocessing
 import time
+
+import numpy as np
 from recognition.scripts.parameter_struct import ScriptParameter
 from recognition.scripts.base.base_script import BaseScript, WorkflowEnum
 import cv2
-import numpy as np
-from recognition.scripts.base.base_sub_step import SubStepRunningStatus
+import pytesseract
 
 class DQM3Synthesis(BaseScript):
     def __init__(self, stop_event: multiprocessing.Event, frame_queue: multiprocessing.Queue, controller_input_action_queue: multiprocessing.Queue, paras: dict() = None):
@@ -19,9 +19,8 @@ class DQM3Synthesis(BaseScript):
         self._secondary = self.get_para("secondary")
         self._shiny_star_template = cv2.imread("resources/img/recognition/dqm3/synthesis/shiny_star.png")
         self._shiny_star_template = cv2.cvtColor(self._shiny_star_template, cv2.COLOR_BGR2GRAY)
-        # crop_x, crop_y, crop_w, crop_h = 300, 300, 360, 240
-        crop_x, crop_y, crop_w, crop_h = 350, 240, 260, 300
-        self._template_crop = (crop_x, crop_y, crop_w, crop_h)
+
+        self._shiny = False
 
 
     @staticmethod
@@ -51,6 +50,13 @@ class DQM3Synthesis(BaseScript):
             "m3_target", int, 1, "配种怪兽3位置")
         paras["m3_talents"] = ScriptParameter(
             "m3_talents", str, "1,2,3", "配种怪兽3天赋")
+        paras["monster_size"] = ScriptParameter(
+            "monster_size", str, "普通体型", "配种怪物体型(个别怪兽超大体型个体需要修改为超大体型)",["普通体型","超大体型"])
+        paras["experience_book_index"] = ScriptParameter(
+            "experience_book_index", int, 0, "经验之书位置(<=0时跳过能力值检测)")
+        paras["check_ability"] = ScriptParameter("check_ability", str, "HP", "检测属性",["HP","MP","攻击","防御","速度","智力"])
+        paras["check_value"] = ScriptParameter("check_value", int, 100, "检测阈值(大于设定值)")
+        
         return paras
     
     def check_durations(self):
@@ -112,56 +118,148 @@ class DQM3Synthesis(BaseScript):
     def prepare_step_list(self):
         return [
             self.prepare_step_0,
+            self.restart_game,
         ]
 
     def prepare_step_0(self):
+        self.macro_text_run("B:0.1\n0.1", loop=1, block=True)
+        time.sleep(3)
+        self._prepare_step_index += 1
+
+    def restart_game(self):
+        self.macro_run("recognition.dqm3.common.restart_game",
+                        1, {"secondary": str(self._secondary)}, True, None)
         self._prepare_step_index += 1
 
     @property
     def cycle_step_list(self):
         return [
             self.prepare_cycle,
-            self.restart_game,
-            self.synthesis,
-            self.check_shiny,
+            self.synthesis_1,
+            self.shiny_check_1,
+            self.synthesis_2,
+            self.use_experience_book,
+            self.shiny_check_2,
+            self.reload_game,
         ]
     
     def circle_init(self):
         pass
 
     def prepare_cycle(self):
+        self._shiny = False
         self._check_shiny_frame_count = 0
         self._circle_step_index += 1
 
-    def restart_game(self):
-        self.macro_run("recognition.dqm3.common.restart_game",
-                        1, {"secondary": str(self._secondary)}, True, None)
-        self._circle_step_index += 1
 
-    def synthesis(self):
+    def synthesis_1(self):
         macro_paras = dict()
         for p in self.paras.values():
             macro_paras[p.name] = p.value
 
-        self.macro_run("recognition.dqm3.synthesis.synthesis",
+        self.macro_run("recognition.dqm3.synthesis.synthesis_1",
                         1, macro_paras, True, None)
         self._jump_next_frame = True
         self._circle_step_index += 1
 
-    def check_shiny(self):
+    def shiny_check_1(self):
         image = self.current_frame
+
+        monster_size = self.paras['monster_size'].value
+        if monster_size == "普通体型":
+            crop_x, crop_y, crop_w, crop_h = 300, 300, 360, 240
+        else:
+            crop_x, crop_y, crop_w, crop_h = 350, 240, 260, 300
+
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        crop_gray = gray[self._template_crop[1]:self._template_crop[1]+self._template_crop[3], self._template_crop[0]:self._template_crop[0]+self._template_crop[2]]
+        crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
         match = cv2.matchTemplate(crop_gray, self._shiny_star_template, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, _ = cv2.minMaxLoc(match)
         self._check_shiny_frame_count += 1
         # self.send_log("闪光怪兽检测中，当前帧最大匹配值：{}".format(max_val))
         if max_val >= 0.7:
-            self.send_log("已成功配种闪光怪兽，脚本停止")
-            self.finished_process()
+            self._shiny = True
+            self._circle_step_index += 1
+            self.send_log("已成功配种闪光怪兽")
             return
         if self._check_shiny_frame_count >= 6:
             self._circle_step_index += 1
+
+    def synthesis_2(self):
+        self.macro_run("recognition.dqm3.synthesis.synthesis_2",
+                        1, {}, True, None)
+        self._circle_step_index += 1
+
+    def use_experience_book(self):
+        if not self._shiny:
+            self._circle_step_index += 1
+            return
+        if self.paras["experience_book_index"].value <= 0:
+            self.finished_process()
+            return
+        macro_paras = dict()
+        for p in self.paras.values():
+            macro_paras[p.name] = p.value
+        self.macro_run("recognition.dqm3.synthesis.use_experience_book",
+                        1, macro_paras, True, None)
+        self._jump_next_frame = True
+        self._circle_step_index += 1
+        
+    def shiny_check_2(self):
+        if not self._shiny:
+            self._circle_step_index += 1
+            return
+        check_ability = self.paras['check_ability'].value
+        check_value = self.paras['check_value'].value
+        self.send_log(f"检测项目：{check_ability}，阈值：{check_value}")
+
+        if check_ability == "HP":
+            crop_x, crop_y, crop_w, crop_h = 585, 203, 35, 20
+        elif check_ability == "MP":
+            crop_x, crop_y, crop_w, crop_h = 585, 228, 35, 20
+        elif check_ability == "攻击":
+            crop_x, crop_y, crop_w, crop_h = 585, 253, 35, 20
+        elif check_ability == "防御":
+            crop_x, crop_y, crop_w, crop_h = 585, 278, 35, 20
+        elif check_ability == "速度":
+            crop_x, crop_y, crop_w, crop_h = 585, 306, 35, 20
+        elif check_ability == "智力":
+            crop_x, crop_y, crop_w, crop_h = 585, 331, 35, 20
+        else:
+            self.send_log("检测项目错误")
+            self.finished_process()
+            return
+        # 转为灰度图片
+        image = self.current_frame
+        # 转为灰度图片
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
+        crop_gray = cv2.resize(crop_gray, (crop_w*4, crop_h*4))
+        # 对图片进行二值化处理
+        _, thresh1 = cv2.threshold(crop_gray, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)
+        kernel = np.ones((3, 3), np.uint8)
+        opening = cv2.morphologyEx(thresh1, cv2.MORPH_OPEN, kernel)
+        closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
+
+        # 使用Tesseract进行文字识别
+        custom_config = r'--oem 3 --psm 7 -c tessedit_char_whitelist=0123456789'
+        num_text = pytesseract.image_to_string(closing, config=custom_config)
+        num_text = "".join(num_text.split())
+        num = int(num_text) if num_text.isdigit() else 0
+        self.send_log(f"实际值：{num}")
+        if num >= check_value:
+            self.send_log("检测通过")
+            self.finished_process()
+            return
+        self.macro_text_run("A:0.1\n0.1", loop=1, block=True)
+        self.macro_text_run("B:0.1\n0.1", loop=8, block=True)
+        time.sleep(3)
+        self._circle_step_index += 1
+
+    def reload_game(self):
+        self.macro_run("recognition.dqm3.common.reload_game",
+                        1, {}, True, None)
+        self._circle_step_index += 1
 
     def finished_process(self):
         run_time_span = self.run_time_span

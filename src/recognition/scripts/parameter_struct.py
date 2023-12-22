@@ -1,7 +1,7 @@
 
 
 class ScriptParameter(object):
-    def __init__(self, name: str, value_type: type, default_value, description: str):
+    def __init__(self, name: str, value_type: type, default_value, description: str, items: list = None):
         if not isinstance(name, str):
             raise TypeError("name must be str")
         if not isinstance(description, str):
@@ -15,6 +15,7 @@ class ScriptParameter(object):
         self._default_value = default_value
         self._value = default_value
         self._description = description
+        self._items = items
 
     def set_value(self, value):
         if not isinstance(value, self._value_type):
@@ -40,6 +41,10 @@ class ScriptParameter(object):
     @property
     def description(self):
         return self._description
+
+    @property
+    def items(self):
+        return self._items
 
     def __eq__(self, o: object) -> bool:
         if isinstance(o, ScriptParameter):

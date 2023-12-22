@@ -1,5 +1,5 @@
 --重启勇者斗恶龙怪兽篇3配种--
-<synthesis--secondary|副设备(副设备启动游戏时校验)|False--m1_page|怪兽1页面|2--m1_row|怪兽1所在行|1--m1_col|怪兽1所在列|1--m2_page|怪兽2页面|1--m2_row|怪兽2所在行|1--m2_col|怪兽2所在列|2--m3_target|怪兽3位置|2--m3_talents|怪兽3天赋|1,4,5>
+<synthesis_1--secondary|副设备(副设备启动游戏时校验)|False--m1_page|怪兽1页面|2--m1_row|怪兽1所在行|1--m1_col|怪兽1所在列|1--m2_page|怪兽2页面|1--m2_row|怪兽2所在行|1--m2_col|怪兽2所在列|2--m3_target|怪兽3位置|2--m3_talents|怪兽3天赋|1,4,5>
 body:
 EXEC>m1_page=int(m1_page);m1_row=int(m1_row);m1_col=int(m1_col);
 EXEC>m2_page=int(m2_page);m2_row=int(m2_row);m2_col=int(m2_col);
@@ -123,3 +123,42 @@ A:0.1
     PLUS:0.1
     0.4
 }*7*2
+
+
+--配种步骤2(关闭命名界面，结束对话)--
+<synthesis_2>
+A:0.1
+2
+PLUS:0.1
+1
+{
+    B:0.1
+    0.4
+}*9*2
+4
+
+--使用经验之书--
+<use_experience_book--experience_book_index|经验之书位置|4>
+EXEC>experience_book_index=int(experience_book_index)
+X:0.1
+1.5
+BOTTOM:0.05
+0.2
+A:0.1
+3
+{
+    R:0.1
+    0.4
+}*4
+{
+    BOTTOM:0.05
+    0.15
+}*(experience_book_index-1)
+A:0.1
+1
+BOTTOM:0.05
+0.3
+A:0.1
+4
+A:0.1
+2

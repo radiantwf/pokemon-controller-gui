@@ -5,6 +5,7 @@ pillow
 PySide6
 pyserial
 pygame
+pytesseract
 # torch
 # ultralytics
 #torchvision
