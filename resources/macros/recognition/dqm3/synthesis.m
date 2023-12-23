@@ -102,17 +102,17 @@ A:0.1
 0.7
 # 点击确定双亲
 A:0.1
-0.8
+1
 # 选择遗传技能
 EXEC>current_m3_talent=init_m3_talent;i=0;
 {
     EXEC>move_m3_talent=int(m3_talent_splits[i])-current_m3_talent;
     {
         BOTTOM:0.1
-        0.2
+        0.3
     }*abs(move_m3_talent)
     A:0.1
-    0.2
+    0.3
     EXEC>current_m3_talent=int(m3_talent_splits[i]);i+=1;
 }*len(m3_talent_splits)
 0.8
@@ -129,8 +129,10 @@ A:0.1
 <synthesis_2>
 A:0.1
 2
-PLUS:0.1
-1
+{
+    PLUS:0.1
+    0.4
+}*4
 {
     B:0.1
     0.4
