@@ -54,8 +54,14 @@ class DQM3Synthesis(BaseScript):
             "monster_size", str, "普通体型", "配种怪物体型(个别怪兽超大体型个体需要修改为超大体型)",["普通体型","超大体型"])
         paras["experience_book_index"] = ScriptParameter(
             "experience_book_index", int, 0, "经验之书位置(<=0时跳过能力值检测)")
-        paras["check_ability"] = ScriptParameter("check_ability", str, "HP", "检测属性",["HP","MP","攻击","防御","速度","智力"])
-        paras["check_value"] = ScriptParameter("check_value", int, 100, "检测阈值(大于设定值)")
+        paras["check_ability"] = ScriptParameter("check_ability", str, "HP", "属性成长值检测",["HP","MP","攻击","防御","速度","智力"])
+        paras["check_value"] = ScriptParameter("check_value", int, 100, "检测阈值(大于等于设定值)")
+
+        paras["def_limit_tag"] = ScriptParameter("def_limit_tag", str, "不检测", "体型检测(防御成长值限制)",["不检测","大于等于","小于等于"])
+        paras["def_limit_value"] = ScriptParameter("def_limit_value", int, 0, "防御成长值阈值")
+
+        paras["speed_limit_tag"] = ScriptParameter("speed_limit_tag", str, "不检测", "体型检测(速度成长值限制)",["不检测","大于等于","小于等于"])
+        paras["speed_limit_value"] = ScriptParameter("speed_limit_value", int, 0, "速度成长值阈值")
         
         return paras
     
@@ -211,6 +217,11 @@ class DQM3Synthesis(BaseScript):
             return
         check_ability = self.paras['check_ability'].value
         check_value = self.paras['check_value'].value
+        def_limit_tag = self.paras['def_limit_tag'].value
+        def_limit_value = self.paras['def_limit_value'].value
+        speed_limit_tag = self.paras['speed_limit_tag'].value
+        speed_limit_value = self.paras['speed_limit_value'].value
+
         self.send_log(f"检测项目：{check_ability}，阈值：{check_value}")
 
         if check_ability == "HP":
@@ -241,16 +252,80 @@ class DQM3Synthesis(BaseScript):
         opening = cv2.morphologyEx(thresh1, cv2.MORPH_OPEN, kernel)
         closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
 
+
         # 使用Tesseract进行文字识别
         custom_config = r'--oem 3 --psm 7 -c tessedit_char_whitelist=0123456789'
         num_text = pytesseract.image_to_string(closing, config=custom_config)
         num_text = "".join(num_text.split())
         num = int(num_text) if num_text.isdigit() else 0
-        self.send_log(f"实际值：{num}")
+        self.save_temp_image()
+        self.send_log(f"属性成长实际值：{num}")
+
+        # 防御成长值：
+        crop_x, crop_y, crop_w, crop_h = 585, 278, 35, 20
+        crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
+        crop_gray = cv2.resize(crop_gray, (crop_w*4, crop_h*4))
+        # 对图片进行二值化处理
+        _, thresh1 = cv2.threshold(crop_gray, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)
+        kernel = np.ones((3, 3), np.uint8)
+        opening = cv2.morphologyEx(thresh1, cv2.MORPH_OPEN, kernel)
+        closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
+        num_text = pytesseract.image_to_string(closing, config=custom_config)
+        num_text = "".join(num_text.split())
+        def_num = int(num_text) if num_text.isdigit() else 0
+        if def_num <= 0:
+            def_limit_tag = "不检测"
+        self.send_log(f"防御成长值：{def_num}")
+        
+        # 速度成长值：
+        crop_x, crop_y, crop_w, crop_h = 585, 306, 35, 20
+        crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
+        crop_gray = cv2.resize(crop_gray, (crop_w*4, crop_h*4))
+        # 对图片进行二值化处理
+        _, thresh1 = cv2.threshold(crop_gray, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)
+        kernel = np.ones((3, 3), np.uint8)
+        opening = cv2.morphologyEx(thresh1, cv2.MORPH_OPEN, kernel)
+        closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
+        num_text = pytesseract.image_to_string(closing, config=custom_config)
+        num_text = "".join(num_text.split())
+        speed_num = int(num_text) if num_text.isdigit() else 0
+        if speed_num <= 0:
+            speed_limit_tag = "不检测"
+        self.send_log(f"速度成长值：{speed_num}")
+
+        check_pass = True
+
         if num >= check_value:
-            self.send_log("检测通过")
+            self.send_log("闪光属性检测，成长值检测通过，大于等于设定值")
+        else:
+            check_pass &= False
+        
+        if def_limit_tag == "大于等于":
+            if def_num >= def_limit_value:
+                self.send_log("体型检测，防御成长值检测通过，大于等于设定值")
+            else:
+                check_pass &= False
+        elif def_limit_tag == "小于等于":
+            if def_num <= def_limit_value:
+                self.send_log("体型检测，速度成长值检测通过，小于等于设定值")
+            else:
+                check_pass &= False
+
+        if speed_limit_tag == "大于等于":
+            if speed_num >= speed_limit_value:
+                self.send_log("体型检测，防御成长值检测通过，大于等于设定值")
+            else:
+                check_pass &= False
+        elif speed_limit_tag == "小于等于":
+            if speed_num <= speed_limit_value:
+                self.send_log("体型检测，防御成长值检测通过，小于等于设定值")
+            else:
+                check_pass &= False
+
+        if check_pass:
             self.finished_process()
             return
+
         self.macro_text_run("A:0.1\n0.1", loop=1, block=True)
         self.macro_text_run("B:0.1\n0.1", loop=8, block=True)
         time.sleep(3)
