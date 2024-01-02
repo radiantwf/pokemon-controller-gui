@@ -54,8 +54,8 @@ class DQM3Synthesis(BaseScript):
             "monster_size", str, "普通体型", "配种怪物体型(个别怪兽超大体型个体需要修改为超大体型)",["普通体型","超大体型"])
         paras["experience_book_index"] = ScriptParameter(
             "experience_book_index", int, 0, "经验之书位置(<=0时跳过能力值检测)")
-        paras["check_ability"] = ScriptParameter("check_ability", str, "HP", "属性成长值检测",["HP","MP","攻击","防御","速度","智力"])
-        paras["check_value"] = ScriptParameter("check_value", int, 100, "检测阈值(大于等于设定值)")
+        paras["check_ability_tag"] = ScriptParameter("check_ability_tag", str, "HP", "属性成长值检测",["HP","MP","攻击","防御","速度","智力"])
+        paras["check_ability_value"] = ScriptParameter("check_ability_value", int, 100, "检测阈值(大于等于设定值)")
 
         paras["def_limit_tag"] = ScriptParameter("def_limit_tag", str, "不检测", "体型检测(防御成长值限制)",["不检测","大于等于","小于等于"])
         paras["def_limit_value"] = ScriptParameter("def_limit_value", int, 0, "防御成长值阈值")
@@ -215,26 +215,26 @@ class DQM3Synthesis(BaseScript):
         if not self._shiny:
             self._circle_step_index += 1
             return
-        check_ability = self.paras['check_ability'].value
-        check_value = self.paras['check_value'].value
+        check_ability_tag = self.paras['check_ability_tag'].value
+        check_ability_value = self.paras['check_ability_value'].value
         def_limit_tag = self.paras['def_limit_tag'].value
         def_limit_value = self.paras['def_limit_value'].value
         speed_limit_tag = self.paras['speed_limit_tag'].value
         speed_limit_value = self.paras['speed_limit_value'].value
 
-        self.send_log(f"检测项目：{check_ability}，阈值：{check_value}")
+        self.send_log(f"检测项目：{check_ability_tag}，阈值：{check_ability_value}")
 
-        if check_ability == "HP":
+        if check_ability_tag == "HP":
             crop_x, crop_y, crop_w, crop_h = 585, 203, 35, 20
-        elif check_ability == "MP":
+        elif check_ability_tag == "MP":
             crop_x, crop_y, crop_w, crop_h = 585, 228, 35, 20
-        elif check_ability == "攻击":
+        elif check_ability_tag == "攻击":
             crop_x, crop_y, crop_w, crop_h = 585, 253, 35, 20
-        elif check_ability == "防御":
+        elif check_ability_tag == "防御":
             crop_x, crop_y, crop_w, crop_h = 585, 278, 35, 20
-        elif check_ability == "速度":
+        elif check_ability_tag == "速度":
             crop_x, crop_y, crop_w, crop_h = 585, 306, 35, 20
-        elif check_ability == "智力":
+        elif check_ability_tag == "智力":
             crop_x, crop_y, crop_w, crop_h = 585, 331, 35, 20
         else:
             self.send_log("检测项目错误")
@@ -258,8 +258,6 @@ class DQM3Synthesis(BaseScript):
         num_text = pytesseract.image_to_string(closing, config=custom_config)
         num_text = "".join(num_text.split())
         num = int(num_text) if num_text.isdigit() else 0
-        self.save_temp_image()
-        self.send_log(f"属性成长实际值：{num}")
 
         # 防御成长值：
         crop_x, crop_y, crop_w, crop_h = 585, 278, 35, 20
@@ -275,7 +273,6 @@ class DQM3Synthesis(BaseScript):
         def_num = int(num_text) if num_text.isdigit() else 0
         if def_num <= 0:
             def_limit_tag = "不检测"
-        self.send_log(f"防御成长值：{def_num}")
         
         # 速度成长值：
         crop_x, crop_y, crop_w, crop_h = 585, 306, 35, 20
@@ -291,38 +288,54 @@ class DQM3Synthesis(BaseScript):
         speed_num = int(num_text) if num_text.isdigit() else 0
         if speed_num <= 0:
             speed_limit_tag = "不检测"
-        self.send_log(f"速度成长值：{speed_num}")
 
-        check_pass = True
-
-        if num >= check_value:
-            self.send_log("闪光属性检测，成长值检测通过，大于等于设定值")
+        check_ability = False
+        self.send_log(f"闪光属性检测，判断{check_ability_tag}成长值大于是否大于等于{check_ability_value}")
+        if num >= check_ability_value:
+            check_ability = True
+        self.send_log(f"{check_ability_tag}属性成长实际值：{num}")
+        if check_ability:
+            self.send_log(f"闪光属性检测成长值检测通过")
         else:
-            check_pass &= False
-        
-        if def_limit_tag == "大于等于":
-            if def_num >= def_limit_value:
-                self.send_log("体型检测，防御成长值检测通过，大于等于设定值")
-            else:
-                check_pass &= False
-        elif def_limit_tag == "小于等于":
-            if def_num <= def_limit_value:
-                self.send_log("体型检测，速度成长值检测通过，小于等于设定值")
-            else:
-                check_pass &= False
+            self.send_log(f"闪光属性检测成长值检测未通过")
 
-        if speed_limit_tag == "大于等于":
-            if speed_num >= speed_limit_value:
-                self.send_log("体型检测，防御成长值检测通过，大于等于设定值")
+        check_def = False
+        if def_limit_tag == "大于等于" or def_limit_tag == "小于等于":
+            if def_limit_tag == "大于等于":
+                self.send_log(f"体型检测，判断防御成长值是否大于等于{def_limit_value}")
+                if def_num >= def_limit_value:
+                    check_def = True
+            elif def_limit_tag == "小于等于":
+                self.send_log(f"体型检测，判断防御成长值是否小于等于{def_limit_value}")
+                if def_num <= def_limit_value:
+                    check_def = True
+            self.send_log(f"防御成长值：{def_num}")
+            if check_def:
+                self.send_log(f"体型检测，防御成长值检测通过")
             else:
-                check_pass &= False
-        elif speed_limit_tag == "小于等于":
-            if speed_num <= speed_limit_value:
-                self.send_log("体型检测，防御成长值检测通过，小于等于设定值")
-            else:
-                check_pass &= False
+                self.send_log(f"体型检测，防御成长值检测未通过")
+        else:
+            check_def = True
 
-        if check_pass:
+        check_speed = False
+        if speed_limit_tag == "大于等于" or speed_limit_tag == "小于等于":
+            if speed_limit_tag == "大于等于":
+                self.send_log(f"体型检测，判断速度成长值是否大于等于{speed_limit_value}")
+                if speed_num >= speed_limit_value:
+                    check_speed = True
+            elif speed_limit_tag == "小于等于":
+                self.send_log(f"体型检测，判断速度成长值是否小于等于{speed_limit_value}")
+                if speed_num <= speed_limit_value:
+                    check_speed = True
+            self.send_log(f"速度成长值：{speed_num}")
+            if check_speed:
+                self.send_log(f"体型检测，速度成长值检测通过")
+            else:
+                self.send_log(f"体型检测，速度成长值检测未通过")
+        else:
+            check_speed = True
+
+        if check_ability and check_def and check_speed:
             self.finished_process()
             return
 
