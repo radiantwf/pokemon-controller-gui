@@ -336,10 +336,11 @@ class DQM3Synthesis(BaseScript):
             check_speed = True
 
         if check_ability and check_def and check_speed:
+            self.send_log(f"恭喜，全部检测通过")
             self.finished_process()
             return
         else:
-            self.send_log(f"体型检测未通过，重新配种")
+            self.send_log(f"检测未通过，重新配种")
 
         self.macro_text_run("A:0.1\n0.1", loop=1, block=True)
         self.macro_text_run("B:0.1\n0.1", loop=8, block=True)
