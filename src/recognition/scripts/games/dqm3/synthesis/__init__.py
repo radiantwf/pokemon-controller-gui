@@ -240,12 +240,15 @@ class DQM3Synthesis(BaseScript):
             self.send_log("检测项目错误")
             self.finished_process()
             return
+        
+        # self.save_temp_image()
+
         # 转为灰度图片
         image = self.current_frame
         # 转为灰度图片
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
-        crop_gray = cv2.resize(crop_gray, (crop_w*4, crop_h*4))
+        crop_gray = cv2.resize(crop_gray, (crop_w*5, crop_h*5))
         # 对图片进行二值化处理
         _, thresh1 = cv2.threshold(crop_gray, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)
         kernel = np.ones((3, 3), np.uint8)
@@ -262,7 +265,7 @@ class DQM3Synthesis(BaseScript):
         # 防御成长值：
         crop_x, crop_y, crop_w, crop_h = 585, 278, 35, 20
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
-        crop_gray = cv2.resize(crop_gray, (crop_w*4, crop_h*4))
+        crop_gray = cv2.resize(crop_gray, (crop_w*5, crop_h*5))
         # 对图片进行二值化处理
         _, thresh1 = cv2.threshold(crop_gray, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)
         kernel = np.ones((3, 3), np.uint8)
@@ -277,7 +280,7 @@ class DQM3Synthesis(BaseScript):
         # 速度成长值：
         crop_x, crop_y, crop_w, crop_h = 585, 306, 35, 20
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
-        crop_gray = cv2.resize(crop_gray, (crop_w*4, crop_h*4))
+        crop_gray = cv2.resize(crop_gray, (crop_w*5, crop_h*5))
         # 对图片进行二值化处理
         _, thresh1 = cv2.threshold(crop_gray, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)
         kernel = np.ones((3, 3), np.uint8)
