@@ -72,6 +72,15 @@ class SwshDynamaxAdventures(BaseScript):
         self.send_log(f"开始运行{SwshDynamaxAdventures.script_name()}脚本")
 
     def on_circle(self):
+        # 开始极巨大冒险
+        # 选择宝可梦
+        # 选择道路
+        # 战斗
+        # 判断战斗结果 3次
+        # 进入boss战
+        # 战斗
+        # 判断战斗结果
+        # 闪光判断
         pass
         # run_time_span = self.run_time_span
         # self.send_log("脚本运行中，已经运行{}次，耗时{}小时{}分{}秒".format(self.circle_times, int(
