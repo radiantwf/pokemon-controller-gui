@@ -2,7 +2,7 @@ from recognition.scripts.base.base_script import BaseScript
 from recognition.scripts.base.base_sub_step import BaseSubStep, SubStepRunningStatus
 
 
-class SVDASwitchPokemon(BaseSubStep):
+class SVDACatch(BaseSubStep):
     def __init__(self, script: BaseScript, eggs: int, timeout: float = 600) -> None:
         super().__init__(script, timeout)
         self._process_step_index = 0
@@ -29,3 +29,6 @@ class SVDASwitchPokemon(BaseSubStep):
             # self.hatch_step_2,
             # self.hatch_step_3,
         ]
+
+# 选择球种
+# A

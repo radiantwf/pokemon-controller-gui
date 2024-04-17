@@ -29,3 +29,14 @@ class SVDAStart(BaseSubStep):
             # self.hatch_step_2,
             # self.hatch_step_3,
         ]
+    
+# 对话 A
+# 非正常退出，没有惩罚 3次A
+# 有惩罚  ？
+
+# 现在就出发 A -> 2次A
+# 选择进度 A
+# 保存进度 A -> 是（A）
+
+# 极巨大冒险界面 发起单人挑战 下 -> A
+# 选择宝可梦 A —> 9s 左右

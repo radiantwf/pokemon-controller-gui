@@ -30,6 +30,16 @@ class SVDABattle(BaseSubStep):
             # self.hatch_step_3,
         ]
 
+# 判断战斗操作
+# 识别 战斗、宝可梦、逃走 按钮 -> A
+    # 识别 极巨化图标 左 -> A
+    # 选择技能 优先度次序 1、PP数量大于0 2、技能下方小字 效果绝佳/有效果/效果不好 3、从上到下
+# 识别 呐喊（玩家控制宝可梦倒下） -> A -> ?
+# 识别 右下角捕捉/不捕捉按钮 战斗成功
+# 识别 ？ 战斗失败
+
+
+
     # def hatch_step_0(self):
     #     self.script.macro_text_run(
     #         "B:0.05\n0.05", loop=-1, timeout=2.5, block=True)

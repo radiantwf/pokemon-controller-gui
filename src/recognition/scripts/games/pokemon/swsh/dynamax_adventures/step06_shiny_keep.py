@@ -29,3 +29,9 @@ class SVDAShinyKeep(BaseSubStep):
             # self.hatch_step_2,
             # self.hatch_step_3,
         ]
+    
+# boss战成功
+# 识别右上方 捉到宝可梦了!
+# 识别捉到宝可梦数量 0-4
+# 选择传说宝可梦（最后一只） 查看能力  A -> 下 -> A
+
