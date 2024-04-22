@@ -41,9 +41,11 @@ class SWSHDAStart(BaseSubStep):
 
     def start_step_2(self):
         self.script.macro_text_run("BOTTOM:0.1->0.4->A:0.1->0.4", block=True)
-        self.time_sleep(1)
+        self.time_sleep(2)
         self._process_step_index += 1
     def start_step_3(self):
+        self.script.macro_text_run("A:0.1", block=True)
+        self.time_sleep(21)
         self._process_step_index += 1
 
 # 对话 A
@@ -55,4 +57,4 @@ class SWSHDAStart(BaseSubStep):
 # 保存进度 A -> 是（A）
 
 # 极巨大冒险界面 发起单人挑战 下 -> A
-# 选择宝可梦 A —> 9s 左右
+# 选择宝可梦 A —> 19s 左右
