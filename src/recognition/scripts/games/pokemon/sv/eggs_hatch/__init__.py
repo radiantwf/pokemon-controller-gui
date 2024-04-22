@@ -103,10 +103,10 @@ class SVEggs(BaseScript):
     @property
     def cycle_step_list(self):
         return [
-            self.open_menu,
-            self.enter_box,
-            self.box_opt,
-            self.hatch,
+            self.step_1_open_menu,
+            self.step_2_enter_box,
+            self.step_3_box_opt,
+            self.step_4_hatch,
         ]
 
     def circle_init(self):
@@ -117,7 +117,7 @@ class SVEggs(BaseScript):
         self.hatching_step_index = 0
         pass
 
-    def open_menu(self):
+    def step_1_open_menu(self):
         status = self._sv_open_menu.run()
         if status == SubStepRunningStatus.Running:
             return
@@ -136,7 +136,7 @@ class SVEggs(BaseScript):
             self.send_log("{}函数返回状态为{}".format("open_menu", status.name))
             self.finished_process()
 
-    def enter_box(self):
+    def step_2_enter_box(self):
         status = self._sv_enter_menu_box.run()
         if status == SubStepRunningStatus.Running:
             return
@@ -155,7 +155,7 @@ class SVEggs(BaseScript):
             self.send_log("{}函数返回状态为{}".format("enter_box", status.name))
             self.finished_process()
 
-    def box_opt(self):
+    def step_3_box_opt(self):
         status = self._sv_box_opt.run()
         if status == SubStepRunningStatus.Running:
             return
@@ -180,7 +180,7 @@ class SVEggs(BaseScript):
             self.send_log("{}函数返回状态为{}".format("box_opt", status.name))
             self.finished_process()
 
-    def hatch(self):
+    def step_4_hatch(self):
         status = self._sv_hatch_opt.run()
         if status == SubStepRunningStatus.Running:
             return

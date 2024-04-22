@@ -1,6 +1,7 @@
 import math
 import multiprocessing
 import time
+from recognition.scripts.games.pokemon.swsh.dynamax_adventures.step01_start import SWSHDAStart
 from recognition.scripts.parameter_struct import ScriptParameter
 from recognition.scripts.base.base_script import BaseScript, WorkflowEnum
 import cv2
@@ -19,9 +20,10 @@ class SwshDynamaxAdventures(BaseScript):
         self.set_paras(paras)
         self._durations = self.get_para("durations")
 
+
     @staticmethod
     def script_name() -> str:
-        return "宝可梦剑盾极巨大冒险"
+        return "宝可梦剑盾极巨大冒险(开发中)"
 
     @staticmethod
     def script_paras() -> dict:
@@ -72,15 +74,6 @@ class SwshDynamaxAdventures(BaseScript):
         self.send_log(f"开始运行{SwshDynamaxAdventures.script_name()}脚本")
 
     def on_circle(self):
-        # 开始极巨大冒险
-        # 选择宝可梦
-        # 选择道路
-        # 战斗
-        # 判断战斗结果 3次
-        # 进入boss战
-        # 战斗
-        # 判断战斗结果
-        # 闪光判断
         pass
         # run_time_span = self.run_time_span
         # self.send_log("脚本运行中，已经运行{}次，耗时{}小时{}分{}秒".format(self.circle_times, int(
@@ -106,18 +99,29 @@ class SwshDynamaxAdventures(BaseScript):
     @property
     def cycle_step_list(self):
         return [
-            # 此处添加流程函数
+            # 开始极巨大冒险
+            # 选择宝可梦
+            # 选择道路
+            # 战斗
+            # 判断战斗结果 3次
+            # 进入boss战
+            # 战斗
+            # 判断战斗结果
+            # 闪光判断
+            self.step_1,
+            self.step_2,
+            self.step_3,
         ]
 
     def circle_init(self):
-        pass
+        self._swsh_da_start = SWSHDAStart(self)
 
 
     def finished_process(self):
         run_time_span = self.run_time_span
         self.macro_stop(block=True)
-        self.macro_run("common.switch_sleep",
-                       loop=1, paras={}, block=True, timeout=10)
+        # self.macro_run("common.switch_sleep",
+        #                loop=1, paras={}, block=True, timeout=10)
         self.send_log("[{}] 脚本完成，已运行{}次，耗时{}小时{}分{}秒".format(SwshDynamaxAdventures.script_name(), self.circle_times, int(
             run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
         self.stop_work()
@@ -126,3 +130,23 @@ class SwshDynamaxAdventures(BaseScript):
         self.macro_stop()
         self.set_circle_continue()
         self._circle_step_index = 0
+
+    def step_1(self):
+        status = self._swsh_da_start.run()
+        if status == SubStepRunningStatus.Running:
+            return
+        # elif status == SubStepRunningStatus.Failed:
+        # elif status == SubStepRunningStatus.Timeout:
+        # elif status == SubStepRunningStatus.Finished:
+        elif status == SubStepRunningStatus.OK:
+            self._circle_step_index += 1
+        else:
+            self.send_log("{}函数返回状态为{}".format("open_menu", status.name))
+            self.finished_process()
+            
+    def step_2(self):
+        self._circle_step_index += 1
+
+
+    def step_3(self):
+        self.finished_process()

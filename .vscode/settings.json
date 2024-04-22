@@ -14,7 +14,8 @@
 	"cSpell.words": [
 		"baudrate",
 		"chatbox",
-		"Swsh"
+		"Swsh",
+		"SWSHDA"
 	],
 	"[python]": {
 		"editor.defaultFormatter": "ms-python.autopep8"

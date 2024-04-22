@@ -2,7 +2,7 @@ from recognition.scripts.base.base_script import BaseScript
 from recognition.scripts.base.base_sub_step import BaseSubStep, SubStepRunningStatus
 
 
-class SVDACatch(BaseSubStep):
+class SWSHDACatch(BaseSubStep):
     def __init__(self, script: BaseScript, eggs: int, timeout: float = 600) -> None:
         super().__init__(script, timeout)
         self._process_step_index = 0
