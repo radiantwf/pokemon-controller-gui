@@ -3,17 +3,17 @@ from recognition.scripts.base.base_sub_step import BaseSubStep, SubStepRunningSt
 
 
 class SWSHDACatch(BaseSubStep):
-    def __init__(self, script: BaseScript, eggs: int, timeout: float = 600) -> None:
+    def __init__(self, script: BaseScript, timeout: float = -1) -> None:
         super().__init__(script, timeout)
         self._process_step_index = 0
 
     def _process(self) -> SubStepRunningStatus:
         self._status = self.running_status
         if self._process_step_index >= 0:
-            if self._process_step_index >= len(self.process_steps):
+            if self._process_step_index >= len(self._process_steps):
                 return SubStepRunningStatus.OK
             elif self._status == SubStepRunningStatus.Running:
-                self.process_steps[self._process_step_index]()
+                self._process_steps[self._process_step_index]()
                 return self._status
             else:
                 return self._status
@@ -22,7 +22,7 @@ class SWSHDACatch(BaseSubStep):
             return self._process()
 
     @property
-    def process_steps(self):
+    def _process_steps(self):
         return [
             # self.hatch_step_0,
             # self.hatch_step_1,

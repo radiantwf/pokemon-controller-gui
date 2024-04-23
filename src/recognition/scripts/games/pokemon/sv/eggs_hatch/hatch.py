@@ -17,10 +17,10 @@ class SVHatchPokemon(BaseSubStep):
     def _process(self) -> SubStepRunningStatus:
         self._status = self.running_status
         if self._process_step_index >= 0:
-            if self._process_step_index >= len(self.process_steps):
+            if self._process_step_index >= len(self._process_steps):
                 return SubStepRunningStatus.OK
             elif self._status == SubStepRunningStatus.Running:
-                self.process_steps[self._process_step_index]()
+                self._process_steps[self._process_step_index]()
                 return self._status
             else:
                 return self._status
@@ -29,7 +29,7 @@ class SVHatchPokemon(BaseSubStep):
             return self._process()
 
     @property
-    def process_steps(self):
+    def _process_steps(self):
         return [
             self.hatch_step_0,
             self.hatch_step_1,

@@ -2,6 +2,8 @@ import math
 import multiprocessing
 import time
 from recognition.scripts.games.pokemon.swsh.dynamax_adventures.step01_start import SWSHDAStart
+from recognition.scripts.games.pokemon.swsh.dynamax_adventures.step02_choose_path import SWSHDAChoosePath
+from recognition.scripts.games.pokemon.swsh.dynamax_adventures.step03_battle import SWSHDABattle
 from recognition.scripts.parameter_struct import ScriptParameter
 from recognition.scripts.base.base_script import BaseScript, WorkflowEnum
 import cv2
@@ -32,34 +34,34 @@ class SwshDynamaxAdventures(BaseScript):
             "durations", float, -1, "运行时长（分钟）")
         return paras
     
-    def check_durations(self):
+    def _check_durations(self):
         if self._durations <= 0:
             return False
         if self.run_time_span >= self._durations * 60:
             self.send_log("运行时间已到达设定值，脚本停止")
-            self.finished_process()
+            self._finished_process()
             return True
         return False
         
     def process_frame(self):
-        if self.check_durations():
+        if self._check_durations():
             return
         if self.running_status == WorkflowEnum.Preparation:
             if self._prepare_step_index >= 0:
-                if self._prepare_step_index >= len(self.prepare_step_list):
+                if self._prepare_step_index >= len(self._prepare_step_list):
                     self.set_circle_begin()
                     self._circle_step_index = 0
                     return
-                self.prepare_step_list[self._prepare_step_index]()
+                self._prepare_step_list[self._prepare_step_index]()
             return
         if self.running_status == WorkflowEnum.Circle:
             if self.current_frame_count == 1:
-                self.circle_init()
+                self._circle_init()
             if self._jump_next_frame:
                 self._jump_next_frame = False
                 return
-            if self._circle_step_index >= 0 and self._circle_step_index < len(self.cycle_step_list):
-                self.cycle_step_list[self._circle_step_index]()
+            if self._circle_step_index >= 0 and self._circle_step_index < len(self._cycle_step_list):
+                self._cycle_step_list[self._circle_step_index]()
             else:
                 self.macro_stop()
                 self.set_circle_continue()
@@ -88,7 +90,7 @@ class SwshDynamaxAdventures(BaseScript):
         pass
 
     @property
-    def prepare_step_list(self):
+    def _prepare_step_list(self):
         return [
             self.prepare_step_0,
         ]
@@ -97,27 +99,15 @@ class SwshDynamaxAdventures(BaseScript):
         self._prepare_step_index += 1
 
     @property
-    def cycle_step_list(self):
+    def _cycle_step_list(self):
         return [
-            # 开始极巨大冒险
-            # 选择宝可梦
-            # 选择道路
-            # 战斗
-            # 判断战斗结果 3次
-            # 进入boss战
-            # 战斗
-            # 判断战斗结果
-            # 闪光判断
-            self.step_1,
+            # self.step_1,
             self.step_2,
             self.step_3,
+            self.step_4,
         ]
 
-    def circle_init(self):
-        self._swsh_da_start = SWSHDAStart(self)
-
-
-    def finished_process(self):
+    def _finished_process(self):
         run_time_span = self.run_time_span
         self.macro_stop(block=True)
         # self.macro_run("common.switch_sleep",
@@ -126,11 +116,16 @@ class SwshDynamaxAdventures(BaseScript):
             run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
         self.stop_work()
 
-    def re_circle(self):
+    def _re_circle(self):
         self.macro_stop()
         self.set_circle_continue()
         self._circle_step_index = 0
 
+    def _circle_init(self):
+        self._swsh_da_start = SWSHDAStart(self)
+        self._swsh_da_choose_path = None
+        self._swsh_da_battle = None
+        
     def step_1(self):
         status = self._swsh_da_start.run()
         if status == SubStepRunningStatus.Running:
@@ -139,14 +134,39 @@ class SwshDynamaxAdventures(BaseScript):
         # elif status == SubStepRunningStatus.Timeout:
         # elif status == SubStepRunningStatus.Finished:
         elif status == SubStepRunningStatus.OK:
+            self._swsh_da_choose_path = SWSHDAChoosePath(self)
             self._circle_step_index += 1
         else:
-            self.send_log("{}函数返回状态为{}".format("open_menu", status.name))
-            self.finished_process()
+            self.send_log("{}函数返回状态为{}".format("swsh_da_start", status.name))
+            self._finished_process()
             
     def step_2(self):
-        self._circle_step_index += 1
-
+        # status = self._swsh_da_choose_path.run()
+        status = SubStepRunningStatus.OK
+        if status == SubStepRunningStatus.Running:
+            return
+        elif status == SubStepRunningStatus.OK:
+            self._swsh_da_battle = SWSHDABattle(self)
+            self._circle_step_index += 1
+        else:
+            self.send_log("{}函数返回状态为{}".format("swsh_da_choose_path", status.name))
+            self._finished_process()
 
     def step_3(self):
-        self.finished_process()
+        status = self._swsh_da_battle.run()
+        if status == SubStepRunningStatus.Running:
+            return
+        # elif status == SubStepRunningStatus.Failed:
+        elif status == SubStepRunningStatus.Timeout:
+            self.send_log("{}函数返回状态为{}".format("swsh_da_battle", status.name))
+            self._finished_process()
+        # elif status == SubStepRunningStatus.Finished:
+        elif status == SubStepRunningStatus.OK:
+            self._swsh_da_choose_path = SWSHDAChoosePath(self)
+            self._circle_step_index += 1
+        else:
+            self.send_log("{}函数返回状态为{}".format("swsh_da_battle", status.name))
+            self._finished_process()
+    
+    def step_4(self):
+        self._finished_process()

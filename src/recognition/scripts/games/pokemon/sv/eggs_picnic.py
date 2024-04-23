@@ -22,20 +22,20 @@ class SVEggsPicnic(BaseScript):
     def process_frame(self):
         if self.running_status == WorkflowEnum.Preparation:
             if self._prepare_step_index >= 0:
-                if self._prepare_step_index >= len(self.prepare_step_list):
+                if self._prepare_step_index >= len(self._prepare_step_list):
                     self.set_circle_begin()
                     self._circle_step_index = 0
                     return
-                self.prepare_step_list[self._prepare_step_index]()
+                self._prepare_step_list[self._prepare_step_index]()
             return
         if self.running_status == WorkflowEnum.Circle:
             if self.current_frame_count == 1:
-                self.circle_init()
+                self._circle_init()
             if self._jump_next_frame:
                 self._jump_next_frame = False
                 return
-            if self._circle_step_index >= 0 and self._circle_step_index < len(self.cycle_step_list):
-                self.cycle_step_list[self._circle_step_index]()
+            if self._circle_step_index >= 0 and self._circle_step_index < len(self._cycle_step_list):
+                self._cycle_step_list[self._circle_step_index]()
             else:
                 self.macro_stop()
                 self.set_circle_continue()
@@ -64,7 +64,7 @@ class SVEggsPicnic(BaseScript):
         pass
 
     @property
-    def prepare_step_list(self):
+    def _prepare_step_list(self):
         return [
             self.prepare_step_0,
         ]
@@ -73,12 +73,12 @@ class SVEggsPicnic(BaseScript):
         self._prepare_step_index += 1
 
     @property
-    def cycle_step_list(self):
+    def _cycle_step_list(self):
         return [
             self.picnic,
         ]
 
-    def circle_init(self):
+    def _circle_init(self):
         self.picnic_step_index = 0
         pass
 

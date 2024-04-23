@@ -37,17 +37,17 @@ class SwshBattleShiny(BaseScript):
             "durations", float, -1, "运行时长（分钟）")
         return paras
 
-    def check_durations(self):
+    def _check_durations(self):
         if self._durations <= 0:
             return False
         if self.run_time_span >= self._durations * 60:
             self.send_log("运行时间已到达设定值，脚本停止")
-            self.finished_process()
+            self._finished_process()
             return True
         return False
 
     def process_frame(self):
-        if self.check_durations():
+        if self._check_durations():
             return
         if self.running_status == WorkflowEnum.Preparation:
             if self._prepare_step_index >= 0 and self._prepare_step_index < len(self._prepare_steps):
@@ -55,7 +55,7 @@ class SwshBattleShiny(BaseScript):
             return
         if self.running_status == WorkflowEnum.Circle:
             if self.current_frame_count == 1:
-                self.circle_init()
+                self._circle_init()
             if self._circle_step_index >= 0 and self._circle_step_index < len(self._circle_steps):
                 self._circle_steps[self._circle_step_index]()
             else:
@@ -101,7 +101,7 @@ class SwshBattleShiny(BaseScript):
             self.circle_step_3,
         ]
 
-    def circle_init(self):
+    def _circle_init(self):
         self._circle_step_2_start_time_monotonic = 0
         self._circle_step_2_time_monotonic_check_1_temp = 0
         self._circle_step_2_time_monotonic_check_1 = 0
@@ -154,7 +154,7 @@ class SwshBattleShiny(BaseScript):
                     self.macro_stop(block=False)
                     self.send_log("检测到闪光，请人工核查，已运行{}次，耗时{}小时{}分{}秒".format(self.circle_times, int(
                         run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
-                    self.finished_process()
+                    self._finished_process()
         elif self._circle_step_2_time_monotonic_check_1_temp > 0 and self._circle_step_2_time_monotonic_check_1 == 0:
             self._circle_step_2_time_monotonic_check_1 = self._circle_step_2_time_monotonic_check_1_temp
             self._circle_step_2_frame_count_check_1 = self.current_frame_count
@@ -165,7 +165,7 @@ class SwshBattleShiny(BaseScript):
         # self.send_log("未检测到闪光,帧数:{},时长{}".format(self.current_frame_count,self.current_circle_time_span))
         self._circle_step_index = 0
 
-    def finished_process(self):
+    def _finished_process(self):
         run_time_span = self.run_time_span
         self.macro_stop(block=True)
         self.macro_run("common.switch_sleep",

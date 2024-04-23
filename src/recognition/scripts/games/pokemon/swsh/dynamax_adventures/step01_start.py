@@ -10,10 +10,10 @@ class SWSHDAStart(BaseSubStep):
     def _process(self) -> SubStepRunningStatus:
         self._status = self.running_status
         if self._process_step_index >= 0:
-            if self._process_step_index >= len(self.process_steps):
+            if self._process_step_index >= len(self._process_steps):
                 return SubStepRunningStatus.OK
             elif self._status == SubStepRunningStatus.Running:
-                self.process_steps[self._process_step_index]()
+                self._process_steps[self._process_step_index]()
                 return self._status
             else:
                 return self._status
@@ -22,28 +22,29 @@ class SWSHDAStart(BaseSubStep):
             return self._process()
 
     @property
-    def process_steps(self):
+    def _process_steps(self):
         return [
-            self.start_step_0,
-            self.start_step_1,
-            self.start_step_2,
-            self.start_step_3,
-            # self.hatch_step_3,
+            self._process_step_0,
+            self._process_step_1,
+            self._process_step_2,
+            self._process_step_3,
         ]
-    
-    def start_step_0(self):
+
+    def _process_step_0(self):
         self._process_step_index += 1
 
-    def start_step_1(self):
-        self.script.macro_text_run("A:0.1->0.4->A:0.1->0.4", block=True,loop=7)
+    def _process_step_1(self):
+        self.script.macro_text_run(
+            "A:0.1->0.4->A:0.1->0.4", block=True, loop=7)
         self.time_sleep(2)
         self._process_step_index += 1
 
-    def start_step_2(self):
+    def _process_step_2(self):
         self.script.macro_text_run("BOTTOM:0.1->0.4->A:0.1->0.4", block=True)
         self.time_sleep(2)
         self._process_step_index += 1
-    def start_step_3(self):
+
+    def _process_step_3(self):
         self.script.macro_text_run("A:0.1", block=True)
         self.time_sleep(21)
         self._process_step_index += 1

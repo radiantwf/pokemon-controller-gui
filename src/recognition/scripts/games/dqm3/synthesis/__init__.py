@@ -65,34 +65,34 @@ class DQM3Synthesis(BaseScript):
         
         return paras
     
-    def check_durations(self):
+    def _check_durations(self):
         if self._durations <= 0:
             return False
         if self.run_time_span >= self._durations * 60:
             self.send_log("运行时间已到达设定值，脚本停止")
-            self.finished_process()
+            self._finished_process()
             return True
         return False
         
     def process_frame(self):
-        if self.check_durations():
+        if self._check_durations():
             return
         if self.running_status == WorkflowEnum.Preparation:
             if self._prepare_step_index >= 0:
-                if self._prepare_step_index >= len(self.prepare_step_list):
+                if self._prepare_step_index >= len(self._prepare_step_list):
                     self.set_circle_begin()
                     self._circle_step_index = 0
                     return
-                self.prepare_step_list[self._prepare_step_index]()
+                self._prepare_step_list[self._prepare_step_index]()
             return
         if self.running_status == WorkflowEnum.Circle:
             if self.current_frame_count == 1:
-                self.circle_init()
+                self._circle_init()
             if self._jump_next_frame:
                 self._jump_next_frame = False
                 return
-            if self._circle_step_index >= 0 and self._circle_step_index < len(self.cycle_step_list):
-                self.cycle_step_list[self._circle_step_index]()
+            if self._circle_step_index >= 0 and self._circle_step_index < len(self._cycle_step_list):
+                self._cycle_step_list[self._circle_step_index]()
             else:
                 self.macro_stop()
                 self.set_circle_continue()
@@ -121,7 +121,7 @@ class DQM3Synthesis(BaseScript):
         pass
 
     @property
-    def prepare_step_list(self):
+    def _prepare_step_list(self):
         return [
             self.prepare_step_0,
             self.restart_game,
@@ -138,7 +138,7 @@ class DQM3Synthesis(BaseScript):
         self._prepare_step_index += 1
 
     @property
-    def cycle_step_list(self):
+    def _cycle_step_list(self):
         return [
             self.prepare_cycle,
             self.synthesis_1,
@@ -149,7 +149,7 @@ class DQM3Synthesis(BaseScript):
             self.reload_game,
         ]
     
-    def circle_init(self):
+    def _circle_init(self):
         pass
 
     def prepare_cycle(self):
@@ -201,7 +201,7 @@ class DQM3Synthesis(BaseScript):
             self._circle_step_index += 1
             return
         if self.paras["experience_book_index"].value <= 0:
-            self.finished_process()
+            self._finished_process()
             return
         macro_paras = dict()
         for p in self.paras.values():
@@ -238,7 +238,7 @@ class DQM3Synthesis(BaseScript):
             crop_x, crop_y, crop_w, crop_h = 585, 331, 35, 20
         else:
             self.send_log("检测项目错误")
-            self.finished_process()
+            self._finished_process()
             return
         
         # self.save_temp_image()
@@ -340,7 +340,7 @@ class DQM3Synthesis(BaseScript):
 
         if check_ability and check_def and check_speed:
             self.send_log(f"恭喜，全部检测通过")
-            self.finished_process()
+            self._finished_process()
             return
         else:
             self.send_log(f"检测未通过，重新配种")
@@ -355,7 +355,7 @@ class DQM3Synthesis(BaseScript):
                         1, {}, True, None)
         self._circle_step_index += 1
 
-    def finished_process(self):
+    def _finished_process(self):
         run_time_span = self.run_time_span
         self.macro_stop(block=True)
         self.macro_run("common.switch_sleep",
