@@ -66,7 +66,7 @@ class SWSHDABattle(BaseSubStep):
         ]
 
     def _process_steps_0(self):
-        if time.monotonic() - self._last_action_time_monotonic > 60:
+        if time.monotonic() - self._last_action_time_monotonic > 120:
             self._status = SubStepRunningStatus.Timeout
             self._battle_status = SWSHDABattleResult.Error
             return
@@ -173,7 +173,7 @@ class SWSHDABattle(BaseSubStep):
                     "TOP:0.05->0.1", block=True, loop=abs(move_times))
             elif move_times > 0:
                 self.script.macro_text_run(
-                    "BOTTOM:0.05->0.1", block=True, loop=move_times)
+                    "BOTTOM:0.05->0.25", block=True, loop=move_times)
             self.script.macro_text_run("A:0.1->0.3", block=True, loop=5)
             self.time_sleep(1)
             self._last_action_time_monotonic = time.monotonic()
@@ -208,7 +208,7 @@ class SWSHDABattle(BaseSubStep):
 
     def _ocr_move_effect(self, gray, crop_x, crop_y, crop_w, crop_h):
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
-        crop_gray = cv2.resize(crop_gray, (crop_w*10, crop_h*10))
+        crop_gray = cv2.resize(crop_gray, (crop_w*50, crop_h*50))
         # 对图片进行二值化处理
         _, thresh1 = cv2.threshold(
             crop_gray, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)

@@ -67,7 +67,7 @@ def main():
 # Captures/20231016105436-recognize.jpg
 
     mat = cv2.imread(
-        "Captures/1.jpg")
+        "Captures/20240425011448-recognize.jpg")
     ret = CombatMatch().combat_check(mat)
     print(ret)
     gray = cv2.cvtColor(mat, cv2.COLOR_BGR2GRAY)
@@ -91,23 +91,25 @@ def main():
     cv2.imshow("Matches", mat)
     cv2.waitKey(0)
 
-    # txt = ocr_move_effect(gray, 689, 351, 54, 18)
-    # print(txt)
-    # txt = ocr_move_pp(gray, 872, 335, 24, 27)
-    # print(txt)
+    for i in range(4):
+        txt = ocr_move_effect(gray, 689, 351 + 53 * i, 54, 18)
+        print(txt)
+        txt = ocr_move_pp(gray, 872, 335 + 53 * i, 24, 27)
+        print(txt)
 
 
 
 def ocr_move_effect(gray, crop_x, crop_y, crop_w, crop_h):
     crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
-    crop_gray = cv2.resize(crop_gray, (crop_w*10, crop_h*10))
-    # 对图片进行二值化处理
+    crop_gray = cv2.resize(crop_gray, (crop_w*50, crop_h*50))
     _, thresh1 = cv2.threshold(crop_gray, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)
 
     kernel = np.ones((3, 3), np.uint8)
     opening = cv2.morphologyEx(thresh1, cv2.MORPH_OPEN, kernel)
     closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
-
+    cv2.imshow("thresh1", thresh1)
+    cv2.imshow("closing", closing)
+    cv2.waitKey(0)
 
     # 使用Tesseract进行文字识别
     custom_config = r'--oem 3 --psm 7 -c tessedit_char_whitelist=效果绝佳有不好'

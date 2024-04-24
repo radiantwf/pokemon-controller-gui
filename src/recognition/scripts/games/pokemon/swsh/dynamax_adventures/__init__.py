@@ -4,6 +4,7 @@ import time
 from recognition.scripts.games.pokemon.swsh.dynamax_adventures.step01_start import SWSHDAStart
 from recognition.scripts.games.pokemon.swsh.dynamax_adventures.step02_choose_path import SWSHDAChoosePath
 from recognition.scripts.games.pokemon.swsh.dynamax_adventures.step03_battle import SWSHDABattle
+from recognition.scripts.games.pokemon.swsh.dynamax_adventures.step04_catch import SWSHDACatch
 from recognition.scripts.parameter_struct import ScriptParameter
 from recognition.scripts.base.base_script import BaseScript, WorkflowEnum
 import cv2
@@ -105,6 +106,7 @@ class SwshDynamaxAdventures(BaseScript):
             self.step_2,
             self.step_3,
             self.step_4,
+            self.step_5,
         ]
 
     def _finished_process(self):
@@ -125,6 +127,7 @@ class SwshDynamaxAdventures(BaseScript):
         self._swsh_da_start = SWSHDAStart(self)
         self._swsh_da_choose_path = None
         self._swsh_da_battle = None
+        self._swsh_da_catch = None
         
     def step_1(self):
         status = self._swsh_da_start.run()
@@ -162,11 +165,24 @@ class SwshDynamaxAdventures(BaseScript):
             self._finished_process()
         # elif status == SubStepRunningStatus.Finished:
         elif status == SubStepRunningStatus.OK:
-            self._swsh_da_choose_path = SWSHDAChoosePath(self)
+            self._swsh_da_catch = SWSHDACatch(self)
             self._circle_step_index += 1
         else:
             self.send_log("{}函数返回状态为{}".format("swsh_da_battle", status.name))
             self._finished_process()
     
     def step_4(self):
+        status = self._swsh_da_catch.run()
+        if status == SubStepRunningStatus.Running:
+            return
+        elif status == SubStepRunningStatus.Timeout:
+            self.send_log("{}函数返回状态为{}".format("swsh_da_catch", status.name))
+            self._finished_process()
+        elif status == SubStepRunningStatus.OK:
+            self._circle_step_index += 1
+        else:
+            self.send_log("{}函数返回状态为{}".format("swsh_da_catch", status.name))
+            self._finished_process()
+
+    def step_5(self):
         self._finished_process()
