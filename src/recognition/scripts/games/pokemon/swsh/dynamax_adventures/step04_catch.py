@@ -7,7 +7,7 @@ import pytesseract
 
 
 class SWSHDACatch(BaseSubStep):
-    def __init__(self, script: BaseScript, target_ball: str = "精灵球", timeout: float = 60) -> None:
+    def __init__(self, script: BaseScript,  target_ball: str = "究极球", timeout: float = 60) -> None:
         super().__init__(script, timeout)
         self._process_step_index = 0
         self._target_ball = target_ball

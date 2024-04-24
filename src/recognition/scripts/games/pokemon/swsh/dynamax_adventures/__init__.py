@@ -102,7 +102,7 @@ class SwshDynamaxAdventures(BaseScript):
     @property
     def _cycle_step_list(self):
         return [
-            # self.step_1,
+            self.step_1,
             self.step_2,
             self.step_3,
             self.step_4,
@@ -144,8 +144,7 @@ class SwshDynamaxAdventures(BaseScript):
             self._finished_process()
             
     def step_2(self):
-        # status = self._swsh_da_choose_path.run()
-        status = SubStepRunningStatus.OK
+        status = self._swsh_da_choose_path.run()
         if status == SubStepRunningStatus.Running:
             return
         elif status == SubStepRunningStatus.OK:

@@ -11,7 +11,9 @@ import pytesseract
 class SWSHDABattleResult(Enum):
     Error = -1
     Won = 0
-    Lost = 1
+    Lost1 = 1
+    Lost2 = 2
+    Lost3 = 3
     Running = 9
 
 
@@ -37,6 +39,18 @@ class SWSHDABattle(BaseSubStep):
             "resources/img/recognition/pokemon/swsh/dynamax_adventures/battle/won.png")
         self._won_template = cv2.cvtColor(
             self._won_template, cv2.COLOR_BGR2GRAY)
+        self._lost_1_template = cv2.imread(
+            "resources/img/recognition/pokemon/swsh/dynamax_adventures/battle/lost_1.png")
+        self._lost_1_template = cv2.cvtColor(
+            self._lost_1_template, cv2.COLOR_BGR2GRAY)
+        self._lost_2_template = cv2.imread(
+            "resources/img/recognition/pokemon/swsh/dynamax_adventures/battle/lost_2.png")
+        self._lost_2_template = cv2.cvtColor(
+            self._lost_2_template, cv2.COLOR_BGR2GRAY)
+        self._lost_3_template = cv2.imread(
+            "resources/img/recognition/pokemon/swsh/common/chatbox_next.png")
+        self._lost_3_template = cv2.cvtColor(
+            self._lost_3_template, cv2.COLOR_BGR2GRAY)
 
     @property
     def battle_status(self) -> SWSHDABattleResult:
@@ -88,6 +102,22 @@ class SWSHDABattle(BaseSubStep):
             self._process_step_index += 1
             self._battle_status = SWSHDABattleResult.Won
             return
+        ret = self._check_lost_1(gray_frame)
+        if ret:
+            self._process_step_index += 1
+            self._battle_status = SWSHDABattleResult.Lost1
+            return
+        ret = self._check_lost_2(gray_frame)
+        if ret:
+            self._process_step_index += 1
+            self._battle_status = SWSHDABattleResult.Lost2
+            return
+        ret = self._check_lost_3(gray_frame)
+        if ret:
+            self._process_step_index += 1
+            self._battle_status = SWSHDABattleResult.Lost3
+            return
+        
 
     # 识别 宝可梦、逃走 按钮，操作：A
     def _check_action(self, gray):
@@ -192,6 +222,42 @@ class SWSHDABattle(BaseSubStep):
             self._last_action_time_monotonic = time.monotonic()
             return True
         return False
+    
+    # 识别 失败1
+    def _check_lost_1(self, gray):
+        crop_x, crop_y, crop_w, crop_h = 435, 25, 525, 75
+        crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
+        res = cv2.matchTemplate(
+            crop_gray, self._lost_1_template, cv2.TM_CCOEFF_NORMED)
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+        if max_val > 0.9:
+            self._last_action_time_monotonic = time.monotonic()
+            return True
+        return False
+    
+    # 识别 失败2
+    def _check_lost_2(self, gray):
+        crop_x, crop_y, crop_w, crop_h = 435, 25, 525, 75
+        crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
+        res = cv2.matchTemplate(
+            crop_gray, self._lost_2_template, cv2.TM_CCOEFF_NORMED)
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+        if max_val > 0.9:
+            self._last_action_time_monotonic = time.monotonic()
+            return True
+        return False
+    
+    # 识别 失败3
+    def _check_lost_3(self, gray):
+        crop_x, crop_y, crop_w, crop_h = 732, 489, 46, 32
+        crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
+        res = cv2.matchTemplate(
+            crop_gray, self._lost_2_template, cv2.TM_CCOEFF_NORMED)
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+        if max_val > 0.9:
+            self._last_action_time_monotonic = time.monotonic()
+            return True
+        return False
 
     def _get_current_move(self, y):
         if 0 <= y < 30:
@@ -240,47 +306,3 @@ class SWSHDABattle(BaseSubStep):
         text = "".join(text.split())
         num = int(text) if text.isdigit() else 0
         return num
-# 判断战斗操作
-# 识别 战斗、宝可梦、逃走 按钮 -> A
-    # 识别 极巨化图标 左 -> A
-    # 选择技能 优先度次序 1、PP数量大于0 2、技能下方小字 效果绝佳/有效果/效果不好/没有效果 3、从上到下
-# 识别 呐喊（玩家控制宝可梦倒下） -> A -> ?
-# 识别 右下角捕捉/不捕捉按钮 战斗成功
-# 识别 ？ 战斗失败
-
-    # def hatch_step_0(self):
-    #     self.script.macro_text_run(
-    #         "B:0.05\n0.05", loop=-1, timeout=2.5, block=True)
-    #     self.time_sleep(2.5)
-    #     self._process_step_index += 1
-
-    # def hatch_step_1(self):
-    #     self.script.macro_run("recognition.pokemon.sv.eggs.hatching_run",
-    #                           120, {}, False, None)
-    #     self._process_step_index += 1
-
-    # def hatch_step_2(self):
-    #     image = self.script.current_frame
-    #     ret = HatchMatch().hatched_tag_check(image)
-    #     if ret:
-    #         self.script.macro_stop(True)
-    #         self._process_step_index += 1
-    #         return
-    #     ret = CombatMatch().combat_check(image)
-    #     if ret:
-    #         self._status = SubStepRunningStatus.Interrupted
-    #         self.script.send_log("{}函数返回状态为{}，检测到遭遇战斗".format(
-    #             "hatch_step_2", self._status.name))
-    #         return
-    #     if not self.script.macro_running:
-    #         self._status = SubStepRunningStatus.Failed
-    #         return
-
-    # def hatch_step_3(self):
-    #     self.script.macro_text_run(
-    #         "A:0.01->0.005->A:0.05\n0.1", loop=5 * 17, block=True)
-    #     self._hatched_eggs += 1
-    #     if self._hatched_eggs < self._eggs:
-    #         self._process_step_index = 1
-    #         return
-    #     self._status = SubStepRunningStatus.OK
