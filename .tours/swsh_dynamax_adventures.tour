@@ -20,20 +20,24 @@
     {
       "file": "src/recognition/scripts/games/pokemon/swsh/dynamax_adventures/step03_battle.py",
       "description": "### 步骤3 开始战斗\n\n识别 战斗、宝可梦、逃走 按钮 -> A\n\n识别 极巨化图标 左 -> A\n\n选择技能 优先度次序 1、PP数量大于0 2、技能下方小字 效果绝佳/有效果/效果不好 3、从上到下\n\n识别 呐喊（玩家控制宝可梦倒下） -> A -> ?\n\n识别 右下角捕捉/不捕捉按钮 战斗成功\n\n识别 ？ 战斗失败",
-      "line": 26
+      "line": 61
+    },
+    {
+      "file": "src/recognition/scripts/games/pokemon/swsh/dynamax_adventures/step04_catch.py",
+      "description": "### 步骤4 捕捉宝可梦\n\n捕捉 A -> 继续\n\n不捕捉 下、A -> 跳过交换步骤\n\n#### 捕捉\n\n选择球种（文字识别）\n",
+      "line": 29
     },
     {
       "file": "src/recognition/scripts/games/pokemon/swsh/dynamax_adventures/step03_battle.py",
-      "description": "### 图像识别位置记录\n\n1. action\n   \n    战斗与助威时，图像识别  图像大小 66*110,位置887,421\n\n2. dynamax\n\n    极巨化可用时，图像识别  522,424,52,32\n\n3. choose_move_arrow\n\n    选择招式时，图像识别   620,320,46,220\n\n4. won\n   \n    胜利时，图像识别    748,445,204,90",
-      "line": 21,
+      "description": "### 战斗 图像识别位置记录\n\n1. action\n   \n    战斗与助威时，图像识别  图像大小 66*110,位置887,421\n\n2. dynamax\n\n    极巨化可用时，图像识别  522,424,52,32\n\n3. choose_move_arrow\n\n    选择招式时，图像识别   620,320,46,220\n\n4. won\n   \n    胜利时，图像识别    748,445,204,90",
       "selection": {
         "start": {
-          "line": 13,
-          "character": 18
+          "line": 24,
+          "character": 1
         },
         "end": {
-          "line": 13,
-          "character": 31
+          "line": 39,
+          "character": 52
         }
       }
     }
