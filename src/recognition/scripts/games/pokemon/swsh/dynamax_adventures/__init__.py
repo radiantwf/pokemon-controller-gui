@@ -144,7 +144,8 @@ class SwshDynamaxAdventures(BaseScript):
             self._finished_process()
             
     def step_2(self):
-        status = self._swsh_da_choose_path.run()
+        # status = self._swsh_da_choose_path.run()
+        status = SubStepRunningStatus.OK
         if status == SubStepRunningStatus.Running:
             return
         elif status == SubStepRunningStatus.OK:

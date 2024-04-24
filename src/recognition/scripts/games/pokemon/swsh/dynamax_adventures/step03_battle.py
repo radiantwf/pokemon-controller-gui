@@ -88,39 +88,34 @@ class SWSHDABattle(BaseSubStep):
         current_frame = self.script.current_frame
         gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
 
-        ret = self._check_action(gray_frame)
-        if ret:
+        if self._match_action(gray_frame):
             return
-        ret = self._check_dynamax_icon(gray_frame)
-        if ret:
+        elif self._match_dynamax_icon(gray_frame):
             return
-        ret = self._choose_move(gray_frame)
-        if ret:
+        elif self._choose_move(gray_frame):
             return
-        ret = self._check_won(gray_frame)
-        if ret:
+        elif self._match_won(gray_frame):
             self._process_step_index += 1
             self._battle_status = SWSHDABattleResult.Won
             return
-        ret = self._check_lost_1(gray_frame)
-        if ret:
+        elif self._match_lost_1(gray_frame):
             self._process_step_index += 1
             self._battle_status = SWSHDABattleResult.Lost1
             return
-        ret = self._check_lost_2(gray_frame)
-        if ret:
+        elif self._match_lost_2(gray_frame):
             self._process_step_index += 1
             self._battle_status = SWSHDABattleResult.Lost2
             return
-        ret = self._check_lost_3(gray_frame)
-        if ret:
+        elif self._match_lost_3(gray_frame):
             self._process_step_index += 1
             self._battle_status = SWSHDABattleResult.Lost3
             return
+        else:
+            self.time_sleep(0.5)
         
 
     # 识别 宝可梦、逃走 按钮，操作：A
-    def _check_action(self, gray):
+    def _match_action(self, gray):
         crop_x, crop_y, crop_w, crop_h = 887, 421, 66, 110
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
         res = cv2.matchTemplate(
@@ -135,7 +130,7 @@ class SWSHDABattle(BaseSubStep):
         return False
 
     # 识别 极巨化图标，操作：左 -> A
-    def _check_dynamax_icon(self, gray):
+    def _match_dynamax_icon(self, gray):
         crop_x, crop_y, crop_w, crop_h = 522, 424, 52, 32
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
         res = cv2.matchTemplate(
@@ -212,7 +207,7 @@ class SWSHDABattle(BaseSubStep):
             return False
 
     # 识别 胜利
-    def _check_won(self, gray):
+    def _match_won(self, gray):
         crop_x, crop_y, crop_w, crop_h = 748, 445, 204, 90
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
         res = cv2.matchTemplate(
@@ -224,7 +219,7 @@ class SWSHDABattle(BaseSubStep):
         return False
     
     # 识别 失败1
-    def _check_lost_1(self, gray):
+    def _match_lost_1(self, gray):
         crop_x, crop_y, crop_w, crop_h = 435, 25, 525, 75
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
         res = cv2.matchTemplate(
@@ -236,7 +231,7 @@ class SWSHDABattle(BaseSubStep):
         return False
     
     # 识别 失败2
-    def _check_lost_2(self, gray):
+    def _match_lost_2(self, gray):
         crop_x, crop_y, crop_w, crop_h = 435, 25, 525, 75
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
         res = cv2.matchTemplate(
@@ -248,7 +243,7 @@ class SWSHDABattle(BaseSubStep):
         return False
     
     # 识别 失败3
-    def _check_lost_3(self, gray):
+    def _match_lost_3(self, gray):
         crop_x, crop_y, crop_w, crop_h = 732, 489, 46, 32
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
         res = cv2.matchTemplate(

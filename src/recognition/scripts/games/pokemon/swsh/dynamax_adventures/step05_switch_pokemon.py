@@ -43,6 +43,8 @@ class SWSHDASwitchPokemon(BaseSubStep):
                 self.script.macro_text_run("BOTTOM:0.1->0.4->A:0.1", block=True)
             self.time_sleep(1)
             self._process_step_index += 1
+        else:
+            self.time_sleep(0.5)
 
     def _match_switch_pokemon(self, gray) -> bool:
         crop_x, crop_y, crop_w, crop_h = 336, 172, 76, 195
