@@ -1,3 +1,4 @@
+from enum import Enum
 from recognition.scripts.base.base_script import BaseScript
 from recognition.scripts.base.base_sub_step import BaseSubStep, SubStepRunningStatus
 import time
@@ -6,11 +7,21 @@ import numpy as np
 import pytesseract
 
 
+class SWSHDACatchResult(Enum):
+    NotCaught = 0
+    Caught = 1
+
 class SWSHDACatch(BaseSubStep):
-    def __init__(self, script: BaseScript,  target_ball: str = "究极球", timeout: float = 60) -> None:
+    def __init__(self, script: BaseScript, catch: bool = True,  target_ball: str = "究极球", timeout: float = 60) -> None:
         super().__init__(script, timeout)
         self._process_step_index = 0
         self._target_ball = target_ball
+        self._catch_flag = catch
+        self._catch_result = SWSHDACatchResult.NotCaught
+    
+    @property
+    def catch_result(self):
+        return self._catch_result
 
     def _process(self) -> SubStepRunningStatus:
         self._status = self.running_status
@@ -34,11 +45,17 @@ class SWSHDACatch(BaseSubStep):
         ]
 
     def _process_step_0(self):
-        self.script.macro_text_run("A:0.1", block=True)
-        self.time_sleep(0.5)
-        self._last_action_time_monotonic = time.monotonic()
-        self._initial_ball = None
-        self._process_step_index += 1
+        if self._catch_flag:
+            self.script.macro_text_run("A:0.1", block=True)
+            self.time_sleep(0.5)
+            self._last_action_time_monotonic = time.monotonic()
+            self._initial_ball = None
+            self._process_step_index += 1
+        else:
+            self.script.macro_text_run("BOTTOM:0.1->0.5->A:0.1", block=True)
+            self.time_sleep(0.5)
+            self._status = SubStepRunningStatus.OK
+
 
     def _process_step_1(self):
         current_frame = self.script.current_frame
@@ -66,6 +83,7 @@ class SWSHDACatch(BaseSubStep):
                 self.script.macro_text_run("A:0.1", block=True)
                 self.time_sleep(8)
                 self._last_action_time_monotonic = time.monotonic()
+                self._catch_result = SWSHDACatchResult.Caught
                 self._process_step_index += 1
             else:
                 self.script.macro_text_run("RIGHT:0.1", block=True)

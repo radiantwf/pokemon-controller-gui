@@ -8,10 +8,10 @@ class SWSHDASwitchPokemon(BaseSubStep):
         super().__init__(script, timeout)
         self._process_step_index = 0
         self._switch_pokemon = switch
-        self._action_template = cv2.imread(
+        self._switch_pokemon_template = cv2.imread(
             "resources/img/recognition/pokemon/swsh/dynamax_adventures/switch_pokemon/switch_pokemon.png")
-        self._action_template = cv2.cvtColor(
-            self._action_template, cv2.COLOR_BGR2GRAY)
+        self._switch_pokemon_template = cv2.cvtColor(
+            self._switch_pokemon_template, cv2.COLOR_BGR2GRAY)
 
     def _process(self) -> SubStepRunningStatus:
         self._status = self.running_status
@@ -41,7 +41,7 @@ class SWSHDASwitchPokemon(BaseSubStep):
                 self.script.macro_text_run("A:0.1", block=True)
             else:
                 self.script.macro_text_run("BOTTOM:0.1->0.4->A:0.1", block=True)
-            self.time_sleep(1)
+            self.time_sleep(2)
             self._process_step_index += 1
         else:
             self.time_sleep(0.5)
@@ -50,7 +50,7 @@ class SWSHDASwitchPokemon(BaseSubStep):
         crop_x, crop_y, crop_w, crop_h = 336, 172, 76, 195
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
         res = cv2.matchTemplate(
-            crop_gray, self._won_template, cv2.TM_CCOEFF_NORMED)
+            crop_gray, self._switch_pokemon_template, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
         if max_val > 0.9:
             return True

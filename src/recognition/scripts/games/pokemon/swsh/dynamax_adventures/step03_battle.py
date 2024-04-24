@@ -74,9 +74,6 @@ class SWSHDABattle(BaseSubStep):
     def _process_steps(self):
         return [
             self._process_steps_0,
-            # self.hatch_step_1,
-            # self.hatch_step_2,
-            # self.hatch_step_3,
         ]
 
     def _process_steps_0(self):
@@ -247,7 +244,7 @@ class SWSHDABattle(BaseSubStep):
         crop_x, crop_y, crop_w, crop_h = 732, 489, 46, 32
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
         res = cv2.matchTemplate(
-            crop_gray, self._lost_2_template, cv2.TM_CCOEFF_NORMED)
+            crop_gray, self._lost_3_template, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
         if max_val > 0.9:
             self._last_action_time_monotonic = time.monotonic()

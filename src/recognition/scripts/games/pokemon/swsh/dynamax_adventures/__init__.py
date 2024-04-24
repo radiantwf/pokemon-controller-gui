@@ -1,16 +1,13 @@
-import math
 import multiprocessing
 import time
 from recognition.scripts.games.pokemon.swsh.dynamax_adventures.step01_start import SWSHDAStart
 from recognition.scripts.games.pokemon.swsh.dynamax_adventures.step02_choose_path import SWSHDAChoosePath
-from recognition.scripts.games.pokemon.swsh.dynamax_adventures.step03_battle import SWSHDABattle
-from recognition.scripts.games.pokemon.swsh.dynamax_adventures.step04_catch import SWSHDACatch
+from recognition.scripts.games.pokemon.swsh.dynamax_adventures.step03_battle import SWSHDABattle, SWSHDABattleResult
+from recognition.scripts.games.pokemon.swsh.dynamax_adventures.step04_catch import SWSHDACatch, SWSHDACatchResult
+from recognition.scripts.games.pokemon.swsh.dynamax_adventures.step05_switch_pokemon import SWSHDASwitchPokemon
 from recognition.scripts.parameter_struct import ScriptParameter
 from recognition.scripts.base.base_script import BaseScript, WorkflowEnum
-import cv2
-import numpy as np
 from recognition.scripts.base.base_sub_step import SubStepRunningStatus
-
 
 
 class SwshDynamaxAdventures(BaseScript):
@@ -22,7 +19,7 @@ class SwshDynamaxAdventures(BaseScript):
         self._jump_next_frame = False
         self.set_paras(paras)
         self._durations = self.get_para("durations")
-
+        self._battle_counter = 0
 
     @staticmethod
     def script_name() -> str:
@@ -34,7 +31,7 @@ class SwshDynamaxAdventures(BaseScript):
         paras["durations"] = ScriptParameter(
             "durations", float, -1, "运行时长（分钟）")
         return paras
-    
+
     def _check_durations(self):
         if self._durations <= 0:
             return False
@@ -43,7 +40,7 @@ class SwshDynamaxAdventures(BaseScript):
             self._finished_process()
             return True
         return False
-        
+
     def process_frame(self):
         if self._check_durations():
             return
@@ -102,11 +99,13 @@ class SwshDynamaxAdventures(BaseScript):
     @property
     def _cycle_step_list(self):
         return [
-            self.step_1,
-            self.step_2,
-            self.step_3,
-            self.step_4,
-            self.step_5,
+            self.step_1_start,
+            self.step_2_choose_path,
+            self.step_3_battle,
+            self.step_4_catch,
+            self.step_5_switch_pokemon,
+            self.step_6_shiny_keep,
+            self.step_7_finish,
         ]
 
     def _finished_process(self):
@@ -128,8 +127,9 @@ class SwshDynamaxAdventures(BaseScript):
         self._swsh_da_choose_path = None
         self._swsh_da_battle = None
         self._swsh_da_catch = None
-        
-    def step_1(self):
+        self._swsh_da_switch_pokemon = None
+
+    def step_1_start(self):
         status = self._swsh_da_start.run()
         if status == SubStepRunningStatus.Running:
             return
@@ -139,39 +139,61 @@ class SwshDynamaxAdventures(BaseScript):
         elif status == SubStepRunningStatus.OK:
             self._swsh_da_choose_path = SWSHDAChoosePath(self)
             self._circle_step_index += 1
+            self.send_log("开始选择路径")
         else:
             self.send_log("{}函数返回状态为{}".format("swsh_da_start", status.name))
             self._finished_process()
-            
-    def step_2(self):
-        # status = self._swsh_da_choose_path.run()
-        status = SubStepRunningStatus.OK
+
+    def step_2_choose_path(self):
+        status = self._swsh_da_choose_path.run()
         if status == SubStepRunningStatus.Running:
             return
         elif status == SubStepRunningStatus.OK:
             self._swsh_da_battle = SWSHDABattle(self)
+            self._battle_counter += 1
             self._circle_step_index += 1
+            self.send_log("选择路径完成，准备战斗")
         else:
-            self.send_log("{}函数返回状态为{}".format("swsh_da_choose_path", status.name))
+            self.send_log("{}函数返回状态为{}".format(
+                "swsh_da_choose_path", status.name))
             self._finished_process()
 
-    def step_3(self):
+    def step_3_battle(self):
         status = self._swsh_da_battle.run()
         if status == SubStepRunningStatus.Running:
             return
-        # elif status == SubStepRunningStatus.Failed:
         elif status == SubStepRunningStatus.Timeout:
             self.send_log("{}函数返回状态为{}".format("swsh_da_battle", status.name))
             self._finished_process()
-        # elif status == SubStepRunningStatus.Finished:
         elif status == SubStepRunningStatus.OK:
-            self._swsh_da_catch = SWSHDACatch(self)
-            self._circle_step_index += 1
+            if self._swsh_da_battle.battle_status == SWSHDABattleResult.Won:
+                catch_flag = True
+                target_ball = "精灵球"
+                if self._battle_counter >= 4:
+                    catch_flag = True
+                    target_ball = "究极球"
+                self._swsh_da_catch = SWSHDACatch(
+                    self, catch=catch_flag, target_ball=target_ball)
+                self._circle_step_index += 1
+                self.send_log("胜利，准备捕捉")
+                return
+            elif self._swsh_da_battle.battle_status == SWSHDABattleResult.Lost1:
+                self._circle_step_index = 5
+                self.send_log("失败1，带走宝可梦")
+                return
+            elif self._swsh_da_battle.battle_status == SWSHDABattleResult.Lost2:
+                self._circle_step_index = 6
+                self.send_log("失败2，准备结束")
+                return
+            elif self._swsh_da_battle.battle_status == SWSHDABattleResult.Lost3:
+                self._circle_step_index = 6
+                self.send_log("失败3，准备结束")
+                return
         else:
             self.send_log("{}函数返回状态为{}".format("swsh_da_battle", status.name))
             self._finished_process()
-    
-    def step_4(self):
+
+    def step_4_catch(self):
         status = self._swsh_da_catch.run()
         if status == SubStepRunningStatus.Running:
             return
@@ -179,10 +201,40 @@ class SwshDynamaxAdventures(BaseScript):
             self.send_log("{}函数返回状态为{}".format("swsh_da_catch", status.name))
             self._finished_process()
         elif status == SubStepRunningStatus.OK:
-            self._circle_step_index += 1
+            if self._swsh_da_catch.catch_result == SWSHDACatchResult.Caught:
+                if self._battle_counter >= 4:
+                    self._circle_step_index = 5
+                    self.send_log("捕捉成功，准备结束")
+                else:
+                    switch_flag = True
+                    self._swsh_da_switch_pokemon = SWSHDASwitchPokemon(
+                        self, switch=switch_flag)
+                    self._circle_step_index += 1
+                    self.send_log("捕捉成功，准备切换宝可梦")
+            else:
+                self._circle_step_index = 1
+                self.send_log("未捕捉，准备重新选择路径")
+            return
         else:
             self.send_log("{}函数返回状态为{}".format("swsh_da_catch", status.name))
             self._finished_process()
 
-    def step_5(self):
+    def step_5_switch_pokemon(self):
+        status = self._swsh_da_switch_pokemon.run()
+        if status == SubStepRunningStatus.Running:
+            return
+        elif status == SubStepRunningStatus.Timeout:
+            self.send_log("{}函数返回状态为{}".format("swsh_da_switch_pokemon", status.name))
+            self._finished_process()
+        elif status == SubStepRunningStatus.OK:
+            self._circle_step_index = 1
+            return
+        else:
+            self.send_log("{}函数返回状态为{}".format("swsh_da_switch_pokemon", status.name))
+            self._finished_process()
+
+    def step_6_shiny_keep(self):
+        self._finished_process()
+
+    def step_7_finish(self):
         self._finished_process()

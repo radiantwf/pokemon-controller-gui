@@ -46,7 +46,7 @@ class SWSHDAStart(BaseSubStep):
 
     def _process_step_3(self):
         self.script.macro_text_run("A:0.1", block=True)
-        self.time_sleep(21)
+        self.time_sleep(18)
         self._process_step_index += 1
 
 # 对话 A
