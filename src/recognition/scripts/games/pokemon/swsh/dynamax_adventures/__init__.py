@@ -1,3 +1,4 @@
+from enum import Enum
 import multiprocessing
 import time
 from recognition.scripts.games.pokemon.swsh.dynamax_adventures.step01_start import SWSHDAStart
@@ -10,16 +11,71 @@ from recognition.scripts.base.base_script import BaseScript, WorkflowEnum
 from recognition.scripts.base.base_sub_step import SubStepRunningStatus
 
 
+class SWSHDABallType(Enum):
+    NotCatch = "不捕捉"
+    PokeBall = "精灵球"
+    GreatBall = "超级球"
+    UltraBall = "高级球"
+    MasterBall = "大师球"
+    SafariBall = "狩猎球"
+    LevelBall = "等级球"
+    MoonBall = "月亮球"
+    LureBall = "诱饵球"
+    FriendBall = "友友球"
+    LoveBall = "甜蜜球"
+    FastBall = "速度球"
+    HeavyBall = "重量球"
+    PremierBall = "纪念球"
+    RepeatBall = "重复球"
+    TimerBall = "计时球"
+    NestBall = "巢穴球"
+    NetBall = "捕网球"
+    DiveBall = "潜水球"
+    LuxuryBall = "豪华球"
+    HealBall = "治愈球"
+    QuickBall = "先机球"
+    DuskBall = "黑暗球"
+    SportBall = "竞赛球"
+    DreamBall = "梦境球"
+    BeastBall = "究极球"
+
+
 class SwshDynamaxAdventures(BaseScript):
-    def __init__(self, stop_event: multiprocessing.Event, frame_queue: multiprocessing.Queue, controller_input_action_queue: multiprocessing.Queue, paras: dict() = None):
+    def __init__(self, stop_event: multiprocessing.Event, frame_queue: multiprocessing.Queue, controller_input_action_queue: multiprocessing.Queue, paras: dict = None):
         super().__init__(SwshDynamaxAdventures.script_name(), stop_event,
                          frame_queue, controller_input_action_queue, SwshDynamaxAdventures.script_paras())
         self._prepare_step_index = -1
         self._circle_step_index = -1
         self._jump_next_frame = False
         self.set_paras(paras)
-        self._durations = self.get_para("durations")
         self._battle_index = 0
+
+        # 获取脚本参数
+        self._durations = self.get_para("durations")
+        self._restart_game = self.get_para(
+            "restart_game") if "restart_game" in paras else False
+        self._only_take_legendary = self.get_para(
+            "only_take_legendary") if "only_take_legendary" in paras else False
+        self._choose_path = [self.get_para("choose_path_1") if "choose_path_1" in paras else 0,
+                             self.get_para(
+                                 "choose_path_2") if "choose_path_2" in paras else 0,
+                             self.get_para("choose_path_3") if "choose_path_3" in paras else 0]
+        self._path_event = [self.get_para("path_event_1") if "path_event_1" in paras else True,
+                            self.get_para(
+                                "path_event_2") if "path_event_2" in paras else True,
+                            self.get_para(
+                                "path_event_3") if "path_event_3" in paras else True,
+                            self.get_para("path_event_4") if "path_event_4" in paras else True]
+        self._catch_ball = [self.get_para("catch_ball_1") if "catch_ball_1" in paras else SWSHDABallType.PokeBall,
+                            self.get_para(
+                                "catch_ball_2") if "catch_ball_2" in paras else SWSHDABallType.PokeBall,
+                            self.get_para(
+                                "catch_ball_3") if "catch_ball_3" in paras else SWSHDABallType.PokeBall,
+                            self.get_para("catch_ball_4") if "catch_ball_4" in paras else SWSHDABallType.BeastBall]
+        self._switch_pokemon = [self.get_para("switch_pokemon_1") if "switch_pokemon_1" in paras else True,
+                                self.get_para(
+                                    "switch_pokemon_2") if "switch_pokemon_2" in paras else True,
+                                self.get_para("switch_pokemon_3") if "switch_pokemon_3" in paras else True]
 
     @staticmethod
     def script_name() -> str:
@@ -137,7 +193,8 @@ class SwshDynamaxAdventures(BaseScript):
         # elif status == SubStepRunningStatus.Timeout:
         # elif status == SubStepRunningStatus.Finished:
         elif status == SubStepRunningStatus.OK:
-            self._swsh_da_choose_path = SWSHDAChoosePath(self, battle_index = self._battle_index)
+            self._swsh_da_choose_path = SWSHDAChoosePath(
+                self, battle_index=self._battle_index)
             self._circle_step_index += 1
             self.send_log("开始选择路径")
         else:
@@ -149,7 +206,8 @@ class SwshDynamaxAdventures(BaseScript):
         if status == SubStepRunningStatus.Running:
             return
         elif status == SubStepRunningStatus.OK:
-            self._swsh_da_battle = SWSHDABattle(self, battle_index = self._battle_index)
+            self._swsh_da_battle = SWSHDABattle(
+                self, battle_index=self._battle_index)
             self._circle_step_index += 1
             self.send_log("选择路径完成，准备战斗")
         else:
@@ -166,13 +224,10 @@ class SwshDynamaxAdventures(BaseScript):
             self._finished_process()
         elif status == SubStepRunningStatus.OK:
             if self._swsh_da_battle.battle_status == SWSHDABattleResult.Won:
-                catch_flag = True
-                target_ball = "精灵球"
-                if self._battle_index >= 3:
-                    catch_flag = True
-                    target_ball = "究极球"
+                catch_flag = (
+                    self._catch_ball[self._battle_index] != SWSHDABallType.NotCatch)
                 self._swsh_da_catch = SWSHDACatch(
-                    self, battle_index = self._battle_index, catch=catch_flag, target_ball=target_ball)
+                    self, battle_index=self._battle_index, catch=catch_flag, target_ball=self._catch_ball[self._battle_index].value)
                 self._circle_step_index += 1
                 self.send_log("胜利，准备捕捉")
                 return
@@ -205,7 +260,7 @@ class SwshDynamaxAdventures(BaseScript):
                     self._circle_step_index = 5
                     self.send_log("捕捉成功，准备结束")
                 else:
-                    switch_flag = True
+                    switch_flag = self._switch_pokemon[self._battle_index]
                     self._swsh_da_switch_pokemon = SWSHDASwitchPokemon(
                         self, battle_index=self._battle_index, switch=switch_flag)
                     self._circle_step_index += 1
