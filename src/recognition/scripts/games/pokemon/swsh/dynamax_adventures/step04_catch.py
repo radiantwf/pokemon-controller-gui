@@ -12,11 +12,13 @@ class SWSHDACatchResult(Enum):
     Caught = 1
 
 class SWSHDACatch(BaseSubStep):
-    def __init__(self, script: BaseScript, catch: bool = True,  target_ball: str = "究极球", timeout: float = 60) -> None:
+    def __init__(self, script: BaseScript, battle_index: int = 0, catch: bool = True,  target_ball: str = "究极球", timeout: float = 60) -> None:
         super().__init__(script, timeout)
         self._process_step_index = 0
         self._target_ball = target_ball
         self._catch_flag = catch
+        if battle_index >= 3:
+            self._catch_flag = True
         self._catch_result = SWSHDACatchResult.NotCaught
     
     @property

@@ -18,9 +18,10 @@ class SWSHDABattleResult(Enum):
 
 
 class SWSHDABattle(BaseSubStep):
-    def __init__(self, script: BaseScript, timeout: float = -1) -> None:
+    def __init__(self, script: BaseScript, battle_index: int = 0, timeout: float = -1) -> None:
         super().__init__(script, timeout)
         self._process_step_index = 0
+        self._battle_index = battle_index
         self._battle_status = 0
         self._last_action_time_monotonic = time.monotonic()
         self._action_template = cv2.imread(

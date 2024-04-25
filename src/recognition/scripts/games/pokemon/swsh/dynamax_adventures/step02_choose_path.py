@@ -2,10 +2,12 @@ from recognition.scripts.base.base_script import BaseScript
 from recognition.scripts.base.base_sub_step import BaseSubStep, SubStepRunningStatus
 import cv2
 
+
 class SWSHDAChoosePath(BaseSubStep):
-    def __init__(self, script: BaseScript, timeout: float = -1) -> None:
+    def __init__(self, script: BaseScript, battle_index: int = 0, timeout: float = -1) -> None:
         super().__init__(script, timeout)
         self._process_step_index = 0
+        self._battle_index = battle_index
         self._choose_path_template = cv2.imread(
             "resources/img/recognition/pokemon/swsh/dynamax_adventures/choose_path.png")
         self._choose_path_template = cv2.cvtColor(
@@ -34,9 +36,11 @@ class SWSHDAChoosePath(BaseSubStep):
     def process_steps_0(self):
         current_frame = self.script.current_frame
         gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
-        if self._match_choose_path(gray_frame):
+        if self._battle_index >= 3 or self._match_choose_path(gray_frame):
             self.script.macro_text_run("A:0.1->0.4", block=True, loop=20)
             self._process_step_index += 1
+            self.time_sleep(0.5)
+            return
         else:
             self.time_sleep(0.5)
 
