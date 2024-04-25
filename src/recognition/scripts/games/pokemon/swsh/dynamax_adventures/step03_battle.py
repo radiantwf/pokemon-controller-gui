@@ -110,9 +110,9 @@ class SWSHDABattle(BaseSubStep):
             return
         else:
             self.time_sleep(0.5)
-        
 
     # 识别 宝可梦、逃走 按钮，操作：A
+
     def _match_action(self, gray):
         crop_x, crop_y, crop_w, crop_h = 887, 421, 66, 110
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
@@ -157,7 +157,10 @@ class SWSHDABattle(BaseSubStep):
                 effect = ""
                 pp = 0
                 effect = self._ocr_move_effect(
-                    gray, 689, 351 + 53 * i, 54, 18)
+                    gray, 689, 351 + 53 * i, 54, 18, zoom=5)
+                if effect == "":
+                    effect = self._ocr_move_effect(
+                        gray, 689, 351 + 53 * i, 54, 18, zoom=50)
                 pp = self._ocr_move_pp(
                     gray, 872, 335 + 53 * i, 24, 27)
                 effects.append(effect)
@@ -215,7 +218,7 @@ class SWSHDABattle(BaseSubStep):
             self._last_action_time_monotonic = time.monotonic()
             return True
         return False
-    
+
     # 识别 失败1
     def _match_lost_1(self, gray):
         crop_x, crop_y, crop_w, crop_h = 435, 25, 525, 75
@@ -227,7 +230,7 @@ class SWSHDABattle(BaseSubStep):
             self._last_action_time_monotonic = time.monotonic()
             return True
         return False
-    
+
     # 识别 失败2
     def _match_lost_2(self, gray):
         crop_x, crop_y, crop_w, crop_h = 435, 25, 525, 75
@@ -239,7 +242,7 @@ class SWSHDABattle(BaseSubStep):
             self._last_action_time_monotonic = time.monotonic()
             return True
         return False
-    
+
     # 识别 失败3
     def _match_lost_3(self, gray):
         crop_x, crop_y, crop_w, crop_h = 732, 489, 46, 32
@@ -265,9 +268,9 @@ class SWSHDABattle(BaseSubStep):
             index = -1
         return index
 
-    def _ocr_move_effect(self, gray, crop_x, crop_y, crop_w, crop_h):
+    def _ocr_move_effect(self, gray, crop_x, crop_y, crop_w, crop_h, zoom=5):
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
-        crop_gray = cv2.resize(crop_gray, (crop_w*50, crop_h*50))
+        crop_gray = cv2.resize(crop_gray, (crop_w*zoom, crop_h*zoom))
         # 对图片进行二值化处理
         _, thresh1 = cv2.threshold(
             crop_gray, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)
