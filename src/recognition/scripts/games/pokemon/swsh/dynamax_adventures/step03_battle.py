@@ -157,7 +157,7 @@ class SWSHDABattle(BaseSubStep):
                 effect = ""
                 pp = 0
                 effect = self._ocr_move_effect(
-                    gray, 689, 351 + 53 * i, 54, 18, zoom=5)
+                    gray, 689, 351 + 53 * i, 54, 18, zoom=10)
                 if effect == "":
                     effect = self._ocr_move_effect(
                         gray, 689, 351 + 53 * i, 54, 18, zoom=50)
@@ -268,7 +268,7 @@ class SWSHDABattle(BaseSubStep):
             index = -1
         return index
 
-    def _ocr_move_effect(self, gray, crop_x, crop_y, crop_w, crop_h, zoom=5):
+    def _ocr_move_effect(self, gray, crop_x, crop_y, crop_w, crop_h, zoom=10):
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
         crop_gray = cv2.resize(crop_gray, (crop_w*zoom, crop_h*zoom))
         # 对图片进行二值化处理
