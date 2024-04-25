@@ -135,8 +135,8 @@ class SWSHDABattle(BaseSubStep):
             crop_gray, self._dynamax_icon_template, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
         if max_val > 0.9:
-            self.script.macro_text_run("LEFT:0.1->0.2->A:0.1", block=True)
-            self.time_sleep(0.2)
+            self.script.macro_text_run("LEFT:0.1->0.4->A:0.05->0.1->A:0.05", block=True)
+            self.time_sleep(0.5)
             self._last_action_time_monotonic = time.monotonic()
             return True
         return False
@@ -200,8 +200,8 @@ class SWSHDABattle(BaseSubStep):
             elif move_times > 0:
                 self.script.macro_text_run(
                     "BOTTOM:0.05->0.25", block=True, loop=move_times)
-            self.script.macro_text_run("A:0.1->0.3", block=True, loop=5)
-            self.time_sleep(1)
+            self.script.macro_text_run("A:0.1->0.3", block=True, loop=20)
+            self.time_sleep(0.5)
             self._last_action_time_monotonic = time.monotonic()
             return True
         else:
