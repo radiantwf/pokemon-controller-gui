@@ -84,8 +84,54 @@ class SwshDynamaxAdventures(BaseScript):
     @staticmethod
     def script_paras() -> dict:
         paras = dict()
+        paras["loop"] = ScriptParameter(
+            "loop", int, 1, "运行次数")
         paras["durations"] = ScriptParameter(
             "durations", float, -1, "运行时长（分钟）")
+        paras["only_take_legendary"] = ScriptParameter(
+            "only_take_legendary", bool, "False", "只带走传说宝可梦", ["False", "True"])
+        paras["restart_game"] = ScriptParameter(
+            "restart_game", bool, "False", "未带走传说宝可梦时重启游戏（有极巨石惩罚）", ["False", "True"])
+        paras["secondary"] = ScriptParameter(
+            "secondary", bool, "False", "副设备", ["False", "True"])
+        
+        paras["use_record"] = ScriptParameter(
+            "use_record", int, 1, "使用记录（0:不使用 1-3:使用记录1-3）")
+        paras["save_record"] = ScriptParameter(
+            "save_record", int, 1, "保存并覆盖原有记录（0:不保存 1-3:覆盖记录位置1-3）")
+        
+        paras["choose_path_1"] = ScriptParameter(
+            "choose_path_1", int, 0, "战斗1 选择路径（0:默认路径，负数:向左移动，正数:向右移动，数字:移动次数）")
+        paras["path_event_1"] = ScriptParameter(
+            "path_event_1", bool, "True", "战斗1 路径事件（True:连点A False:连点B）", ["False", "True"])
+        paras["catch_ball_1"] = ScriptParameter(
+            "catch_ball_1", str, SWSHDABallType.PokeBall.value, "战斗1 捕捉球种", [e.value for e in SWSHDABallType])
+        paras["switch_pokemon_1"] = ScriptParameter(
+            "switch_pokemon_1", bool, "True", "战斗1 是否更换使用宝可梦（未捕捉跳过此步骤）", ["False", "True"])
+        
+        paras["choose_path_2"] = ScriptParameter(
+            "choose_path_2", int, 0, "战斗2 选择路径（0:默认路径，负数:向左移动，正数:向右移动，数字:移动次数）")
+        paras["path_event_2"] = ScriptParameter(
+            "path_event_2", bool, "True", "战斗2 路径事件（True:连点A False:连点B）", ["False", "True"])
+        paras["catch_ball_2"] = ScriptParameter(
+            "catch_ball_2", str, SWSHDABallType.PokeBall.value, "战斗2 捕捉球种", [e.value for e in SWSHDABallType])
+        paras["switch_pokemon_2"] = ScriptParameter(
+            "switch_pokemon_2", bool, "True", "战斗2 是否更换使用宝可梦（未捕捉跳过此步骤）", ["False", "True"])
+        
+        paras["choose_path_3"] = ScriptParameter(
+            "choose_path_3", int, 0, "战斗3 选择路径（0:默认路径，负数:向左移动，正数:向右移动，数字:移动次数）")
+        paras["path_event_3"] = ScriptParameter(
+            "path_event_3", bool, "True", "战斗3 路径事件（True:连点A False:连点B）", ["False", "True"])
+        paras["catch_ball_3"] = ScriptParameter(
+            "catch_ball_3", str, SWSHDABallType.PokeBall.value, "战斗3 捕捉球种", [e.value for e in SWSHDABallType])
+        paras["switch_pokemon_3"] = ScriptParameter(
+            "switch_pokemon_3", bool, "True", "战斗3 是否更换使用宝可梦（未捕捉跳过此步骤）", ["False", "True"])
+        
+
+        paras["path_event_4"] = ScriptParameter(
+            "path_event_4", bool, "True", "BOSS战 路径事件（True:连点A False:连点B）", ["False", "True"])
+        paras["catch_ball_4"] = ScriptParameter(
+            "catch_ball_4", str, SWSHDABallType.BeastBall.value, "BOSS战 捕捉球种", [e.value for e in SWSHDABallType])
         return paras
 
     def _check_durations(self):
