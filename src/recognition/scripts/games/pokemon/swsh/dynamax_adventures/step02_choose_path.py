@@ -37,7 +37,7 @@ class SWSHDAChoosePath(BaseSubStep):
         current_frame = self.script.current_frame
         gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
         if self._battle_index >= 3 or self._match_choose_path(gray_frame):
-            self.script.macro_text_run("A:0.1->0.4", block=True, loop=20)
+            self.script.macro_text_run("A:0.1->0.4", block=True, loop=30)
             self._process_step_index += 1
             self.time_sleep(0.5)
             return
