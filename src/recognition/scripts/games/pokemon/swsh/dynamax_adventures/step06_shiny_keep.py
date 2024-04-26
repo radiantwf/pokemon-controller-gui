@@ -105,7 +105,7 @@ class SWSHDAShinyKeep(BaseSubStep):
 
     def _not_keep(self):
         self.script.macro_text_run(
-            "B:0.1->0.5->A:0.1->0.3->A:0.1->0.3->A:0.1", block=True)
+            "B:0.1->0.6->A:0.1->0.4->A:0.1->0.4->A:0.1", block=True)
         self.time_sleep(1)
 
     def _match_keep_pokemon_page(self, gray, threshold=0.9) -> bool:
