@@ -49,7 +49,6 @@ class SwshDynamaxAdventures(BaseScript):
         self._cycle_step_index = -1
         self._jump_next_frame = False
         self.set_paras(paras)
-        self._battle_index = 0
 
         # 获取脚本参数
         self._loop = self.get_para("loop")
@@ -91,7 +90,7 @@ class SwshDynamaxAdventures(BaseScript):
     def script_paras() -> dict:
         paras = dict()
         paras["loop"] = ScriptParameter(
-            "loop", int, 1, "运行次数")
+            "loop", int, -1, "运行次数")
         paras["durations"] = ScriptParameter(
             "durations", float, -1, "运行时长（分钟）")
         paras["only_keep_legendary"] = ScriptParameter(
@@ -239,14 +238,24 @@ class SwshDynamaxAdventures(BaseScript):
         self.macro_stop()
         self.set_cycle_continue()
         self._cycle_step_index = 0
-
-    def _cycle_init(self):
+        self._battle_index = 0
         self._swsh_da_start = SWSHDAStart(self, timeout=90)
         self._swsh_da_choose_path = None
         self._swsh_da_battle = None
         self._swsh_da_catch = None
         self._swsh_da_switch_pokemon = None
         self._swsh_da_shiny_keep = None
+        self._swsh_da_finish = None
+
+    def _cycle_init(self):
+        self._battle_index = 0
+        self._swsh_da_start = SWSHDAStart(self, timeout=90)
+        self._swsh_da_choose_path = None
+        self._swsh_da_battle = None
+        self._swsh_da_catch = None
+        self._swsh_da_switch_pokemon = None
+        self._swsh_da_shiny_keep = None
+        self._swsh_da_finish = None
 
     def step_1_start(self):
         status = self._swsh_da_start.run()
@@ -378,7 +387,7 @@ class SwshDynamaxAdventures(BaseScript):
                 if self._not_keep_restart_flag:
                     self.macro_run("recognition.pokemon.swsh.common.restart_game",
                                    1, {"secondary": str(self._secondary)}, True, None)
-                    self.set_cycle_continue()
+                    self._re_cycle()
                     return
                 self._cycle_step_index += 1
                 return
