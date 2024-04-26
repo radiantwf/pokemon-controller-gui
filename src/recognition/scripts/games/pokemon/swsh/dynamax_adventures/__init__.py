@@ -309,7 +309,6 @@ class SwshDynamaxAdventures(BaseScript):
                     self._catch_ball[self._battle_index] != SWSHDABallType.NotCatch.value)
                 self._swsh_da_catch = SWSHDACatch(
                     self, battle_index=self._battle_index, catch=catch_flag, target_ball=self._catch_ball[self._battle_index])
-                self._win_count += 1
                 self._cycle_step_index += 1
                 if TRACE_LOG:
                     self.send_log("胜利，准备捕捉")
@@ -348,6 +347,7 @@ class SwshDynamaxAdventures(BaseScript):
                     self._cycle_step_index = 5
                     self._swsh_da_shiny_keep = SWSHDAShinyKeep(
                         self, only_keep_legendary=self._only_keep_legendary, legendary_caught=True)
+                    self._win_count += 1
                     if TRACE_LOG:
                         self.send_log("传说宝可梦捕捉成功")
                     return

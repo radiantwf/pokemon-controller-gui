@@ -88,7 +88,7 @@ class SWSHDACatch(BaseSubStep):
                 self._catch_result = SWSHDACatchResult.Caught
                 self._process_step_index += 1
             else:
-                self.script.macro_text_run("RIGHT:0.1", block=True)
+                self.script.macro_text_run("LEFT:0.1", block=True)
                 self.time_sleep(0.5)
                 self._last_action_time_monotonic = time.monotonic()
 
