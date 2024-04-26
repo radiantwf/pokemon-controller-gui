@@ -229,8 +229,8 @@ class SwshDynamaxAdventures(BaseScript):
     def _finished_process(self):
         run_time_span = self.run_time_span
         self.macro_stop(block=True)
-        # self.macro_run("common.switch_sleep",
-        #                loop=1, paras={}, block=True, timeout=10)
+        self.macro_run("common.switch_sleep",
+                       loop=1, paras={}, block=True, timeout=10)
         self.send_log("[{}] 脚本完成，已运行{}次，耗时{}小时{}分{}秒".format(SwshDynamaxAdventures.script_name(), self.cycle_times, int(
             run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
         self.stop_work()
@@ -241,7 +241,7 @@ class SwshDynamaxAdventures(BaseScript):
         self._cycle_step_index = 0
 
     def _cycle_init(self):
-        self._swsh_da_start = SWSHDAStart(self)
+        self._swsh_da_start = SWSHDAStart(self, timeout=90)
         self._swsh_da_choose_path = None
         self._swsh_da_battle = None
         self._swsh_da_catch = None
@@ -371,7 +371,7 @@ class SwshDynamaxAdventures(BaseScript):
         elif status == SubStepRunningStatus.OK:
             if self._swsh_da_shiny_keep.kept_result == SWSHDAShinyKeepResult.Kept:
                 self.send_log("闪光宝可梦保留成功")
-                self._cycle_step_index += 1
+                self._finished_process()
                 return
             else:
                 self.send_log("未检测到闪光宝可梦")
@@ -388,4 +388,4 @@ class SwshDynamaxAdventures(BaseScript):
             self._finished_process()
 
     def step_7_finish(self):
-        self._finished_process()
+        self._cycle_step_index += 1
