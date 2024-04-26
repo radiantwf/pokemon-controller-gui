@@ -46,7 +46,7 @@ class SwshDynamaxAdventures(BaseScript):
         super().__init__(SwshDynamaxAdventures.script_name(), stop_event,
                          frame_queue, controller_input_action_queue, SwshDynamaxAdventures.script_paras())
         self._prepare_step_index = -1
-        self._circle_step_index = -1
+        self._cycle_step_index = -1
         self._jump_next_frame = False
         self.set_paras(paras)
         self._battle_index = 0
@@ -54,8 +54,10 @@ class SwshDynamaxAdventures(BaseScript):
         # 获取脚本参数
         self._loop = self.get_para("loop")
         self._durations = self.get_para("durations")
-        self._restart_game = self.get_para(
-            "restart_game") if "restart_game" in paras else False
+        self._secondary = self.get_para(
+            "secondary") if "secondary" in paras else False
+        self._not_keep_restart_flag = self.get_para(
+            "not_keep_restart_flag") if "not_keep_restart_flag" in paras else False
         self._only_keep_legendary = self.get_para(
             "only_keep_legendary") if "only_keep_legendary" in paras else False
         self._choose_path = [self.get_para("choose_path_1") if "choose_path_1" in paras else 0,
@@ -97,8 +99,8 @@ class SwshDynamaxAdventures(BaseScript):
             "durations", float, -1, "运行时长（分钟）")
         paras["only_keep_legendary"] = ScriptParameter(
             "only_keep_legendary", bool, "False", "只带走传说宝可梦", ["False", "True"])
-        paras["restart_game"] = ScriptParameter(
-            "restart_game", bool, "False", "未带走传说宝可梦时重启游戏（有极巨石惩罚）", ["False", "True"])
+        paras["not_keep_restart_flag"] = ScriptParameter(
+            "not_keep_restart_flag", bool, "False", "未带走传说宝可梦时重启游戏（有极巨石惩罚）", ["False", "True"])
         paras["secondary"] = ScriptParameter(
             "secondary", bool, "False", "副设备", ["False", "True"])
 
@@ -151,10 +153,10 @@ class SwshDynamaxAdventures(BaseScript):
             return True
         return False
 
-    def _check_circles(self):
+    def _check_cycles(self):
         if self._loop <= 0:
             return False
-        if self.circle_times > self._loop:
+        if self.cycle_times > self._loop:
             self.send_log("运行次数已到达设定值，脚本停止")
             self._finished_process()
             return True
@@ -163,31 +165,31 @@ class SwshDynamaxAdventures(BaseScript):
     def process_frame(self):
         if self._check_durations():
             return
-        if self._check_circles():
+        if self._check_cycles():
             return
 
         if self.running_status == WorkflowEnum.Preparation:
             if self._prepare_step_index >= 0:
                 if self._prepare_step_index >= len(self._prepare_step_list):
-                    self.set_circle_begin()
-                    self._circle_step_index = 0
+                    self.set_cycle_begin()
+                    self._cycle_step_index = 0
                     return
                 self._prepare_step_list[self._prepare_step_index]()
             return
-        if self.running_status == WorkflowEnum.Circle:
+        if self.running_status == WorkflowEnum.Cycle:
             if self.current_frame_count == 1:
-                self._circle_init()
+                self._cycle_init()
             if self._jump_next_frame:
                 self._jump_next_frame = False
                 return
-            if self._circle_step_index >= 0 and self._circle_step_index < len(self._cycle_step_list):
-                self._cycle_step_list[self._circle_step_index]()
+            if self._cycle_step_index >= 0 and self._cycle_step_index < len(self._cycle_step_list):
+                self._cycle_step_list[self._cycle_step_index]()
             else:
                 self.macro_stop()
-                self.set_circle_continue()
-                self._circle_step_index = 0
+                self.set_cycle_continue()
+                self._cycle_step_index = 0
             return
-        if self.running_status == WorkflowEnum.AfterCircle:
+        if self.running_status == WorkflowEnum.AfterCycle:
             self.stop_work()
             return
 
@@ -195,14 +197,14 @@ class SwshDynamaxAdventures(BaseScript):
         self._prepare_step_index = 0
         self.send_log(f"开始运行{SwshDynamaxAdventures.script_name()}脚本")
 
-    def on_circle(self):
+    def on_cycle(self):
         run_time_span = self.run_time_span
-        self.send_log("脚本运行中，已经运行{}次，耗时{}小时{}分{}秒".format(self.circle_times, int(
+        self.send_log("脚本运行中，已经运行{}次，耗时{}小时{}分{}秒".format(self.cycle_times, int(
             run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
 
     def on_stop(self):
         run_time_span = self.run_time_span
-        self.send_log("[{}] 脚本停止，实际运行{}次，耗时{}小时{}分{}秒".format(SwshDynamaxAdventures.script_name(), self.circle_times, int(
+        self.send_log("[{}] 脚本停止，实际运行{}次，耗时{}小时{}分{}秒".format(SwshDynamaxAdventures.script_name(), self.cycle_times, int(
             run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
 
     def on_error(self):
@@ -234,16 +236,16 @@ class SwshDynamaxAdventures(BaseScript):
         self.macro_stop(block=True)
         # self.macro_run("common.switch_sleep",
         #                loop=1, paras={}, block=True, timeout=10)
-        self.send_log("[{}] 脚本完成，已运行{}次，耗时{}小时{}分{}秒".format(SwshDynamaxAdventures.script_name(), self.circle_times, int(
+        self.send_log("[{}] 脚本完成，已运行{}次，耗时{}小时{}分{}秒".format(SwshDynamaxAdventures.script_name(), self.cycle_times, int(
             run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
         self.stop_work()
 
-    def _re_circle(self):
+    def _re_cycle(self):
         self.macro_stop()
-        self.set_circle_continue()
-        self._circle_step_index = 0
+        self.set_cycle_continue()
+        self._cycle_step_index = 0
 
-    def _circle_init(self):
+    def _cycle_init(self):
         self._swsh_da_start = SWSHDAStart(self)
         self._swsh_da_choose_path = None
         self._swsh_da_battle = None
@@ -261,7 +263,7 @@ class SwshDynamaxAdventures(BaseScript):
         elif status == SubStepRunningStatus.OK:
             self._swsh_da_choose_path = SWSHDAChoosePath(
                 self, True, True, battle_index=self._battle_index, path=self._choose_path[self._battle_index],)
-            self._circle_step_index += 1
+            self._cycle_step_index += 1
             self.send_log("开始选择路径")
         else:
             self.send_log("{}函数返回状态为{}".format("swsh_da_start", status.name))
@@ -274,7 +276,7 @@ class SwshDynamaxAdventures(BaseScript):
         elif status == SubStepRunningStatus.OK:
             self._swsh_da_battle = SWSHDABattle(
                 self, battle_index=self._battle_index)
-            self._circle_step_index += 1
+            self._cycle_step_index += 1
             self.send_log("选择路径完成，准备战斗")
         else:
             self.send_log("{}函数返回状态为{}".format(
@@ -294,21 +296,21 @@ class SwshDynamaxAdventures(BaseScript):
                     self._catch_ball[self._battle_index] != SWSHDABallType.NotCatch.value)
                 self._swsh_da_catch = SWSHDACatch(
                     self, battle_index=self._battle_index, catch=catch_flag, target_ball=self._catch_ball[self._battle_index])
-                self._circle_step_index += 1
+                self._cycle_step_index += 1
                 self.send_log("胜利，准备捕捉")
                 return
             elif self._swsh_da_battle.battle_status == SWSHDABattleResult.Lost1:
-                self._circle_step_index = 5
+                self._cycle_step_index = 5
                 self._swsh_da_shiny_keep = SWSHDAShinyKeep(
                     self, only_keep_legendary=self._only_keep_legendary, legendary_caught=True)
                 self.send_log("失败1，带走宝可梦")
                 return
             elif self._swsh_da_battle.battle_status == SWSHDABattleResult.Lost2:
-                self._circle_step_index = 6
+                self._cycle_step_index = 6
                 self.send_log("失败2，准备结束")
                 return
             elif self._swsh_da_battle.battle_status == SWSHDABattleResult.Lost3:
-                self._circle_step_index = 6
+                self._cycle_step_index = 6
                 self.send_log("失败3，准备结束")
                 return
         else:
@@ -325,7 +327,7 @@ class SwshDynamaxAdventures(BaseScript):
         elif status == SubStepRunningStatus.OK:
             if self._swsh_da_catch.catch_result == SWSHDACatchResult.Caught:
                 if self._battle_index >= 3:
-                    self._circle_step_index = 5
+                    self._cycle_step_index = 5
                     self._swsh_da_shiny_keep = SWSHDAShinyKeep(
                         self, only_keep_legendary=self._only_keep_legendary, legendary_caught=True)
                     self.send_log("传说宝可梦捕捉成功")
@@ -334,13 +336,13 @@ class SwshDynamaxAdventures(BaseScript):
                     switch_flag = self._switch_pokemon[self._battle_index]
                     self._swsh_da_switch_pokemon = SWSHDASwitchPokemon(
                         self, battle_index=self._battle_index, switch=switch_flag)
-                    self._circle_step_index += 1
+                    self._cycle_step_index += 1
                     self.send_log("捕捉成功，准备切换宝可梦")
             else:
                 self._battle_index += 1
                 self._swsh_da_choose_path = SWSHDAChoosePath(
                     self, leave_event=self._path_leave_event[self._battle_index - 1], enter_event=self._path_enter_event[self._battle_index], battle_index=self._battle_index, path=self._choose_path[self._battle_index],)
-                self._circle_step_index = 1
+                self._cycle_step_index = 1
                 self.send_log("未捕捉，准备重新选择路径")
             return
         else:
@@ -359,7 +361,7 @@ class SwshDynamaxAdventures(BaseScript):
             self._battle_index += 1
             self._swsh_da_choose_path = SWSHDAChoosePath(
                 self, leave_event=self._path_leave_event[self._battle_index - 1], enter_event=self._path_enter_event[self._battle_index], battle_index=self._battle_index, path=0,)
-            self._circle_step_index = 1
+            self._cycle_step_index = 1
             self.send_log("切换宝可梦成功，准备重新选择路径")
             return
         else:
@@ -374,11 +376,16 @@ class SwshDynamaxAdventures(BaseScript):
         elif status == SubStepRunningStatus.OK:
             if self._swsh_da_shiny_keep.kept_result == SWSHDAShinyKeepResult.Kept:
                 self.send_log("闪光宝可梦保留成功")
-                self._circle_step_index += 1
+                self._cycle_step_index += 1
                 return
             else:
                 self.send_log("未检测到闪光宝可梦")
-                self._circle_step_index += 1
+                if self._not_keep_restart_flag:
+                    self.macro_run("recognition.pokemon.swsh.common.not_keep_restart_flag",
+                                1, {"secondary": str(self._secondary)}, True, None)
+                    self.set_cycle_continue()
+                    return
+                self._cycle_step_index += 1
                 return
         else:
             self.send_log("{}函数返回状态为{}".format(

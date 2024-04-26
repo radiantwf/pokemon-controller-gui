@@ -11,7 +11,7 @@ class SVEggsPicnic(BaseScript):
         super().__init__(SVEggsPicnic.script_name(), stop_event,
                          frame_queue, controller_input_action_queue)
         self._prepare_step_index = -1
-        self._circle_step_index = -1
+        self._cycle_step_index = -1
         self._jump_next_frame = False
         self._menu_arrow_template = cv2.imread("resources/img/recognition/pokemon/sv/menu_arrow.jpg")
         self._menu_arrow_template = cv2.cvtColor(self._menu_arrow_template, cv2.COLOR_BGR2GRAY)
@@ -23,25 +23,25 @@ class SVEggsPicnic(BaseScript):
         if self.running_status == WorkflowEnum.Preparation:
             if self._prepare_step_index >= 0:
                 if self._prepare_step_index >= len(self._prepare_step_list):
-                    self.set_circle_begin()
-                    self._circle_step_index = 0
+                    self.set_cycle_begin()
+                    self._cycle_step_index = 0
                     return
                 self._prepare_step_list[self._prepare_step_index]()
             return
-        if self.running_status == WorkflowEnum.Circle:
+        if self.running_status == WorkflowEnum.Cycle:
             if self.current_frame_count == 1:
-                self._circle_init()
+                self._cycle_init()
             if self._jump_next_frame:
                 self._jump_next_frame = False
                 return
-            if self._circle_step_index >= 0 and self._circle_step_index < len(self._cycle_step_list):
-                self._cycle_step_list[self._circle_step_index]()
+            if self._cycle_step_index >= 0 and self._cycle_step_index < len(self._cycle_step_list):
+                self._cycle_step_list[self._cycle_step_index]()
             else:
                 self.macro_stop()
-                self.set_circle_continue()
-                self._circle_step_index = 0
+                self.set_cycle_continue()
+                self._cycle_step_index = 0
             return
-        if self.running_status == WorkflowEnum.AfterCircle:
+        if self.running_status == WorkflowEnum.AfterCycle:
             self.stop_work()
             return
 
@@ -49,15 +49,15 @@ class SVEggsPicnic(BaseScript):
         self._prepare_step_index = 0
         self.send_log(f"开始运行{SVEggsPicnic.script_name()}脚本")
 
-    def on_circle(self):
+    def on_cycle(self):
         pass
         # run_time_span = self.run_time_span
-        # self.send_log("脚本运行中，已经运行{}次，耗时{}小时{}分{}秒".format(self.circle_times, int(
+        # self.send_log("脚本运行中，已经运行{}次，耗时{}小时{}分{}秒".format(self.cycle_times, int(
         #     run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
 
     def on_stop(self):
         run_time_span = self.run_time_span
-        self.send_log("[{}] 脚本停止，实际运行{}次，耗时{}小时{}分{}秒".format(SVEggsPicnic.script_name(), self.circle_times, int(
+        self.send_log("[{}] 脚本停止，实际运行{}次，耗时{}小时{}分{}秒".format(SVEggsPicnic.script_name(), self.cycle_times, int(
             run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
 
     def on_error(self):
@@ -78,14 +78,14 @@ class SVEggsPicnic(BaseScript):
             self.picnic,
         ]
 
-    def _circle_init(self):
+    def _cycle_init(self):
         self.picnic_step_index = 0
         pass
 
     def picnic(self):
         if self.picnic_step_index >= 0:
             if self.picnic_step_index >= len(self.picnic_step_list):
-                self._circle_step_index += 1
+                self._cycle_step_index += 1
                 return
             self.picnic_step_list[self.picnic_step_index]()
         else:
@@ -166,7 +166,7 @@ class SVEggsPicnic(BaseScript):
 
     def hatching(self):
         self.stop_work()
-        self._circle_step_index += 1
+        self._cycle_step_index += 1
 
     def release(self):
-        self._circle_step_index += 1
+        self._cycle_step_index += 1

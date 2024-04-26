@@ -12,7 +12,7 @@ class DQM3Synthesis(BaseScript):
         super().__init__(DQM3Synthesis.script_name(), stop_event,
                          frame_queue, controller_input_action_queue, DQM3Synthesis.script_paras())
         self._prepare_step_index = -1
-        self._circle_step_index = -1
+        self._cycle_step_index = -1
         self._jump_next_frame = False
         self.set_paras(paras)
         self._durations = self.get_para("durations")
@@ -80,25 +80,25 @@ class DQM3Synthesis(BaseScript):
         if self.running_status == WorkflowEnum.Preparation:
             if self._prepare_step_index >= 0:
                 if self._prepare_step_index >= len(self._prepare_step_list):
-                    self.set_circle_begin()
-                    self._circle_step_index = 0
+                    self.set_cycle_begin()
+                    self._cycle_step_index = 0
                     return
                 self._prepare_step_list[self._prepare_step_index]()
             return
-        if self.running_status == WorkflowEnum.Circle:
+        if self.running_status == WorkflowEnum.Cycle:
             if self.current_frame_count == 1:
-                self._circle_init()
+                self._cycle_init()
             if self._jump_next_frame:
                 self._jump_next_frame = False
                 return
-            if self._circle_step_index >= 0 and self._circle_step_index < len(self._cycle_step_list):
-                self._cycle_step_list[self._circle_step_index]()
+            if self._cycle_step_index >= 0 and self._cycle_step_index < len(self._cycle_step_list):
+                self._cycle_step_list[self._cycle_step_index]()
             else:
                 self.macro_stop()
-                self.set_circle_continue()
-                self._circle_step_index = 0
+                self.set_cycle_continue()
+                self._cycle_step_index = 0
             return
-        if self.running_status == WorkflowEnum.AfterCircle:
+        if self.running_status == WorkflowEnum.AfterCycle:
             self.stop_work()
             return
 
@@ -106,15 +106,15 @@ class DQM3Synthesis(BaseScript):
         self._prepare_step_index = 0
         self.send_log(f"开始运行{DQM3Synthesis.script_name()}脚本")
 
-    def on_circle(self):
+    def on_cycle(self):
         pass
         # run_time_span = self.run_time_span
-        # self.send_log("脚本运行中，已经运行{}次，耗时{}小时{}分{}秒".format(self.circle_times, int(
+        # self.send_log("脚本运行中，已经运行{}次，耗时{}小时{}分{}秒".format(self.cycle_times, int(
         #     run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
 
     def on_stop(self):
         run_time_span = self.run_time_span
-        self.send_log("[{}] 脚本停止，实际运行{}次，耗时{}小时{}分{}秒".format(DQM3Synthesis.script_name(), self.circle_times, int(
+        self.send_log("[{}] 脚本停止，实际运行{}次，耗时{}小时{}分{}秒".format(DQM3Synthesis.script_name(), self.cycle_times, int(
             run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
 
     def on_error(self):
@@ -149,13 +149,13 @@ class DQM3Synthesis(BaseScript):
             self.reload_game,
         ]
     
-    def _circle_init(self):
+    def _cycle_init(self):
         pass
 
     def prepare_cycle(self):
         self._shiny = False
         self._check_shiny_frame_count = 0
-        self._circle_step_index += 1
+        self._cycle_step_index += 1
 
 
     def synthesis_1(self):
@@ -166,7 +166,7 @@ class DQM3Synthesis(BaseScript):
         self.macro_run("recognition.dqm3.synthesis.synthesis_1",
                         1, macro_paras, True, None)
         self._jump_next_frame = True
-        self._circle_step_index += 1
+        self._cycle_step_index += 1
 
     def shiny_check_1(self):
         image = self.current_frame
@@ -185,20 +185,20 @@ class DQM3Synthesis(BaseScript):
         # self.send_log("闪光怪兽检测中，当前帧最大匹配值：{}".format(max_val))
         if max_val >= 0.7:
             self._shiny = True
-            self._circle_step_index += 1
+            self._cycle_step_index += 1
             self.send_log("已成功配种闪光怪兽")
             return
         if self._check_shiny_frame_count >= 6:
-            self._circle_step_index += 1
+            self._cycle_step_index += 1
 
     def synthesis_2(self):
         self.macro_run("recognition.dqm3.synthesis.synthesis_2",
                         1, {}, True, None)
-        self._circle_step_index += 1
+        self._cycle_step_index += 1
 
     def use_experience_book(self):
         if not self._shiny:
-            self._circle_step_index += 1
+            self._cycle_step_index += 1
             return
         if self.paras["experience_book_index"].value <= 0:
             self._finished_process()
@@ -209,11 +209,11 @@ class DQM3Synthesis(BaseScript):
         self.macro_run("recognition.dqm3.synthesis.use_experience_book",
                         1, macro_paras, True, None)
         self._jump_next_frame = True
-        self._circle_step_index += 1
+        self._cycle_step_index += 1
         
     def shiny_check_2(self):
         if not self._shiny:
-            self._circle_step_index += 1
+            self._cycle_step_index += 1
             return
         check_ability_tag = self.paras['check_ability_tag'].value
         check_ability_value = self.paras['check_ability_value'].value
@@ -348,18 +348,18 @@ class DQM3Synthesis(BaseScript):
         self.macro_text_run("A:0.1\n0.1", loop=1, block=True)
         self.macro_text_run("B:0.1\n0.1", loop=8, block=True)
         time.sleep(3)
-        self._circle_step_index += 1
+        self._cycle_step_index += 1
 
     def reload_game(self):
         self.macro_run("recognition.dqm3.common.reload_game",
                         1, {}, True, None)
-        self._circle_step_index += 1
+        self._cycle_step_index += 1
 
     def _finished_process(self):
         run_time_span = self.run_time_span
         self.macro_stop(block=True)
         self.macro_run("common.switch_sleep",
                        loop=1, paras={}, block=True, timeout=10)
-        self.send_log("[{}] 脚本完成，已运行{}次，耗时{}小时{}分{}秒".format(DQM3Synthesis.script_name(), self.circle_times, int(
+        self.send_log("[{}] 脚本完成，已运行{}次，耗时{}小时{}分{}秒".format(DQM3Synthesis.script_name(), self.cycle_times, int(
             run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
         self.stop_work()

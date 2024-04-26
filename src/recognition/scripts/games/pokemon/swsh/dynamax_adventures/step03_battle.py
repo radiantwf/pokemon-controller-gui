@@ -7,6 +7,8 @@ import cv2
 import numpy as np
 import pytesseract
 
+from recognition.scripts.games.pokemon.swsh.common.image_match.checkbox_match import ChatBoxMatch
+
 
 class SWSHDABattleResult(Enum):
     Error = -1
@@ -41,17 +43,13 @@ class SWSHDABattle(BaseSubStep):
         self._won_template = cv2.cvtColor(
             self._won_template, cv2.COLOR_BGR2GRAY)
         self._lost_1_template = cv2.imread(
-            "resources/img/recognition/pokemon/swsh/dynamax_adventures/battle/lost_1.png")
+            "resources/img/recognition/pokemon/swsh/dynamax_adventures/keep_pokemon_label.png")
         self._lost_1_template = cv2.cvtColor(
             self._lost_1_template, cv2.COLOR_BGR2GRAY)
         self._lost_2_template = cv2.imread(
-            "resources/img/recognition/pokemon/swsh/dynamax_adventures/battle/lost_2.png")
+            "resources/img/recognition/pokemon/swsh/dynamax_adventures/get_rewards_label.png")
         self._lost_2_template = cv2.cvtColor(
             self._lost_2_template, cv2.COLOR_BGR2GRAY)
-        self._lost_3_template = cv2.imread(
-            "resources/img/recognition/pokemon/swsh/common/chatbox_next.png")
-        self._lost_3_template = cv2.cvtColor(
-            self._lost_3_template, cv2.COLOR_BGR2GRAY)
 
     @property
     def battle_status(self) -> SWSHDABattleResult:
@@ -245,12 +243,7 @@ class SWSHDABattle(BaseSubStep):
 
     # 识别 失败3
     def _match_lost_3(self, gray):
-        crop_x, crop_y, crop_w, crop_h = 732, 489, 46, 32
-        crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
-        res = cv2.matchTemplate(
-            crop_gray, self._lost_3_template, cv2.TM_CCOEFF_NORMED)
-        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-        if max_val > 0.9:
+        if ChatBoxMatch().match_next_arrow(gray=gray, threshold=0.9):
             self._last_action_time_monotonic = time.monotonic()
             return True
         return False

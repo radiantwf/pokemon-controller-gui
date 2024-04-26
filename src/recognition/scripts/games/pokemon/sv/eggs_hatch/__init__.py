@@ -19,7 +19,7 @@ class SVEggs(BaseScript):
         super().__init__(SVEggs.script_name(), stop_event,
                          frame_queue, controller_input_action_queue, SVEggs.script_paras())
         self._prepare_step_index = -1
-        self._circle_step_index = -1
+        self._cycle_step_index = -1
         self._jump_next_frame = False
         self.set_paras(paras)
         self._durations = self.get_para("durations")
@@ -51,25 +51,25 @@ class SVEggs(BaseScript):
         if self.running_status == WorkflowEnum.Preparation:
             if self._prepare_step_index >= 0:
                 if self._prepare_step_index >= len(self._prepare_step_list):
-                    self.set_circle_begin()
-                    self._circle_step_index = 0
+                    self.set_cycle_begin()
+                    self._cycle_step_index = 0
                     return
                 self._prepare_step_list[self._prepare_step_index]()
             return
-        if self.running_status == WorkflowEnum.Circle:
+        if self.running_status == WorkflowEnum.Cycle:
             if self.current_frame_count == 1:
-                self._circle_init()
+                self._cycle_init()
             if self._jump_next_frame:
                 self._jump_next_frame = False
                 return
-            if self._circle_step_index >= 0 and self._circle_step_index < len(self._cycle_step_list):
-                self._cycle_step_list[self._circle_step_index]()
+            if self._cycle_step_index >= 0 and self._cycle_step_index < len(self._cycle_step_list):
+                self._cycle_step_list[self._cycle_step_index]()
             else:
                 self.macro_stop()
-                self.set_circle_continue()
-                self._circle_step_index = 0
+                self.set_cycle_continue()
+                self._cycle_step_index = 0
             return
-        if self.running_status == WorkflowEnum.AfterCircle:
+        if self.running_status == WorkflowEnum.AfterCycle:
             self.stop_work()
             return
 
@@ -77,15 +77,15 @@ class SVEggs(BaseScript):
         self._prepare_step_index = 0
         self.send_log(f"开始运行{SVEggs.script_name()}脚本")
 
-    def on_circle(self):
+    def on_cycle(self):
         pass
         # run_time_span = self.run_time_span
-        # self.send_log("脚本运行中，已经运行{}次，耗时{}小时{}分{}秒".format(self.circle_times, int(
+        # self.send_log("脚本运行中，已经运行{}次，耗时{}小时{}分{}秒".format(self.cycle_times, int(
         #     run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
 
     def on_stop(self):
         run_time_span = self.run_time_span
-        self.send_log("[{}] 脚本停止，实际运行{}次，耗时{}小时{}分{}秒".format(SVEggs.script_name(), self.circle_times, int(
+        self.send_log("[{}] 脚本停止，实际运行{}次，耗时{}小时{}分{}秒".format(SVEggs.script_name(), self.cycle_times, int(
             run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
 
     def on_error(self):
@@ -109,7 +109,7 @@ class SVEggs(BaseScript):
             self.step_4_hatch,
         ]
 
-    def _circle_init(self):
+    def _cycle_init(self):
         self._sv_open_menu = SVOpenMenu(self)
         self._sv_enter_menu_box = SVEnterMenuItem(
             self, menu_item=SVMenuItems.Box)
@@ -123,15 +123,15 @@ class SVEggs(BaseScript):
             return
         elif status == SubStepRunningStatus.Failed:
             self.send_log("{}函数返回状态为{}".format("open_menu", status.name))
-            self._re_circle()
+            self._re_cycle()
         elif status == SubStepRunningStatus.Timeout:
             self.send_log("{}函数返回状态为{}".format("open_menu", status.name))
-            self._re_circle()
+            self._re_cycle()
         elif status == SubStepRunningStatus.Finished:
             self._finished_process()
             return
         elif status == SubStepRunningStatus.OK:
-            self._circle_step_index += 1
+            self._cycle_step_index += 1
         else:
             self.send_log("{}函数返回状态为{}".format("open_menu", status.name))
             self._finished_process()
@@ -142,15 +142,15 @@ class SVEggs(BaseScript):
             return
         elif status == SubStepRunningStatus.Failed:
             self.send_log("{}函数返回状态为{}".format("enter_box", status.name))
-            self._re_circle()
+            self._re_cycle()
         elif status == SubStepRunningStatus.Timeout:
             self.send_log("{}函数返回状态为{}".format("enter_box", status.name))
-            self._re_circle()
+            self._re_cycle()
         elif status == SubStepRunningStatus.Finished:
             self._finished_process()
             return
         elif status == SubStepRunningStatus.OK:
-            self._circle_step_index += 1
+            self._cycle_step_index += 1
         else:
             self.send_log("{}函数返回状态为{}".format("enter_box", status.name))
             self._finished_process()
@@ -161,10 +161,10 @@ class SVEggs(BaseScript):
             return
         elif status == SubStepRunningStatus.Failed:
             self.send_log("{}函数返回状态为{}".format("box_opt", status.name))
-            self._re_circle()
+            self._re_cycle()
         elif status == SubStepRunningStatus.Timeout:
             self.send_log("{}函数返回状态为{}".format("box_opt", status.name))
-            self._re_circle()
+            self._re_cycle()
         elif status == SubStepRunningStatus.Finished:
             self._finished_process()
             return
@@ -172,10 +172,10 @@ class SVEggs(BaseScript):
             image = self.current_frame
             eggs = BoxMatch().current_party_eggs(image)
             if eggs <= 0:
-                self._circle_step_index = 0
+                self._cycle_step_index = 0
                 return
             self._sv_hatch_opt = SVHatchPokemon(self, eggs)
-            self._circle_step_index += 1
+            self._cycle_step_index += 1
         else:
             self.send_log("{}函数返回状态为{}".format("box_opt", status.name))
             self._finished_process()
@@ -186,15 +186,15 @@ class SVEggs(BaseScript):
             return
         elif status == SubStepRunningStatus.Failed:
             self.send_log("{}函数返回状态为{}".format("hatch", status.name))
-            self._re_circle()
+            self._re_cycle()
         elif status == SubStepRunningStatus.Timeout:
             self.send_log("{}函数返回状态为{}".format("hatch", status.name))
-            self._re_circle()
+            self._re_cycle()
         elif status == SubStepRunningStatus.Finished:
             self._finished_process()
             return
         elif status == SubStepRunningStatus.OK:
-            self._re_circle()
+            self._re_cycle()
         else:
             self.send_log("{}函数返回状态为{}".format("hatch", status.name))
             self._finished_process()
@@ -204,11 +204,11 @@ class SVEggs(BaseScript):
         self.macro_stop(block=True)
         self.macro_run("common.switch_sleep",
                        loop=1, paras={}, block=True, timeout=10)
-        self.send_log("[{}] 脚本完成，已运行{}次，耗时{}小时{}分{}秒".format(SVEggs.script_name(), self.circle_times, int(
+        self.send_log("[{}] 脚本完成，已运行{}次，耗时{}小时{}分{}秒".format(SVEggs.script_name(), self.cycle_times, int(
             run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
         self.stop_work()
 
-    def _re_circle(self):
+    def _re_cycle(self):
         self.macro_stop()
-        self.set_circle_continue()
-        self._circle_step_index = 0
+        self.set_cycle_continue()
+        self._cycle_step_index = 0

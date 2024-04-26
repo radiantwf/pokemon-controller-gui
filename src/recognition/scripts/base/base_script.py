@@ -16,8 +16,8 @@ import macro
 class WorkflowEnum(Enum):
     Begin = 0
     Preparation = 1
-    Circle = 2
-    AfterCircle = 3
+    Cycle = 2
+    AfterCycle = 3
     End = 4
 
 
@@ -54,19 +54,19 @@ class BaseScript(ABC):
         # 跳出循环后帧数
         self._after_cycle_frame_count = -1
         # 首次循环周期开始时间
-        self._first_circle_begin_time_monotonic = 0
+        self._first_cycle_begin_time_monotonic = 0
         # 当前循环开始时间
-        self._current_circle_begin_time_monotonic = 0
+        self._current_cycle_begin_time_monotonic = 0
         # 当前循环帧数
-        self._current_circle_frame_count = -1
+        self._current_cycle_frame_count = -1
         # 当前循环次数
-        self._circle_times = 0
+        self._cycle_times = 0
         # 循环重新开始标志
-        self._circle_continue_flag = False
+        self._cycle_continue_flag = False
         # 循环跳出标志
-        self._circle_break_flag = False
+        self._cycle_break_flag = False
         # 循环跳出时间
-        self._circle_break_time_monotonic = 0
+        self._cycle_break_time_monotonic = 0
         # 结束标志
         self._stop_flag = False
         # 上一帧获取时间
@@ -85,7 +85,7 @@ class BaseScript(ABC):
         pass
 
     @abstractmethod
-    def on_circle(self):
+    def on_cycle(self):
         pass
 
     @abstractmethod
@@ -144,9 +144,9 @@ class BaseScript(ABC):
     def current_frame_count(self):
         if self._running_status == WorkflowEnum.Preparation:
             return self._preparation_frame_count
-        elif self._running_status == WorkflowEnum.Circle:
-            return self._current_circle_frame_count
-        elif self._running_status == WorkflowEnum.AfterCircle:
+        elif self._running_status == WorkflowEnum.Cycle:
+            return self._current_cycle_frame_count
+        elif self._running_status == WorkflowEnum.AfterCycle:
             return self._after_cycle_frame_count
         elif self._running_status == WorkflowEnum.End:
             return 0
@@ -154,24 +154,24 @@ class BaseScript(ABC):
     # 循环次数
     @final
     @property
-    def circle_times(self) -> float:
-        return self._circle_times
+    def cycle_times(self) -> float:
+        return self._cycle_times
 
     # 当前循环持续时间
     @final
     @property
-    def current_circle_time_span(self) -> float:
-        if self._running_status != WorkflowEnum.Circle:
+    def current_cycle_time_span(self) -> float:
+        if self._running_status != WorkflowEnum.Cycle:
             return -1
-        return time.monotonic() - self._current_circle_begin_time_monotonic
+        return time.monotonic() - self._current_cycle_begin_time_monotonic
 
     # 首次循环持续时间
     @final
     @property
-    def first_circle_time_span(self) -> float:
-        if self._running_status != WorkflowEnum.Circle:
+    def first_cycle_time_span(self) -> float:
+        if self._running_status != WorkflowEnum.Cycle:
             return -1
-        return time.monotonic() - self._first_circle_begin_time_monotonic
+        return time.monotonic() - self._first_cycle_begin_time_monotonic
 
     # 运行持续时间
     @final
@@ -268,19 +268,19 @@ class BaseScript(ABC):
 
     # 开始循环
     @final
-    def set_circle_begin(self):
-        if self._first_circle_begin_time_monotonic == 0:
-            self._first_circle_begin_time_monotonic = time.monotonic()
+    def set_cycle_begin(self):
+        if self._first_cycle_begin_time_monotonic == 0:
+            self._first_cycle_begin_time_monotonic = time.monotonic()
 
     # 继续循环
     @final
-    def set_circle_continue(self):
-        self._circle_continue_flag = True
+    def set_cycle_continue(self):
+        self._cycle_continue_flag = True
 
     # 跳出循环
     @final
-    def set_circle_end(self):
-        self._circle_break_flag = True
+    def set_cycle_end(self):
+        self._cycle_break_flag = True
 
     # 结束
     @final
@@ -321,21 +321,21 @@ class BaseScript(ABC):
                     self._preparation_frame_count = 0
                 elif self._running_status == WorkflowEnum.Preparation:
                     self._preparation_frame_count += 1
-                elif self._running_status == WorkflowEnum.Circle:
-                    self._current_circle_frame_count += 1
-                elif self._running_status == WorkflowEnum.AfterCircle:
+                elif self._running_status == WorkflowEnum.Cycle:
+                    self._current_cycle_frame_count += 1
+                elif self._running_status == WorkflowEnum.AfterCycle:
                     self._after_cycle_frame_count += 1
 
                 self.process_frame()
 
-                if self._running_status == WorkflowEnum.Preparation and self._first_circle_begin_time_monotonic > 0:
-                    self._on_circle()
-                    self._first_circle_begin_time_monotonic = self._current_circle_begin_time_monotonic
-                elif self._running_status == WorkflowEnum.Circle and self._circle_continue_flag:
-                    self._circle_continue_flag = False
-                    self._on_circle()
-                elif self._running_status == WorkflowEnum.Circle and self._circle_break_flag:
-                    self._on_circle_break()
+                if self._running_status == WorkflowEnum.Preparation and self._first_cycle_begin_time_monotonic > 0:
+                    self._on_cycle()
+                    self._first_cycle_begin_time_monotonic = self._current_cycle_begin_time_monotonic
+                elif self._running_status == WorkflowEnum.Cycle and self._cycle_continue_flag:
+                    self._cycle_continue_flag = False
+                    self._on_cycle()
+                elif self._running_status == WorkflowEnum.Cycle and self._cycle_break_flag:
+                    self._on_cycle_break()
 
         except InterruptedError:
             return
@@ -348,18 +348,18 @@ class BaseScript(ABC):
             self._on_stop()
 
     @final
-    def _on_circle(self):
-        if self._running_status == WorkflowEnum.Circle:
-            self.on_circle()
-        self._running_status = WorkflowEnum.Circle
-        self._current_circle_begin_time_monotonic = time.monotonic()
-        self._current_circle_frame_count = 0
-        self._circle_times += 1
+    def _on_cycle(self):
+        if self._running_status == WorkflowEnum.Cycle:
+            self.on_cycle()
+        self._running_status = WorkflowEnum.Cycle
+        self._current_cycle_begin_time_monotonic = time.monotonic()
+        self._current_cycle_frame_count = 0
+        self._cycle_times += 1
 
     @final
-    def _on_circle_break(self):
-        self._running_status = WorkflowEnum.AfterCircle
-        self._circle_break_time_monotonic = time.monotonic()
+    def _on_cycle_break(self):
+        self._running_status = WorkflowEnum.AfterCycle
+        self._cycle_break_time_monotonic = time.monotonic()
         self._after_cycle_frame_count = 0
 
     @final

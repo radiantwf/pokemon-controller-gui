@@ -3,6 +3,8 @@ from recognition.scripts.base.base_script import BaseScript
 from recognition.scripts.base.base_sub_step import BaseSubStep, SubStepRunningStatus
 import cv2
 
+from recognition.scripts.games.pokemon.swsh.common.image_match.pokemon_detail_shiny_match import PokemonDetailShinyMatch
+
 
 class SWSHDAShinyKeepResult(Enum):
     NotKept = 0
@@ -17,14 +19,10 @@ class SWSHDAShinyKeep(BaseSubStep):
         self._process_step_index = 0
         self._check_counter = 0
         self._kept_result = SWSHDAShinyKeepResult.NotKept
-        self._shiny_keep_template = cv2.imread(
-            "resources/img/recognition/pokemon/swsh/dynamax_adventures/battle/lost_1.png")
-        self._shiny_keep_template = cv2.cvtColor(
-            self._shiny_keep_template, cv2.COLOR_BGR2GRAY)
-        self._shiny_icon_template = cv2.imread(
-            "resources/img/recognition/pokemon/swsh/common/pokemon_detail_shiny_icon.png")
-        self._shiny_icon_template = cv2.cvtColor(
-            self._shiny_icon_template, cv2.COLOR_BGR2GRAY)
+        self._keep_pokemon_label_template = cv2.imread(
+            "resources/img/recognition/pokemon/swsh/dynamax_adventures/keep_pokemon_label.png")
+        self._keep_pokemon_label_template = cv2.cvtColor(
+            self._keep_pokemon_label_template, cv2.COLOR_BGR2GRAY)
 
     @property
     def kept_result(self) -> SWSHDAShinyKeepResult:
@@ -54,7 +52,7 @@ class SWSHDAShinyKeep(BaseSubStep):
     def _process_steps_0(self):
         current_frame = self.script.current_frame
         gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
-        if not self._match_shiny_keep(gray_frame):
+        if not self._match_keep_pokemon_page(gray_frame):
             self.time_sleep(0.5)
             return
         if (not self._legendary_caught) and self._only_keep_legendary:
@@ -63,7 +61,7 @@ class SWSHDAShinyKeep(BaseSubStep):
             return
         self.script.macro_text_run(
             "TOP:0.1->0.4->A:0.1->0.4->BOTTOM:0.1->0.4->A:0.1", block=True)
-        self.time_sleep(1.5)
+        self.time_sleep(2)
         self._check_counter = 0
         self._process_step_index += 1
 
@@ -83,7 +81,7 @@ class SWSHDAShinyKeep(BaseSubStep):
             return
         else:
             self._check_counter += 1
-            if self._check_counter <= 4:
+            if self._check_counter < 4:
                 self.script.macro_text_run("TOP:0.1", block=True)
                 self.time_sleep(0.5)
                 return
@@ -105,24 +103,13 @@ class SWSHDAShinyKeep(BaseSubStep):
             "B:0.1->0.5->A:0.1->0.3->A:0.1->0.3->A:0.1", block=True)
         self.time_sleep(1)
 
-    def _match_shiny_keep(self, gray) -> bool:
+    def _match_keep_pokemon_page(self, gray) -> bool:
         crop_x, crop_y, crop_w, crop_h = 435, 25, 525, 75
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
         res = cv2.matchTemplate(
-            crop_gray, self._shiny_keep_template, cv2.TM_CCOEFF_NORMED)
+            crop_gray, self._keep_pokemon_label_template, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
         return max_val > 0.9
     
     def _match_shiny(self, gray) -> bool:
-        crop_x, crop_y, crop_w, crop_h = 66, 282, 40, 34
-        crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
-        res = cv2.matchTemplate(
-            crop_gray, self._shiny_icon_template, cv2.TM_CCOEFF_NORMED)
-        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-        return max_val > 0.8
-
-
-# boss战成功
-# 识别右上方 捉到宝可梦了!
-# 识别捉到宝可梦数量 0-4
-# 选择传说宝可梦（最后一只） 查看能力  A -> 下 -> A
+        return PokemonDetailShinyMatch().match_shiny(gray = gray, threshold=0.9)
