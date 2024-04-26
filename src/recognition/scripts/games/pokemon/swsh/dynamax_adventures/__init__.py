@@ -7,6 +7,7 @@ from recognition.scripts.games.pokemon.swsh.dynamax_adventures.step03_battle imp
 from recognition.scripts.games.pokemon.swsh.dynamax_adventures.step04_catch import SWSHDACatch, SWSHDACatchResult
 from recognition.scripts.games.pokemon.swsh.dynamax_adventures.step05_switch_pokemon import SWSHDASwitchPokemon
 from recognition.scripts.games.pokemon.swsh.dynamax_adventures.step06_shiny_keep import SWSHDAShinyKeep, SWSHDAShinyKeepResult
+from recognition.scripts.games.pokemon.swsh.dynamax_adventures.step07_finish import SWSHDAFinish
 from recognition.scripts.parameter_struct import ScriptParameter
 from recognition.scripts.base.base_script import BaseScript, WorkflowEnum
 from recognition.scripts.base.base_sub_step import SubStepRunningStatus
@@ -41,6 +42,9 @@ class SWSHDABallType(Enum):
     BeastBall = "究极球"
 
 
+TRACE_LOG = False
+
+
 class SwshDynamaxAdventures(BaseScript):
     def __init__(self, stop_event: multiprocessing.Event, frame_queue: multiprocessing.Queue, controller_input_action_queue: multiprocessing.Queue, paras: dict = None):
         super().__init__(SwshDynamaxAdventures.script_name(), stop_event,
@@ -48,6 +52,9 @@ class SwshDynamaxAdventures(BaseScript):
         self._prepare_step_index = -1
         self._cycle_step_index = -1
         self._jump_next_frame = False
+
+        self._shiny_count = 0
+        self._win_count = 0
         self.set_paras(paras)
 
         # 获取脚本参数
@@ -193,13 +200,13 @@ class SwshDynamaxAdventures(BaseScript):
 
     def on_cycle(self):
         run_time_span = self.run_time_span
-        self.send_log("脚本运行中，已经运行{}次，耗时{}小时{}分{}秒".format(self.cycle_times, int(
-            run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
+        self.send_log("脚本运行中，已经运行{}次，成功攻略大冒险{}次，带回闪光宝可梦{}只，耗时{}小时{}分{}秒".format(self.cycle_times, self._win_count,
+                      self._shiny_count, int(run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
 
     def on_stop(self):
         run_time_span = self.run_time_span
-        self.send_log("[{}] 脚本停止，实际运行{}次，耗时{}小时{}分{}秒".format(SwshDynamaxAdventures.script_name(), self.cycle_times, int(
-            run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
+        self.send_log("[{}] 脚本停止，实际运行{}次，成功攻略大冒险{}次，带回闪光宝可梦{}只，耗时{}小时{}分{}秒".format(SwshDynamaxAdventures.script_name(
+        ), self.cycle_times, self._win_count, self._shiny_count, int(run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
 
     def on_error(self):
         pass
@@ -245,7 +252,7 @@ class SwshDynamaxAdventures(BaseScript):
         self._swsh_da_catch = None
         self._swsh_da_switch_pokemon = None
         self._swsh_da_shiny_keep = None
-        self._swsh_da_finish = None
+        self._swsh_da_finish = SWSHDAFinish(self)
 
     def _cycle_init(self):
         self._battle_index = 0
@@ -255,7 +262,7 @@ class SwshDynamaxAdventures(BaseScript):
         self._swsh_da_catch = None
         self._swsh_da_switch_pokemon = None
         self._swsh_da_shiny_keep = None
-        self._swsh_da_finish = None
+        self._swsh_da_finish = SWSHDAFinish(self)
 
     def step_1_start(self):
         status = self._swsh_da_start.run()
@@ -268,7 +275,8 @@ class SwshDynamaxAdventures(BaseScript):
             self._swsh_da_choose_path = SWSHDAChoosePath(
                 self, True, True, battle_index=self._battle_index, path=self._choose_path[self._battle_index],)
             self._cycle_step_index += 1
-            self.send_log("开始选择路径")
+            if TRACE_LOG:
+                self.send_log("开始选择路径")
         else:
             self.send_log("{}函数返回状态为{}".format("swsh_da_start", status.name))
             self._finished_process()
@@ -281,7 +289,8 @@ class SwshDynamaxAdventures(BaseScript):
             self._swsh_da_battle = SWSHDABattle(
                 self, battle_index=self._battle_index)
             self._cycle_step_index += 1
-            self.send_log("选择路径完成，准备战斗")
+            if TRACE_LOG:
+                self.send_log("选择路径完成，准备战斗")
         else:
             self.send_log("{}函数返回状态为{}".format(
                 "swsh_da_choose_path", status.name))
@@ -300,22 +309,27 @@ class SwshDynamaxAdventures(BaseScript):
                     self._catch_ball[self._battle_index] != SWSHDABallType.NotCatch.value)
                 self._swsh_da_catch = SWSHDACatch(
                     self, battle_index=self._battle_index, catch=catch_flag, target_ball=self._catch_ball[self._battle_index])
+                self._win_count += 1
                 self._cycle_step_index += 1
-                self.send_log("胜利，准备捕捉")
+                if TRACE_LOG:
+                    self.send_log("胜利，准备捕捉")
                 return
             elif self._swsh_da_battle.battle_status == SWSHDABattleResult.Lost1:
                 self._cycle_step_index = 5
                 self._swsh_da_shiny_keep = SWSHDAShinyKeep(
                     self, only_keep_legendary=self._only_keep_legendary, legendary_caught=True)
-                self.send_log("失败1，带走宝可梦")
+                if TRACE_LOG:
+                    self.send_log("失败1，带走宝可梦")
                 return
             elif self._swsh_da_battle.battle_status == SWSHDABattleResult.Lost2:
                 self._cycle_step_index = 6
-                self.send_log("失败2，准备结束")
+                if TRACE_LOG:
+                    self.send_log("失败2，准备结束")
                 return
             elif self._swsh_da_battle.battle_status == SWSHDABattleResult.Lost3:
                 self._cycle_step_index = 6
-                self.send_log("失败3，准备结束")
+                if TRACE_LOG:
+                    self.send_log("失败3，准备结束")
                 return
         else:
             self.send_log("{}函数返回状态为{}".format("swsh_da_battle", status.name))
@@ -334,20 +348,23 @@ class SwshDynamaxAdventures(BaseScript):
                     self._cycle_step_index = 5
                     self._swsh_da_shiny_keep = SWSHDAShinyKeep(
                         self, only_keep_legendary=self._only_keep_legendary, legendary_caught=True)
-                    self.send_log("传说宝可梦捕捉成功")
+                    if TRACE_LOG:
+                        self.send_log("传说宝可梦捕捉成功")
                     return
                 else:
                     switch_flag = self._switch_pokemon[self._battle_index]
                     self._swsh_da_switch_pokemon = SWSHDASwitchPokemon(
                         self, battle_index=self._battle_index, switch=switch_flag)
                     self._cycle_step_index += 1
-                    self.send_log("捕捉成功，准备切换宝可梦")
+                    if TRACE_LOG:
+                        self.send_log("捕捉成功，准备切换宝可梦")
             else:
                 self._battle_index += 1
                 self._swsh_da_choose_path = SWSHDAChoosePath(
                     self, leave_event=self._path_leave_event[self._battle_index - 1], enter_event=self._path_enter_event[self._battle_index], battle_index=self._battle_index, path=self._choose_path[self._battle_index],)
                 self._cycle_step_index = 1
-                self.send_log("未捕捉，准备重新选择路径")
+                if TRACE_LOG:
+                    self.send_log("未捕捉，准备重新选择路径")
             return
         else:
             self.send_log("{}函数返回状态为{}".format("swsh_da_catch", status.name))
@@ -366,7 +383,8 @@ class SwshDynamaxAdventures(BaseScript):
             self._swsh_da_choose_path = SWSHDAChoosePath(
                 self, leave_event=self._path_leave_event[self._battle_index - 1], enter_event=self._path_enter_event[self._battle_index], battle_index=self._battle_index, path=0,)
             self._cycle_step_index = 1
-            self.send_log("切换宝可梦成功，准备重新选择路径")
+            if TRACE_LOG:
+                self.send_log("切换宝可梦成功，准备重新选择路径")
             return
         else:
             self.send_log("{}函数返回状态为{}".format(
@@ -379,11 +397,18 @@ class SwshDynamaxAdventures(BaseScript):
             return
         elif status == SubStepRunningStatus.OK:
             if self._swsh_da_shiny_keep.kept_result == SWSHDAShinyKeepResult.Kept:
-                self.send_log("闪光宝可梦保留成功")
+                self.send_log("非传说闪光宝可梦保留成功")
+                self._shiny_count += 1
+                self._cycle_step_index += 1
+                return
+            elif self._swsh_da_shiny_keep.kept_result == SWSHDAShinyKeepResult.KeptLegendary:
+                self._shiny_count += 1
+                self.send_log("检测到传说宝可梦闪光，请手动确认")
                 self._finished_process()
                 return
             else:
-                self.send_log("未检测到闪光宝可梦")
+                if TRACE_LOG:
+                    self.send_log("未检测到闪光宝可梦")
                 if self._not_keep_restart_flag:
                     self.macro_run("recognition.pokemon.swsh.common.restart_game",
                                    1, {"secondary": str(self._secondary)}, True, None)
@@ -397,4 +422,13 @@ class SwshDynamaxAdventures(BaseScript):
             self._finished_process()
 
     def step_7_finish(self):
-        self._cycle_step_index += 1
+        status = self._swsh_da_finish.run()
+        if status == SubStepRunningStatus.Running:
+            return
+        elif status == SubStepRunningStatus.OK:
+            self._cycle_step_index += 1
+            return
+        else:
+            self.send_log("{}函数返回状态为{}".format(
+                "swsh_da_finish", status.name))
+            self._finished_process()

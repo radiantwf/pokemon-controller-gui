@@ -11,6 +11,10 @@ class SWSHDAFinish(BaseSubStep):
         super().__init__(script, timeout)
         self._process_step_index = 0
         self._check_counter = 0
+        self._get_rewards_label_template = cv2.imread(
+            "resources/img/recognition/pokemon/swsh/dynamax_adventures/get_rewards_label.png")
+        self._get_rewards_label_template = cv2.cvtColor(
+            self._get_rewards_label_template, cv2.COLOR_BGR2GRAY)
 
     def _process(self) -> SubStepRunningStatus:
         self._status = self.running_status
@@ -36,9 +40,20 @@ class SWSHDAFinish(BaseSubStep):
     def _process_steps_0(self):
         current_frame = self.script.current_frame
         gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
+        if not self._match_get_rewards_page(gray_frame):
+            self.time_sleep(0.5)
+            return
         self._process_step_index += 1
 
     def _process_steps_1(self):
-        current_frame = self.script.current_frame
-        gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
+        self.script.macro_text_run("A:0.1->2.5->B:0.1->0.3->A:0.1", block=True)
+        self.time_sleep(0.5)
         self._process_step_index += 1
+
+    def _match_get_rewards_page(self, gray, threshold=0.9):
+        crop_x, crop_y, crop_w, crop_h = 435, 25, 525, 75
+        crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
+        res = cv2.matchTemplate(
+            crop_gray, self._get_rewards_label_template, cv2.TM_CCOEFF_NORMED)
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+        return max_val >= threshold

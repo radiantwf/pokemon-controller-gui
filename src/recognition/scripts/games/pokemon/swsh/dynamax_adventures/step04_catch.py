@@ -65,7 +65,7 @@ class SWSHDACatch(BaseSubStep):
         # 识别球种
         current_ball = self._ocr_current_ball(gray_frame)
         num = self._ocr_current_ball_left_num(gray_frame)
-        print(current_ball, num)
+        # print(current_ball, num)
         if current_ball == "":
             return
         else:

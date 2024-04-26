@@ -9,6 +9,7 @@ from recognition.scripts.games.pokemon.swsh.common.image_match.pokemon_detail_sh
 class SWSHDAShinyKeepResult(Enum):
     NotKept = 0
     Kept = 1
+    KeptLegendary = 2
 
 
 class SWSHDAShinyKeep(BaseSubStep):
@@ -69,7 +70,6 @@ class SWSHDAShinyKeep(BaseSubStep):
         current_frame = self.script.current_frame
         gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
         if self._match_shiny(gray_frame):
-            self._kept_result = SWSHDAShinyKeepResult.Kept
             self._quit_pokemon_detail()
             self._keep()
             self._process_step_index += 1
@@ -96,20 +96,25 @@ class SWSHDAShinyKeep(BaseSubStep):
         self.time_sleep(2)
 
     def _keep(self):
-        pass
+        if self._check_counter == 0:
+            self._kept_result = SWSHDAShinyKeepResult.KeptLegendary
+        else:
+            self.script.macro_text_run("A:0.05->0.5->A:0.05->0.5->A:0.05->0.2->A:0.05->0.2->A:0.05", block=True)
+            self.time_sleep(0.5)
+            self._kept_result = SWSHDAShinyKeepResult.Kept
 
     def _not_keep(self):
         self.script.macro_text_run(
             "B:0.1->0.5->A:0.1->0.3->A:0.1->0.3->A:0.1", block=True)
         self.time_sleep(1)
 
-    def _match_keep_pokemon_page(self, gray) -> bool:
+    def _match_keep_pokemon_page(self, gray, threshold=0.9) -> bool:
         crop_x, crop_y, crop_w, crop_h = 435, 25, 525, 75
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
         res = cv2.matchTemplate(
             crop_gray, self._keep_pokemon_label_template, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-        return max_val > 0.9
+        return max_val >= threshold
     
     def _match_shiny(self, gray) -> bool:
         return PokemonDetailShinyMatch().match_shiny(gray = gray, threshold=0.9)
