@@ -57,7 +57,7 @@ class SwshDynamaxAdventures(BaseScript):
         self._secondary = self.get_para(
             "secondary") if "secondary" in paras else False
         self._not_keep_restart_flag = self.get_para(
-            "not_keep_restart_flag") if "not_keep_restart_flag" in paras else False
+            "not_keep_restart") if "not_keep_restart" in paras else False
         self._only_keep_legendary = self.get_para(
             "only_keep_legendary") if "only_keep_legendary" in paras else False
         self._choose_path = [self.get_para("choose_path_1") if "choose_path_1" in paras else 0,
@@ -99,8 +99,8 @@ class SwshDynamaxAdventures(BaseScript):
             "durations", float, -1, "运行时长（分钟）")
         paras["only_keep_legendary"] = ScriptParameter(
             "only_keep_legendary", bool, "False", "只带走传说宝可梦", ["False", "True"])
-        paras["not_keep_restart_flag"] = ScriptParameter(
-            "not_keep_restart_flag", bool, "False", "未带走传说宝可梦时重启游戏（有极巨石惩罚）", ["False", "True"])
+        paras["not_keep_restart"] = ScriptParameter(
+            "not_keep_restart", bool, "False", "未带走宝可梦时重启游戏（有极巨石惩罚）", ["False", "True"])
         paras["secondary"] = ScriptParameter(
             "secondary", bool, "False", "副设备", ["False", "True"])
 
@@ -381,7 +381,7 @@ class SwshDynamaxAdventures(BaseScript):
             else:
                 self.send_log("未检测到闪光宝可梦")
                 if self._not_keep_restart_flag:
-                    self.macro_run("recognition.pokemon.swsh.common.not_keep_restart_flag",
+                    self.macro_run("recognition.pokemon.swsh.common.restart_game",
                                 1, {"secondary": str(self._secondary)}, True, None)
                     self.set_cycle_continue()
                     return

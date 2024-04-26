@@ -1,11 +1,15 @@
 from recognition.scripts.base.base_script import BaseScript
 from recognition.scripts.base.base_sub_step import BaseSubStep, SubStepRunningStatus
-
+import cv2
 
 class SWSHDAStart(BaseSubStep):
     def __init__(self, script: BaseScript, timeout: float = -1) -> None:
         super().__init__(script, timeout)
         self._process_step_index = 0
+        self._initial_chat_template = cv2.imread(
+            "resources/img/recognition/pokemon/swsh/dynamax_adventures/initial_chat.png")
+        self._initial_chat_template = cv2.cvtColor(
+            self._initial_chat_template, cv2.COLOR_BGR2GRAY)
 
     def _process(self) -> SubStepRunningStatus:
         self._status = self.running_status
@@ -31,7 +35,13 @@ class SWSHDAStart(BaseSubStep):
         ]
 
     def _process_step_0(self):
-        self._process_step_index += 1
+        current_frame = self.script.current_frame
+        gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
+        if self._match_initial_chat(gray_frame):
+            self._process_step_index += 1
+            return
+        self.script.macro_text_run("A:0.1", block=True)
+        self.time_sleep(0.4)
 
     def _process_step_1(self):
         self.script.macro_text_run(
@@ -49,13 +59,11 @@ class SWSHDAStart(BaseSubStep):
         self.time_sleep(18)
         self._process_step_index += 1
 
-# 对话 A
-# 非正常退出，没有惩罚 3次A
-# 有惩罚  ？
 
-# 现在就出发 A -> 2次A
-# 选择挑战对象 A
-# 保存进度 A -> 是（A）
-
-# 极巨大冒险界面 发起单人挑战 下 -> A
-# 选择宝可梦 A —> 19s 左右
+    def _match_initial_chat(self, gray, threshold=0.9) -> bool:
+        crop_x, crop_y, crop_w, crop_h = 160,431,636,95
+        crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
+        res = cv2.matchTemplate(
+            crop_gray, self._initial_chat_template, cv2.TM_CCOEFF_NORMED)
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+        return max_val >= threshold

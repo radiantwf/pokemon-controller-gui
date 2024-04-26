@@ -21,7 +21,7 @@ class ChatBoxMatch:
             self._select_box_template, cv2.COLOR_BGR2GRAY)
 
     def match_next_arrow(self, gray, threshold=0.9) -> bool:
-        x, y, w, h = 738, 488, 31, 31
+        x, y, w, h = 739, 479, 31, 43
         crop_gray = gray[y:y+h, x:x+w]
         match = cv2.matchTemplate(
             crop_gray, self._next_arrow_template, cv2.TM_CCOEFF_NORMED)
