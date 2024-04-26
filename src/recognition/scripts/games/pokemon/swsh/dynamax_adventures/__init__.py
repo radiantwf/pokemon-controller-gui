@@ -70,11 +70,8 @@ class SwshDynamaxAdventures(BaseScript):
                                   self.get_para(
                                       "path_enter_event_3") if "path_enter_event_3" in paras else True,
                                   self.get_para("path_event_4") if "path_event_4" in paras else True]
-        self._path_leave_event = [self.get_para("path_leave_event_1") if "path_leave_event_1" in paras else True,
-                                  self.get_para(
-            "path_leave_event_2") if "path_leave_event_2" in paras else True,
-            self.get_para(
-            "path_leave_event_3") if "path_leave_event_3" in paras else True]
+        self._path_leave_event = [True, self.get_para("path_leave_event_2") if "path_leave_event_2" in paras else True,
+                                  self.get_para("path_leave_event_3") if "path_leave_event_3" in paras else True]
         self._catch_ball = [self.get_para("catch_ball_1") if "catch_ball_1" in paras else SWSHDABallType.PokeBall.value,
                             self.get_para(
                                 "catch_ball_2") if "catch_ball_2" in paras else SWSHDABallType.PokeBall.value,
@@ -113,8 +110,6 @@ class SwshDynamaxAdventures(BaseScript):
             "choose_path_1", int, 0, "战斗1 选择路径（0:默认路径，负数:向左移动，正数:向右移动，数字:移动次数）")
         paras["catch_ball_1"] = ScriptParameter(
             "catch_ball_1", str, SWSHDABallType.PokeBall.value, "战斗1 捕捉球种", [e.value for e in SWSHDABallType])
-        paras["path_leave_event_1"] = ScriptParameter(
-            "path_leave_event_1", bool, "True", "战斗1 离开战斗路径事件（True:连点A False:连点B）", ["False", "True"])
         paras["switch_pokemon_1"] = ScriptParameter(
             "switch_pokemon_1", bool, "True", "战斗1 是否更换使用宝可梦（未捕捉跳过此步骤）", ["False", "True"])
 
@@ -382,7 +377,7 @@ class SwshDynamaxAdventures(BaseScript):
                 self.send_log("未检测到闪光宝可梦")
                 if self._not_keep_restart_flag:
                     self.macro_run("recognition.pokemon.swsh.common.restart_game",
-                                1, {"secondary": str(self._secondary)}, True, None)
+                                   1, {"secondary": str(self._secondary)}, True, None)
                     self.set_cycle_continue()
                     return
                 self._cycle_step_index += 1
