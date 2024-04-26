@@ -31,7 +31,7 @@ class ChatBoxMatch:
         return False
 
     def match_select_box(self, gray, threshold=0.8) -> bool:
-        x, y, w, h = 738, 488, 31, 31
+        x, y, w, h = 708, 406, 89, 82
         crop_gray = gray[y:y+h, x:x+w]
         match = cv2.matchTemplate(
             crop_gray, self._select_box_template, cv2.TM_CCOEFF_NORMED)
