@@ -44,10 +44,10 @@ class SWSHDABallType(Enum):
 
 class SWSHDAWhenRestart(Enum):
     Never = "不重启"
-    NotShiny = "没有闪光宝可梦未重启(已确认最佳路线、保留过程闪光宝可梦)"
-    NotShinyLegendary = "传说宝可梦未闪光重启(已确认最佳路线)"
     NotShiny_And_WonLegendary = "未闪光，击败传说宝可梦重启(寻找最佳路线，保留过程闪光宝可梦)"
     NotShinyLegendary_And_WonLegendary = "传说未闪光，击败传说宝可梦重启(寻找最佳路线)"
+    NotShinyLegendary = "传说宝可梦未闪光重启(已确认最佳路线)"
+    NotShiny = "没有闪光宝可梦未重启(已确认最佳路线、保留过程闪光宝可梦)"
 
 
 TRACE_LOG = False
@@ -438,6 +438,7 @@ class SwshDynamaxAdventures(BaseScript):
                 return
             if TRACE_LOG:
                 self.send_log("未检测到闪光宝可梦")
+
             if self._not_keep_restart_flag == SWSHDAWhenRestart.NotShiny.value:
                 self.send_log("未检测到闪光宝可梦，重启开始下一轮大冒险")
                 self.macro_run("recognition.pokemon.swsh.common.restart_game",
