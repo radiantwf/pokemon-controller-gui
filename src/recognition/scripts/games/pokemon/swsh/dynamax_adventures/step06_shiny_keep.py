@@ -96,7 +96,7 @@ class SWSHDAShinyKeep(BaseSubStep):
         self.time_sleep(2)
 
     def _keep(self):
-        if self._check_counter == 0:
+        if self._check_counter == 0 and self._legendary_caught:
             self._kept_result = SWSHDAShinyKeepResult.KeptLegendary
         else:
             self.script.macro_text_run("A:0.05->0.5->A:0.05->0.5->A:0.05->0.2->A:0.05->0.2->A:0.05", block=True)
