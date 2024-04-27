@@ -44,10 +44,10 @@ class SWSHDABallType(Enum):
 
 class SWSHDAWhenRestart(Enum):
     Never = "不重启"
-    NotShiny = "没有闪光宝可梦未重启"
-    NotShinyLegendary = "传说宝可梦未闪光重启"
-    NotShiny_And_WonLegendary = "没有闪光宝可梦、击败传说宝可梦重启(寻找最佳路线)"
-    NotShinyLegendary_And_WonLegendary = "传说宝可梦未闪光、击败传说宝可梦重启(寻找最佳路线)"
+    NotShiny = "没有闪光宝可梦未重启(已确认最佳路线、保留过程闪光宝可梦)"
+    NotShinyLegendary = "传说宝可梦未闪光重启(已确认最佳路线)"
+    NotShiny_And_WonLegendary = "未闪光，击败传说宝可梦重启(寻找最佳路线，保留过程闪光宝可梦)"
+    NotShinyLegendary_And_WonLegendary = "传说未闪光，击败传说宝可梦重启(寻找最佳路线)"
 
 
 TRACE_LOG = False
@@ -420,6 +420,11 @@ class SwshDynamaxAdventures(BaseScript):
         if status == SubStepRunningStatus.Running:
             return
         elif status == SubStepRunningStatus.OK:
+            if self._swsh_da_shiny_keep.kept_result == SWSHDAShinyKeepResult.KeptLegendary.value:
+                self._shiny_count += 1
+                self.send_log("检测到传说宝可梦闪光，请手动确认")
+                self._finished_process()
+                return
             if self._swsh_da_shiny_keep.kept_result == SWSHDAShinyKeepResult.Kept:
                 if self._not_keep_restart_flag == SWSHDAWhenRestart.NotShinyLegendary_And_WonLegendary.value and self._legendary_caught:
                     self.send_log("成功击败传说宝可梦，传说宝可梦未闪光（已忽略其他闪光宝可梦），重启开始下一轮大冒险")
@@ -431,28 +436,22 @@ class SwshDynamaxAdventures(BaseScript):
                 self._shiny_count += 1
                 self._cycle_step_index += 1
                 return
-            elif self._swsh_da_shiny_keep.kept_result == SWSHDAShinyKeepResult.KeptLegendary.value:
-                self._shiny_count += 1
-                self.send_log("检测到传说宝可梦闪光，请手动确认")
-                self._finished_process()
+            if TRACE_LOG:
+                self.send_log("未检测到闪光宝可梦")
+            if self._not_keep_restart_flag == SWSHDAWhenRestart.NotShiny.value:
+                self.send_log("未检测到闪光宝可梦，重启开始下一轮大冒险")
+                self.macro_run("recognition.pokemon.swsh.common.restart_game",
+                                1, {"secondary": str(self._secondary)}, True, None)
+                self._re_cycle()
                 return
-            else:
-                if TRACE_LOG:
-                    self.send_log("未检测到闪光宝可梦")
-                if self._not_keep_restart_flag == SWSHDAWhenRestart.NotShiny.value:
-                    self.send_log("未检测到闪光宝可梦，重启开始下一轮大冒险")
-                    self.macro_run("recognition.pokemon.swsh.common.restart_game",
-                                   1, {"secondary": str(self._secondary)}, True, None)
-                    self._re_cycle()
-                    return
-                if (self._not_keep_restart_flag == SWSHDAWhenRestart.NotShiny_And_WonLegendary.value or self._not_keep_restart_flag == SWSHDAWhenRestart.NotShinyLegendary_And_WonLegendary.value) and self._legendary_caught:
-                    self.send_log("成功击败传说宝可梦，未检测到闪光宝可梦，重启开始下一轮大冒险")
-                    self.macro_run("recognition.pokemon.swsh.common.restart_game",
-                                   1, {"secondary": str(self._secondary)}, True, None)
-                    self._re_cycle()
-                    return
-                self._cycle_step_index += 1
+            if (self._not_keep_restart_flag == SWSHDAWhenRestart.NotShiny_And_WonLegendary.value or self._not_keep_restart_flag == SWSHDAWhenRestart.NotShinyLegendary_And_WonLegendary.value) and self._legendary_caught:
+                self.send_log("成功击败传说宝可梦，未检测到闪光宝可梦，重启开始下一轮大冒险")
+                self.macro_run("recognition.pokemon.swsh.common.restart_game",
+                                1, {"secondary": str(self._secondary)}, True, None)
+                self._re_cycle()
                 return
+            self._cycle_step_index += 1
+            return
         else:
             self.send_log("{}函数返回状态为{}".format(
                 "swsh_da_shiny_keep", status.name))

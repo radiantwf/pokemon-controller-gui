@@ -107,10 +107,9 @@ class SWSHDABattle(BaseSubStep):
             self._battle_status = SWSHDABattleResult.Lost3
             return
         else:
-            self.time_sleep(0.5)
+            self.time_sleep(1)
 
     # 识别 宝可梦、逃走 按钮，操作：A
-
     def _match_action(self, gray):
         crop_x, crop_y, crop_w, crop_h = 887, 421, 66, 110
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
@@ -119,9 +118,8 @@ class SWSHDABattle(BaseSubStep):
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
         if max_val > 0.9:
             self.script.macro_text_run("A:0.1", block=True)
-            self.time_sleep(0.5)
-
             self._last_action_time_monotonic = time.monotonic()
+            self.time_sleep(0.5)
             return True
         return False
 
@@ -133,9 +131,10 @@ class SWSHDABattle(BaseSubStep):
             crop_gray, self._dynamax_icon_template, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
         if max_val > 0.9:
-            self.script.macro_text_run("LEFT:0.1->0.4->A:0.05->0.1->A:0.05", block=True)
-            self.time_sleep(0.5)
+            self.script.macro_text_run(
+                "LEFT:0.1->0.4->A:0.05->0.1->A:0.05", block=True)
             self._last_action_time_monotonic = time.monotonic()
+            self.time_sleep(0.5)
             return True
         return False
 
@@ -198,52 +197,56 @@ class SWSHDABattle(BaseSubStep):
             elif move_times > 0:
                 self.script.macro_text_run(
                     "BOTTOM:0.05->0.25", block=True, loop=move_times)
-            self.script.macro_text_run("A:0.1->0.3", block=True, loop=20)
-            self.time_sleep(0.5)
+            self.script.macro_text_run("A:0.1->0.3", block=True, loop=10)
+            self.script.macro_text_run(
+                "BOTTOM:0.1->0.3->A:0.1->0.3", block=True)
+            self.script.macro_text_run(
+                "RIGHT:0.1->0.3->A:0.1->0.3", block=True, loop=4)
+            self.time_sleep(1)
             self._last_action_time_monotonic = time.monotonic()
             return True
         else:
             return False
 
     # 识别 胜利
-    def _match_won(self, gray):
+    def _match_won(self, gray, threshold=0.9):
         crop_x, crop_y, crop_w, crop_h = 748, 445, 204, 90
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
         res = cv2.matchTemplate(
             crop_gray, self._won_template, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-        if max_val > 0.9:
+        if max_val >= threshold:
             self._last_action_time_monotonic = time.monotonic()
             return True
         return False
 
     # 识别 失败1
-    def _match_lost_1(self, gray):
+    def _match_lost_1(self, gray, threshold=0.9):
         crop_x, crop_y, crop_w, crop_h = 435, 25, 525, 75
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
         res = cv2.matchTemplate(
             crop_gray, self._lost_1_template, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-        if max_val > 0.9:
+        if max_val >= threshold:
             self._last_action_time_monotonic = time.monotonic()
             return True
         return False
 
     # 识别 失败2
-    def _match_lost_2(self, gray):
+    def _match_lost_2(self, gray, threshold=0.9):
         crop_x, crop_y, crop_w, crop_h = 435, 25, 525, 75
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
         res = cv2.matchTemplate(
             crop_gray, self._lost_2_template, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-        if max_val > 0.9:
+        if max_val >= threshold:
             self._last_action_time_monotonic = time.monotonic()
             return True
         return False
 
     # 识别 失败3
-    def _match_lost_3(self, gray):
-        if ChatBoxMatch().match_next_arrow(gray=gray, threshold=0.9):
+    def _match_lost_3(self, gray, threshold=0.9):
+        if ChatBoxMatch().match_next_arrow(gray=gray, threshold=threshold):
             self._last_action_time_monotonic = time.monotonic()
             return True
         return False
