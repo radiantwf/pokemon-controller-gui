@@ -42,6 +42,14 @@ class SWSHDABallType(Enum):
     BeastBall = "究极球"
 
 
+class SWSHDAWhenRestart(Enum):
+    Never = "不重启"
+    NotShiny = "没有闪光宝可梦未重启"
+    NotShinyLegendary = "传说宝可梦未闪光重启"
+    NotShiny_And_WonLegendary = "没有闪光宝可梦、击败传说宝可梦重启(寻找最佳路线)"
+    NotShinyLegendary_And_WonLegendary = "传说宝可梦未闪光、击败传说宝可梦重启(寻找最佳路线)"
+
+
 TRACE_LOG = False
 
 
@@ -63,7 +71,7 @@ class SwshDynamaxAdventures(BaseScript):
         self._secondary = self.get_para(
             "secondary") if "secondary" in paras else False
         self._not_keep_restart_flag = self.get_para(
-            "not_keep_restart") if "not_keep_restart" in paras else False
+            "not_keep_restart") if "not_keep_restart" in paras else SWSHDAWhenRestart.Never.value
         self._only_keep_legendary = self.get_para(
             "only_keep_legendary") if "only_keep_legendary" in paras else False
         self._choose_path = [self.get_para("choose_path_1") if "choose_path_1" in paras else 0,
@@ -103,7 +111,7 @@ class SwshDynamaxAdventures(BaseScript):
         paras["only_keep_legendary"] = ScriptParameter(
             "only_keep_legendary", bool, "False", "只带走传说宝可梦", ["False", "True"])
         paras["not_keep_restart"] = ScriptParameter(
-            "not_keep_restart", bool, "False", "未带走宝可梦时重启游戏（有极巨石惩罚）", ["False", "True"])
+            "not_keep_restart", str, SWSHDAWhenRestart.NotShiny_And_WonLegendary.value, "重启游戏选项（有极巨石惩罚）", [e.value for e in SWSHDAWhenRestart])
         paras["secondary"] = ScriptParameter(
             "secondary", bool, "False", "副设备", ["False", "True"])
 
@@ -246,6 +254,7 @@ class SwshDynamaxAdventures(BaseScript):
         self.set_cycle_continue()
         self._cycle_step_index = 0
         self._battle_index = 0
+        self._legendary_caught = False
         self._swsh_da_start = SWSHDAStart(self, timeout=90)
         self._swsh_da_choose_path = None
         self._swsh_da_battle = None
@@ -256,6 +265,7 @@ class SwshDynamaxAdventures(BaseScript):
 
     def _cycle_init(self):
         self._battle_index = 0
+        self._legendary_caught = False
         self._swsh_da_start = SWSHDAStart(self, timeout=90)
         self._swsh_da_choose_path = None
         self._swsh_da_battle = None
@@ -305,6 +315,8 @@ class SwshDynamaxAdventures(BaseScript):
             self._finished_process()
         elif status == SubStepRunningStatus.OK:
             if self._swsh_da_battle.battle_status == SWSHDABattleResult.Won:
+                if self._battle_index >= 3:
+                    self._legendary_caught = True
                 catch_flag = (
                     self._catch_ball[self._battle_index] != SWSHDABallType.NotCatch.value)
                 self._swsh_da_catch = SWSHDACatch(
@@ -313,10 +325,22 @@ class SwshDynamaxAdventures(BaseScript):
                 if TRACE_LOG:
                     self.send_log("胜利，准备捕捉")
                 return
-            elif self._swsh_da_battle.battle_status == SWSHDABattleResult.Lost1:
+            if self._swsh_da_battle.battle_status == SWSHDABattleResult.Lost3:
+                self._re_cycle()
+                if TRACE_LOG:
+                    self.send_log("失败3，重启开始下一轮大冒险")
+                return
+            if self._not_keep_restart_flag == SWSHDAWhenRestart.NotShinyLegendary.value:
+                if TRACE_LOG:
+                    self.send_log("未击败传说宝可梦，重启开始下一轮大冒险")
+                self.macro_run("recognition.pokemon.swsh.common.restart_game",
+                               1, {"secondary": str(self._secondary)}, True, None)
+                self._re_cycle()
+                return
+            if self._swsh_da_battle.battle_status == SWSHDABattleResult.Lost1:
                 self._cycle_step_index = 5
                 self._swsh_da_shiny_keep = SWSHDAShinyKeep(
-                    self, only_keep_legendary=self._only_keep_legendary, legendary_caught=True)
+                    self, only_keep_legendary=self._only_keep_legendary, legendary_caught=self._legendary_caught)
                 if TRACE_LOG:
                     self.send_log("失败1，带走宝可梦")
                 return
@@ -326,9 +350,9 @@ class SwshDynamaxAdventures(BaseScript):
                     self.send_log("失败2，准备结束")
                 return
             elif self._swsh_da_battle.battle_status == SWSHDABattleResult.Lost3:
-                self._cycle_step_index = 6
+                self._re_cycle()
                 if TRACE_LOG:
-                    self.send_log("失败3，准备结束")
+                    self.send_log("失败3，重启开始下一轮大冒险")
                 return
         else:
             self.send_log("{}函数返回状态为{}".format("swsh_da_battle", status.name))
@@ -343,10 +367,10 @@ class SwshDynamaxAdventures(BaseScript):
             self._finished_process()
         elif status == SubStepRunningStatus.OK:
             if self._swsh_da_catch.catch_result == SWSHDACatchResult.Caught:
-                if self._battle_index >= 3:
+                if self._legendary_caught:
                     self._cycle_step_index = 5
                     self._swsh_da_shiny_keep = SWSHDAShinyKeep(
-                        self, only_keep_legendary=self._only_keep_legendary, legendary_caught=True)
+                        self, only_keep_legendary=self._only_keep_legendary, legendary_caught=self._legendary_caught)
                     self._win_count += 1
                     if TRACE_LOG:
                         self.send_log("传说宝可梦捕捉成功")
@@ -397,6 +421,11 @@ class SwshDynamaxAdventures(BaseScript):
             return
         elif status == SubStepRunningStatus.OK:
             if self._swsh_da_shiny_keep.kept_result == SWSHDAShinyKeepResult.Kept:
+                if self._not_keep_restart_flag == SWSHDAWhenRestart.NotShinyLegendary_And_WonLegendary and self._legendary_caught:
+                    self.macro_run("recognition.pokemon.swsh.common.restart_game",
+                                   1, {"secondary": str(self._secondary)}, True, None)
+                    self._re_cycle()
+                    return
                 self.send_log("非传说闪光宝可梦保留成功")
                 self._shiny_count += 1
                 self._cycle_step_index += 1
@@ -409,7 +438,12 @@ class SwshDynamaxAdventures(BaseScript):
             else:
                 if TRACE_LOG:
                     self.send_log("未检测到闪光宝可梦")
-                if self._not_keep_restart_flag:
+                if self._not_keep_restart_flag == SWSHDAWhenRestart.NotShiny:
+                    self.macro_run("recognition.pokemon.swsh.common.restart_game",
+                                   1, {"secondary": str(self._secondary)}, True, None)
+                    self._re_cycle()
+                    return
+                if (self._not_keep_restart_flag == SWSHDAWhenRestart.NotShiny_And_WonLegendary or self._not_keep_restart_flag == SWSHDAWhenRestart.NotShinyLegendary_And_WonLegendary) and self._legendary_caught:
                     self.macro_run("recognition.pokemon.swsh.common.restart_game",
                                    1, {"secondary": str(self._secondary)}, True, None)
                     self._re_cycle()
