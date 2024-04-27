@@ -16,6 +16,10 @@ class SWSHDAFinish(BaseSubStep):
             "resources/img/recognition/pokemon/swsh/dynamax_adventures/get_rewards_label.png")
         self._get_rewards_label_template = cv2.cvtColor(
             self._get_rewards_label_template, cv2.COLOR_BGR2GRAY)
+        self._chatbox_template = cv2.imread(
+            "resources/img/recognition/pokemon/swsh/dynamax_adventures/chatbox.png")
+        self._chatbox_template = cv2.cvtColor(
+            self._chatbox_template, cv2.COLOR_BGR2GRAY)
 
     def _process(self) -> SubStepRunningStatus:
         self._status = self.running_status
@@ -59,12 +63,20 @@ class SWSHDAFinish(BaseSubStep):
             crop_gray, self._get_rewards_label_template, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
         return max_val >= threshold
-    
+
     def _process_steps_2(self):
         current_frame = self.script.current_frame
         gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
-        if ChatBoxMatch().match_next_arrow(gray=gray_frame, threshold=0.9):
+        if self._match_chatbox(gray=gray_frame, threshold=0.8):
             self._process_step_index += 1
             return
         self.script.macro_text_run("A:0.1", block=True)
         self.time_sleep(0.4)
+
+    def _match_chatbox(self, gray, threshold=0.8) -> bool:
+        crop_x, crop_y, crop_w, crop_h = 166, 429, 39, 98
+        crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
+        res = cv2.matchTemplate(
+            crop_gray, self._chatbox_template, cv2.TM_CCOEFF_NORMED)
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+        return max_val >= threshold

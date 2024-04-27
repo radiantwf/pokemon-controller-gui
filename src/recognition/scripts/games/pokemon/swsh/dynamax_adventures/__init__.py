@@ -50,7 +50,7 @@ class SWSHDAWhenRestart(Enum):
     NotShinyLegendary_And_WonLegendary = "传说宝可梦未闪光、击败传说宝可梦重启(寻找最佳路线)"
 
 
-TRACE_LOG = False
+TRACE_LOG = True
 
 
 class SwshDynamaxAdventures(BaseScript):
