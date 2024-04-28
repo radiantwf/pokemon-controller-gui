@@ -423,7 +423,7 @@ class SwshDynamaxAdventures(BaseScript):
         if status == SubStepRunningStatus.Running:
             return
         elif status == SubStepRunningStatus.OK:
-            if self._swsh_da_shiny_keep.kept_result == SWSHDAShinyKeepResult.KeptLegendary.value:
+            if self._swsh_da_shiny_keep.kept_result == SWSHDAShinyKeepResult.KeptLegendary:
                 self._shiny_count += 1
                 self.send_log("检测到传说宝可梦闪光，请手动确认")
                 self._finished_process()

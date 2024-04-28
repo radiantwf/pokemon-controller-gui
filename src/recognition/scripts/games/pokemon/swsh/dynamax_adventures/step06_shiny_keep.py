@@ -62,7 +62,7 @@ class SWSHDAShinyKeep(BaseSubStep):
             return
         self.script.macro_text_run(
             "TOP:0.1->0.4->A:0.1->0.6->BOTTOM:0.1->0.6->A:0.1", block=True)
-        self.time_sleep(3)
+        self.time_sleep(2)
         self._check_counter = 0
         self._process_step_index += 1
 
