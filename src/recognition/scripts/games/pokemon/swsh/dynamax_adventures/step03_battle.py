@@ -110,13 +110,13 @@ class SWSHDABattle(BaseSubStep):
             self.time_sleep(1)
 
     # 识别 宝可梦、逃走 按钮，操作：A
-    def _match_action(self, gray):
+    def _match_action(self, gray, threshold=0.9):
         crop_x, crop_y, crop_w, crop_h = 887, 421, 66, 110
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
         res = cv2.matchTemplate(
             crop_gray, self._action_template, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-        if max_val > 0.9:
+        if max_val >= threshold:
             self.script.macro_text_run("A:0.1", block=True)
             self._last_action_time_monotonic = time.monotonic()
             self.time_sleep(0.5)
@@ -124,13 +124,13 @@ class SWSHDABattle(BaseSubStep):
         return False
 
     # 识别 极巨化图标，操作：左 -> A
-    def _match_dynamax_icon(self, gray):
+    def _match_dynamax_icon(self, gray, threshold=0.8):
         crop_x, crop_y, crop_w, crop_h = 522, 424, 52, 32
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
         res = cv2.matchTemplate(
             crop_gray, self._dynamax_icon_template, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-        if max_val > 0.9:
+        if max_val >= threshold:
             self.script.macro_text_run(
                 "LEFT:0.1->0.4->A:0.05->0.1->A:0.05", block=True)
             self._last_action_time_monotonic = time.monotonic()
