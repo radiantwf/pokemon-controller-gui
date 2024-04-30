@@ -154,7 +154,7 @@ class SWSHDABattle(BaseSubStep):
                 effect = ""
                 pp = 0
                 effect = self._ocr_move_effect(
-                    gray, 689, 351 + 53 * i, 54, 18, zoom=10)
+                    gray, 689, 351 + 53 * i, 54, 18, zoom=20)
                 if effect == "":
                     effect = self._ocr_move_effect(
                         gray, 689, 351 + 53 * i, 54, 18, zoom=50)

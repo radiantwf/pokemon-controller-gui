@@ -117,7 +117,7 @@ class SwshDynamaxAdventures(BaseScript):
             "secondary", bool, "False", "副设备", ["False", "True"])
 
         paras["use_record"] = ScriptParameter(
-            "use_record", int, 3, "使用记录（0:不使用 1-3:使用记录1-3）", ["1", "2", "3", "0"])
+            "use_record", int, 1, "使用记录（0:不使用 1-3:使用记录1-3）", ["1", "2", "3", "0"])
         paras["save_record"] = ScriptParameter(
             "save_record", int, 1, "保存并覆盖原有记录（0:不保存 1-3:覆盖记录位置1-3）")
 
