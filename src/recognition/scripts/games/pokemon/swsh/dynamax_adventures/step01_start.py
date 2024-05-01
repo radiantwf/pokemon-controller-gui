@@ -16,6 +16,10 @@ class SWSHDAStart(BaseSubStep):
             "resources/img/recognition/pokemon/swsh/dynamax_adventures/dynamax_adventures_label.png")
         self._dynamax_adventures_template = cv2.cvtColor(
             self._dynamax_adventures_template, cv2.COLOR_BGR2GRAY)
+        self._dynamax_adventures_quit_template = cv2.imread(
+            "resources/img/recognition/pokemon/swsh/dynamax_adventures/dynamax_adventures_quit.png")
+        self._dynamax_adventures_quit_template = cv2.cvtColor(
+            self._dynamax_adventures_quit_template, cv2.COLOR_BGR2GRAY)
         self._record_template = cv2.imread(
             "resources/img/recognition/pokemon/swsh/dynamax_adventures/choose_fight_record.png")
         self._record_template = cv2.cvtColor(
@@ -63,9 +67,11 @@ class SWSHDAStart(BaseSubStep):
             if self._record_index == 1:
                 self.script.macro_text_run("A:0.1", block=True)
             elif self._record_index == 2:
-                self.script.macro_text_run("BOTTOM:0.1->0.3->A:0.1", block=True)
+                self.script.macro_text_run(
+                    "BOTTOM:0.1->0.3->A:0.1", block=True)
             elif self._record_index == 3:
-                self.script.macro_text_run("BOTTOM:0.1->0.3->BOTTOM:0.1->0.3->A:0.1", block=True)
+                self.script.macro_text_run(
+                    "BOTTOM:0.1->0.3->BOTTOM:0.1->0.3->A:0.1", block=True)
             else:
                 self.script.macro_text_run("B:0.1", block=True)
             self.time_sleep(0.4)
@@ -75,6 +81,13 @@ class SWSHDAStart(BaseSubStep):
         self.time_sleep(0.5)
 
     def _process_step_2(self):
+        current_frame = self.script.current_frame
+        gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
+        if self._match_dynamax_adventures_quit(gray_frame):
+            self.script.macro_text_run("B:0.1", block=True)
+            self.time_sleep(1)
+            self._process_step_index = 1
+            return
         self.script.macro_text_run("BOTTOM:0.1->0.4->A:0.1->0.4", block=True)
         self.time_sleep(2)
         self._process_step_index += 1
@@ -97,6 +110,14 @@ class SWSHDAStart(BaseSubStep):
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
         res = cv2.matchTemplate(
             crop_gray, self._dynamax_adventures_template, cv2.TM_CCOEFF_NORMED)
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+        return max_val >= threshold
+
+    def _match_dynamax_adventures_quit(self, gray, threshold=0.9) -> bool:
+        crop_x, crop_y, crop_w, crop_h = 561, 362, 365, 46
+        crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
+        res = cv2.matchTemplate(
+            crop_gray, self._dynamax_adventures_quit_template, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
         return max_val >= threshold
 
