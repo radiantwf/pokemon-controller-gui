@@ -70,7 +70,10 @@ class SwshDynamaxAdventures(BaseScript):
         self._durations = self.get_para("durations")
         self._secondary = self.get_para(
             "secondary") if "secondary" in paras else False
-        self._use_record = self.get_para("use_record") if "use_record" in paras else 1
+        self._use_record = self.get_para(
+            "use_record") if "use_record" in paras else 1
+        self._save_record = self.get_para(
+            "save_record") if "save_record" in paras else 1
         self._not_keep_restart_flag = self.get_para(
             "not_keep_restart") if "not_keep_restart" in paras else SWSHDAWhenRestart.Never.value
         self._only_keep_legendary = self.get_para(
@@ -119,7 +122,7 @@ class SwshDynamaxAdventures(BaseScript):
         paras["use_record"] = ScriptParameter(
             "use_record", int, 1, "使用记录（0:不使用 1-3:使用记录1-3）", ["1", "2", "3", "0"])
         paras["save_record"] = ScriptParameter(
-            "save_record", int, 1, "保存并覆盖原有记录（0:不保存 1-3:覆盖记录位置1-3）")
+            "save_record", int, 1, "保存并覆盖原有记录（0:不保存 1-3:覆盖记录位置1-3）", ["1", "2", "3", "0"])
 
         paras["choose_path_1"] = ScriptParameter(
             "choose_path_1", int, 0, "战斗1 选择路径（0:默认路径，负数:向左移动，正数:向右移动，数字:移动次数）")
@@ -257,7 +260,7 @@ class SwshDynamaxAdventures(BaseScript):
         self._battle_index = 0
         self._legendary_caught = False
         self._swsh_da_start = SWSHDAStart(
-            self, record=self._use_record, timeout=90)
+            self, save_record=self._save_record, choose_record=self._use_record, timeout=90)
         self._swsh_da_choose_path = None
         self._swsh_da_battle = None
         self._swsh_da_catch = None
@@ -269,7 +272,7 @@ class SwshDynamaxAdventures(BaseScript):
         self._battle_index = 0
         self._legendary_caught = False
         self._swsh_da_start = SWSHDAStart(
-            self, record=self._use_record, timeout=90)
+            self, save_record=self._save_record, choose_record=self._use_record, timeout=90)
         self._swsh_da_choose_path = None
         self._swsh_da_battle = None
         self._swsh_da_catch = None

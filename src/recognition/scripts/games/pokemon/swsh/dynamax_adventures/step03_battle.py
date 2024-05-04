@@ -155,11 +155,12 @@ class SWSHDABattle(BaseSubStep):
                 pp = 0
                 effect = self._ocr_move_effect(
                     gray, 689, 351 + 53 * i, 54, 18, zoom=20)
-                if effect == "":
+                if effect != "" and effect != "效果绝佳" and effect != "有效果" and effect != "效果不好" and effect != "没有效果":
                     effect = self._ocr_move_effect(
                         gray, 689, 351 + 53 * i, 54, 18, zoom=50)
                 pp = self._ocr_move_pp(
-                    gray, 872, 335 + 53 * i, 24, 27)
+                    gray, 872, 335 + 53 * i, 24, 27, zoom=5)
+                print(i, effect, pp)
                 effects.append(effect)
                 pps.append(pp)
             choice_first = -1
@@ -187,6 +188,8 @@ class SWSHDABattle(BaseSubStep):
                 target = choice_third
             else:
                 target = choice_forth
+            print(f'Target:{target}')
+            print(f'----------------------------------')
             if target < 0:
                 return False
 
@@ -282,9 +285,9 @@ class SWSHDABattle(BaseSubStep):
         text = "".join(text.split())
         return text
 
-    def _ocr_move_pp(self, gray, crop_x, crop_y, crop_w, crop_h):
+    def _ocr_move_pp(self, gray, crop_x, crop_y, crop_w, crop_h, zoom=5):
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
-        crop_gray = cv2.resize(crop_gray, (crop_w*10, crop_h*10))
+        crop_gray = cv2.resize(crop_gray, (crop_w*zoom, crop_h*zoom))
         # 对图片进行二值化处理
         _, thresh1 = cv2.threshold(
             crop_gray, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)
