@@ -1,6 +1,8 @@
 from recognition.scripts.base.base_script import BaseScript
 from recognition.scripts.base.base_sub_step import BaseSubStep, SubStepRunningStatus
 import cv2
+import numpy as np
+import pytesseract
 
 
 class SWSHDASwitchPokemon(BaseSubStep):
@@ -42,6 +44,8 @@ class SWSHDASwitchPokemon(BaseSubStep):
         current_frame = self.script.current_frame
         gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
         if self._match_switch_pokemon(gray_frame):
+            if self._ocr_moves_defective(gray_frame):
+                self._switch_pokemon = False
             if self._switch_pokemon:
                 self.script.macro_text_run("A:0.1", block=True)
             else:
@@ -60,3 +64,24 @@ class SWSHDASwitchPokemon(BaseSubStep):
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
         if max_val > 0.9:
             return True
+
+    def _ocr_moves_defective(self, gray, zoom=5)->bool:
+        except_moves = ["打嗝"]
+        for i in range(4):
+            crop_x, crop_y, crop_w, crop_h = 680, 253+i*32, 110, 25
+            crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
+            crop_gray = cv2.resize(crop_gray, (crop_w*zoom, crop_h*zoom))
+            # 对图片进行二值化处理
+            _, thresh1 = cv2.threshold(
+                crop_gray, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)
+
+            kernel = np.ones((6, 6), np.uint8)
+            opening = cv2.morphologyEx(thresh1, cv2.MORPH_OPEN, kernel)
+            closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
+            custom_config = r'--oem 3 --psm 7 -c tessedit_char_whitelist=打嗝'
+            text = pytesseract.image_to_string(
+                closing, lang='chi_sim', config=custom_config)
+            text = "".join(text.split())
+            if text in except_moves:
+                return True
+        return False
