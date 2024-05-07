@@ -79,8 +79,8 @@ class SwshDynamaxAdventures(BaseScript):
             "not_keep_restart") if "not_keep_restart" in paras else SWSHDAWhenRestart.Never.value
         self._restart_flag = SWSHDAWhenRestart(restart_flag_value)
         self._current_restart_flag = self._restart_flag
-        self._only_keep_legendary = self.get_para(
-            "only_keep_legendary") if "only_keep_legendary" in paras else False
+        self._only_keep_shiny_legendary = self.get_para(
+            "only_keep_shiny_legendary") if "only_keep_shiny_legendary" in paras else False
         self._choose_path = [self.get_para("choose_path_1") if "choose_path_1" in paras else 0,
                              self.get_para(
                                  "choose_path_2") if "choose_path_2" in paras else 0,
@@ -117,8 +117,8 @@ class SwshDynamaxAdventures(BaseScript):
             "loop", int, -1, "运行次数")
         paras["durations"] = ScriptParameter(
             "durations", float, -1, "运行时长（分钟）")
-        paras["only_keep_legendary"] = ScriptParameter(
-            "only_keep_legendary", bool, "False", "只带走传说宝可梦", ["False", "True"])
+        paras["only_keep_shiny_legendary"] = ScriptParameter(
+            "only_keep_shiny_legendary", bool, "False", "只带走闪光传说宝可梦", ["False", "True"])
         paras["not_keep_restart"] = ScriptParameter(
             "not_keep_restart", str, SWSHDAWhenRestart.NotShiny_And_WonLegendary.value, "重启游戏选项（有极巨石惩罚）", [e.value for e in SWSHDAWhenRestart])
         paras["secondary"] = ScriptParameter(
@@ -217,6 +217,8 @@ class SwshDynamaxAdventures(BaseScript):
         if self._restart_flag == SWSHDAWhenRestart.FindCatchLegendaryBestRoad_And_NotShinyLegendary:
             self._current_restart_flag = SWSHDAWhenRestart.NotShiny_And_WonLegendary
             self.send_log("开始寻找击败传说宝可梦最佳路线")
+        if self._restart_flag == SWSHDABattleResult.NotShinyLegendary:
+            self._only_keep_shiny_legendary = True
 
     def on_cycle(self):
         run_time_span = self.run_time_span
@@ -352,7 +354,7 @@ class SwshDynamaxAdventures(BaseScript):
 
             if self._swsh_da_battle.battle_status == SWSHDABattleResult.Lost3:
                 if self._restart_flag == SWSHDAWhenRestart.FindCatchLegendaryBestRoad_And_NotShinyLegendary:
-                    self._only_keep_legendary = False
+                    self._only_keep_shiny_legendary = False
                     self._current_restart_flag = SWSHDAWhenRestart.NotShiny_And_WonLegendary
                 self._re_cycle()
                 if TRACE_LOG:
@@ -368,7 +370,7 @@ class SwshDynamaxAdventures(BaseScript):
             if self._swsh_da_battle.battle_status == SWSHDABattleResult.Lost1:
                 self._cycle_step_index = 5
                 self._swsh_da_shiny_keep = SWSHDAShinyKeep(
-                    self, only_keep_legendary=self._only_keep_legendary, legendary_caught=self._legendary_caught)
+                    self, only_keep_shiny_legendary=self._only_keep_shiny_legendary, legendary_caught=self._legendary_caught)
                 if TRACE_LOG:
                     self.send_log("失败1，带走宝可梦")
                 return
@@ -402,13 +404,13 @@ class SwshDynamaxAdventures(BaseScript):
                         self.send_log("传说宝可梦捕捉成功")
 
                     if self._win_streaks_count >= 3 and self._restart_flag == SWSHDAWhenRestart.FindCatchLegendaryBestRoad_And_NotShinyLegendary:
-                        self._only_keep_legendary = True
+                        self._only_keep_shiny_legendary = True
                         self._current_restart_flag = SWSHDAWhenRestart.NotShinyLegendary
                         self.send_log("连续3次击败传说宝可梦，已确认最佳路线")
 
                     self._cycle_step_index = 5
                     self._swsh_da_shiny_keep = SWSHDAShinyKeep(
-                        self, only_keep_legendary=self._only_keep_legendary, legendary_caught=self._legendary_caught)
+                        self, only_keep_shiny_legendary=self._only_keep_shiny_legendary, legendary_caught=self._legendary_caught)
                     return
                 else:
                     switch_flag = self._switch_pokemon[self._battle_index]
