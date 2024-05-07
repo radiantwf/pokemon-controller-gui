@@ -120,7 +120,7 @@ class SwshDynamaxAdventures(BaseScript):
         paras["only_keep_legendary"] = ScriptParameter(
             "only_keep_legendary", bool, "False", "只带走传说宝可梦", ["False", "True"])
         paras["not_keep_restart"] = ScriptParameter(
-            "not_keep_restart", str, SWSHDAWhenRestart.NotShiny_And_WonLegendary, "重启游戏选项（有极巨石惩罚）", [e.value for e in SWSHDAWhenRestart])
+            "not_keep_restart", str, SWSHDAWhenRestart.NotShiny_And_WonLegendary.value, "重启游戏选项（有极巨石惩罚）", [e.value for e in SWSHDAWhenRestart])
         paras["secondary"] = ScriptParameter(
             "secondary", bool, "False", "副设备", ["False", "True"])
 
