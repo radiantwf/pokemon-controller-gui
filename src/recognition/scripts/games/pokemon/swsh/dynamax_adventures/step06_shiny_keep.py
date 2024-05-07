@@ -13,10 +13,10 @@ class SWSHDAShinyKeepResult(Enum):
 
 
 class SWSHDAShinyKeep(BaseSubStep):
-    def __init__(self, script: BaseScript, legendary_caught: bool, only_keep_legendary: bool = False, timeout: float = -1) -> None:
+    def __init__(self, script: BaseScript, legendary_caught: bool, only_keep_shiny_legendary: bool = False, timeout: float = -1) -> None:
         super().__init__(script, timeout)
         self._legendary_caught = legendary_caught
-        self._only_keep_legendary = only_keep_legendary
+        self._only_keep_shiny_legendary = only_keep_shiny_legendary
         self._process_step_index = 0
         self._check_counter = 0
         self._kept_result = SWSHDAShinyKeepResult.NotKept
@@ -56,7 +56,7 @@ class SWSHDAShinyKeep(BaseSubStep):
         if not self._match_keep_pokemon_page(gray_frame):
             self.time_sleep(0.5)
             return
-        if (not self._legendary_caught) and self._only_keep_legendary:
+        if (not self._legendary_caught) and self._only_keep_shiny_legendary:
             self._not_keep()
             self._status == SubStepRunningStatus.OK
             return
@@ -74,7 +74,7 @@ class SWSHDAShinyKeep(BaseSubStep):
             self._keep()
             self._process_step_index += 1
             return
-        if self._only_keep_legendary:
+        if self._only_keep_shiny_legendary:
             self._quit_pokemon_detail()
             self._not_keep()
             self._process_step_index += 1
