@@ -217,7 +217,7 @@ class SwshDynamaxAdventures(BaseScript):
         if self._restart_flag == SWSHDAWhenRestart.FindCatchLegendaryBestRoad_And_NotShinyLegendary:
             self._current_restart_flag = SWSHDAWhenRestart.NotShiny_And_WonLegendary
             self.send_log("开始寻找击败传说宝可梦最佳路线")
-        if self._restart_flag == SWSHDAWhenRestart.NotShinyLegendary:
+        if self._restart_flag == SWSHDAWhenRestart.NotShinyLegendary or self._restart_flag == SWSHDAWhenRestart.NotShinyLegendary_And_WonLegendary:
             self._only_keep_shiny_legendary = True
 
     def on_cycle(self):
