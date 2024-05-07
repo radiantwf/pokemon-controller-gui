@@ -431,6 +431,12 @@ class SwshDynamaxAdventures(BaseScript):
                 self.send_log("检测到传说宝可梦闪光，请手动确认")
                 self._finished_process()
                 return
+            if self._not_keep_restart_flag == SWSHDAWhenRestart.NotShinyLegendary.value:
+                self.send_log("传说宝可梦未检测到闪光，重启开始下一轮大冒险")
+                self.macro_run("recognition.pokemon.swsh.common.restart_game",
+                               1, {"secondary": str(self._secondary)}, True, None)
+                self._re_cycle()
+                return
             if self._swsh_da_shiny_keep.kept_result == SWSHDAShinyKeepResult.Kept:
                 if self._not_keep_restart_flag == SWSHDAWhenRestart.NotShinyLegendary_And_WonLegendary.value and self._legendary_caught:
                     self.send_log("成功击败传说宝可梦，传说宝可梦未闪光（已忽略其他闪光宝可梦），重启开始下一轮大冒险")
