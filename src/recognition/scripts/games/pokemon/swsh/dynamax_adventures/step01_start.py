@@ -80,6 +80,7 @@ class SWSHDAStart(BaseSubStep):
         current_frame = self.script.current_frame
         gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
         if self._match_dynamax_adventures(gray_frame):
+            self.time_sleep(1)
             self._process_step_index += 1
             return
         if self._match_choose_record(gray_frame):
@@ -112,6 +113,18 @@ class SWSHDAStart(BaseSubStep):
         self._process_step_index += 1
 
     def _process_step_3(self):
+        current_frame = self.script.current_frame
+        gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
+        if self._match_dynamax_adventures_quit(gray_frame):
+            self.script.macro_text_run("B:0.1", block=True)
+            self.time_sleep(1)
+            self._process_step_index = 1
+            return
+        self.script.macro_text_run("A:0.1", block=True)
+        self.time_sleep(1)
+        self._process_step_index += 1
+
+    def _process_step_4(self):
         current_frame = self.script.current_frame
         gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
         if self._match_dynamax_adventures_quit(gray_frame):
