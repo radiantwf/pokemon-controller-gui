@@ -80,7 +80,7 @@ class SWSHDAStart(BaseSubStep):
         current_frame = self.script.current_frame
         gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
         if self._match_dynamax_adventures(gray_frame):
-            self.time_sleep(1)
+            self.time_sleep(0.5)
             self._process_step_index += 1
             return
         if self._match_choose_record(gray_frame):
