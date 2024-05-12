@@ -138,7 +138,7 @@ class SwshDynamaxAdventures(BaseScript):
         paras["choose_path_1"] = ScriptParameter(
             "choose_path_1", int, 0, "战斗1 选择路径（0:默认路径，负数:向左移动，正数:向右移动，数字:移动次数）")
         paras["disable_dynamax_1"] = ScriptParameter(
-            "disable_dynamax_1", bool, "True", "战斗1 禁用极巨化", ["False", "True"])
+            "disable_dynamax_1", bool, "False", "战斗1 禁用极巨化", ["False", "True"])
         paras["catch_ball_1"] = ScriptParameter(
             "catch_ball_1", str, SWSHDABallType.PokeBall.value, "战斗1 捕捉球种", [e.value for e in SWSHDABallType])
         paras["switch_pokemon_1"] = ScriptParameter(
