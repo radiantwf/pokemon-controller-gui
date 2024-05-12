@@ -20,10 +20,11 @@ class SWSHDABattleResult(Enum):
 
 
 class SWSHDABattle(BaseSubStep):
-    def __init__(self, script: BaseScript, battle_index: int = 0, timeout: float = -1) -> None:
+    def __init__(self, script: BaseScript, battle_index: int = 0, timeout: float = -1, disable_dynamax=False) -> None:
         super().__init__(script, timeout)
         self._process_step_index = 0
         self._battle_index = battle_index
+        self._disable_dynamax = disable_dynamax
         self._battle_status = 0
         self._last_action_time_monotonic = time.monotonic()
         self._action_template = cv2.imread(
@@ -125,6 +126,8 @@ class SWSHDABattle(BaseSubStep):
 
     # 识别 极巨化图标，操作：左 -> A
     def _match_dynamax_icon(self, gray, threshold=0.8):
+        if self._disable_dynamax:
+            return False
         crop_x, crop_y, crop_w, crop_h = 522, 424, 52, 32
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
         res = cv2.matchTemplate(

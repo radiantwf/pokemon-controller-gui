@@ -93,6 +93,12 @@ class SwshDynamaxAdventures(BaseScript):
                                   self.get_para("path_event_4") if "path_event_4" in paras else True]
         self._path_leave_event = [True, self.get_para("path_leave_event_2") if "path_leave_event_2" in paras else True,
                                   self.get_para("path_leave_event_3") if "path_leave_event_3" in paras else True]
+        self._disable_dynamax = [self.get_para("disable_dynamax_1") if "disable_dynamax_1" in paras else False,
+                                 self.get_para(
+            "disable_dynamax_2") if "disable_dynamax_2" in paras else False,
+            self.get_para(
+            "disable_dynamax_3") if "disable_dynamax_3" in paras else False,
+            self.get_para("disable_dynamax_4") if "disable_dynamax_4" in paras else False]
         catch_ball_value = [self.get_para("catch_ball_1") if "catch_ball_1" in paras else SWSHDABallType.PokeBall.value,
                             self.get_para(
                                 "catch_ball_2") if "catch_ball_2" in paras else SWSHDABallType.PokeBall.value,
@@ -131,6 +137,8 @@ class SwshDynamaxAdventures(BaseScript):
 
         paras["choose_path_1"] = ScriptParameter(
             "choose_path_1", int, 0, "战斗1 选择路径（0:默认路径，负数:向左移动，正数:向右移动，数字:移动次数）")
+        paras["disable_dynamax_1"] = ScriptParameter(
+            "disable_dynamax_1", bool, "True", "战斗1 禁用极巨化", ["False", "True"])
         paras["catch_ball_1"] = ScriptParameter(
             "catch_ball_1", str, SWSHDABallType.PokeBall.value, "战斗1 捕捉球种", [e.value for e in SWSHDABallType])
         paras["switch_pokemon_1"] = ScriptParameter(
@@ -140,6 +148,8 @@ class SwshDynamaxAdventures(BaseScript):
             "choose_path_2", int, 0, "战斗2 选择路径（0:默认路径，负数:向左移动，正数:向右移动，数字:移动次数）")
         paras["path_enter_event_2"] = ScriptParameter(
             "path_enter_event_2", bool, "True", "战斗2 进入战斗路径事件（True:连点A False:连点B）", ["False", "True"])
+        paras["disable_dynamax_2"] = ScriptParameter(
+            "disable_dynamax_2", bool, "False", "战斗2 禁用极巨化", ["False", "True"])
         paras["catch_ball_2"] = ScriptParameter(
             "catch_ball_2", str, SWSHDABallType.PokeBall.value, "战斗2 捕捉球种", [e.value for e in SWSHDABallType])
         paras["switch_pokemon_2"] = ScriptParameter(
@@ -151,6 +161,8 @@ class SwshDynamaxAdventures(BaseScript):
             "choose_path_3", int, 0, "战斗3 选择路径（0:默认路径，负数:向左移动，正数:向右移动，数字:移动次数）")
         paras["path_enter_event_3"] = ScriptParameter(
             "path_enter_event_3", bool, "True", "战斗3 进入战斗路径事件（True:连点A False:连点B）", ["False", "True"])
+        paras["disable_dynamax_3"] = ScriptParameter(
+            "disable_dynamax_3", bool, "False", "战斗3 禁用极巨化", ["False", "True"])
         paras["catch_ball_3"] = ScriptParameter(
             "catch_ball_3", str, SWSHDABallType.PokeBall.value, "战斗3 捕捉球种", [e.value for e in SWSHDABallType])
         paras["switch_pokemon_3"] = ScriptParameter(
@@ -158,6 +170,8 @@ class SwshDynamaxAdventures(BaseScript):
         paras["path_leave_event_3"] = ScriptParameter(
             "path_leave_event_3", bool, "True", "战斗2 离开战斗路径事件（True:连点A False:连点B）", ["False", "True"])
 
+        paras["disable_dynamax_4"] = ScriptParameter(
+            "disable_dynamax_4", bool, "False", "Boss战 禁用极巨化", ["False", "True"])
         paras["catch_ball_4"] = ScriptParameter(
             "catch_ball_4", str, SWSHDABallType.BeastBall.value, "BOSS战 捕捉球种", [e.value for e in SWSHDABallType])
         return paras
@@ -321,7 +335,7 @@ class SwshDynamaxAdventures(BaseScript):
             return
         elif status == SubStepRunningStatus.OK:
             self._swsh_da_battle = SWSHDABattle(
-                self, battle_index=self._battle_index)
+                self, battle_index=self._battle_index, disable_dynamax=self._disable_dynamax[self._battle_index])
             self._cycle_step_index += 1
             if TRACE_LOG:
                 self.send_log("选择路径完成，准备战斗")
@@ -349,7 +363,7 @@ class SwshDynamaxAdventures(BaseScript):
                 if TRACE_LOG:
                     self.send_log("胜利，准备捕捉")
                 return
-            
+
             self._win_streaks_count = 0
 
             if self._swsh_da_battle.battle_status == SWSHDABattleResult.Lost3:
