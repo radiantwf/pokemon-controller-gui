@@ -417,7 +417,7 @@ class SwshDynamaxAdventures(BaseScript):
                     if TRACE_LOG:
                         self.send_log("传说宝可梦捕捉成功")
 
-                    if self._win_streaks_count >= 3 and self._restart_flag == SWSHDAWhenRestart.FindCatchLegendaryBestRoad_And_NotShinyLegendary:
+                    if self._win_streaks_count >= 3 and self._restart_flag == SWSHDAWhenRestart.FindCatchLegendaryBestRoad_And_NotShinyLegendary and self._current_restart_flag != SWSHDAWhenRestart.NotShinyLegendary:
                         self._only_keep_shiny_legendary = True
                         self._current_restart_flag = SWSHDAWhenRestart.NotShinyLegendary
                         self.send_log("连续3次击败传说宝可梦，已确认最佳路线")
