@@ -158,7 +158,7 @@ class SWSHDABattle(BaseSubStep):
                 pp = 0
                 effect = self._ocr_move_effect(
                     gray, 689, 351 + 53 * i, 54, 18, zoom=20)
-                if effect != "" and effect != "效果绝佳" and effect != "有效果" and effect != "效果不好" and effect != "没有效果":
+                if effect != "" and effect != "效果佳"and effect != "效果绝佳" and effect != "有效果" and effect != "效果不好" and effect != "没有效果":
                     effect = self._ocr_move_effect(
                         gray, 689, 351 + 53 * i, 54, 18, zoom=50)
                 pp = self._ocr_move_pp(
@@ -173,7 +173,7 @@ class SWSHDABattle(BaseSubStep):
             for i in range(4):
                 if pps[i] <= 0:
                     continue
-                if effects[i] == "效果绝佳":
+                if effects[i] == "效果绝佳" or effects[i] == "效果佳":
                     choice_first = i
                     break
                 if effects[i] == "有效果" and choice_second < 0:
@@ -280,6 +280,7 @@ class SWSHDABattle(BaseSubStep):
         kernel = np.ones((3, 3), np.uint8)
         opening = cv2.morphologyEx(thresh1, cv2.MORPH_OPEN, kernel)
         closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
+        closing = cv2.resize(closing, (crop_w, crop_h))
 
         # 使用Tesseract进行文字识别
         custom_config = r'--oem 3 --psm 7 -c tessedit_char_whitelist=效果绝佳没有不好'
@@ -297,6 +298,7 @@ class SWSHDABattle(BaseSubStep):
         kernel = np.ones((3, 3), np.uint8)
         opening = cv2.morphologyEx(thresh1, cv2.MORPH_OPEN, kernel)
         closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
+        closing = cv2.resize(closing, (crop_w, crop_h))
 
         # 使用Tesseract进行文字识别
         custom_config = r'--oem 3 --psm 7 -c tessedit_char_whitelist=0123456789'

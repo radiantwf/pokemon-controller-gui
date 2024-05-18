@@ -6,6 +6,8 @@ import pytesseract
 
 
 class SWSHDASwitchPokemon(BaseSubStep):
+    _except_moves = ["打嗝","打邑","打啊"]
+
     def __init__(self, script: BaseScript, battle_index: int = 0, switch: bool = True, timeout: float = -1) -> None:
         super().__init__(script, timeout)
         self._process_step_index = 0
@@ -65,8 +67,7 @@ class SWSHDASwitchPokemon(BaseSubStep):
         if max_val > 0.9:
             return True
 
-    def _ocr_moves_defective(self, gray, zoom=5)->bool:
-        except_moves = ["打嗝"]
+    def _ocr_moves_defective(self, gray, zoom=10) -> bool:
         for i in range(4):
             crop_x, crop_y, crop_w, crop_h = 680, 253+i*32, 110, 25
             crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
@@ -75,13 +76,15 @@ class SWSHDASwitchPokemon(BaseSubStep):
             _, thresh1 = cv2.threshold(
                 crop_gray, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)
 
-            kernel = np.ones((6, 6), np.uint8)
+            kernel = np.ones((3, 3), np.uint8)
             opening = cv2.morphologyEx(thresh1, cv2.MORPH_OPEN, kernel)
             closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
-            custom_config = r'--oem 3 --psm 7 -c tessedit_char_whitelist=打嗝'
+            closing = cv2.resize(closing, (crop_w, crop_h))
+            custom_config = r'--oem 3 --psm 7'
             text = pytesseract.image_to_string(
                 closing, lang='chi_sim', config=custom_config)
             text = "".join(text.split())
-            if text in except_moves:
+            print(text)
+            if text in self._except_moves:
                 return True
         return False
