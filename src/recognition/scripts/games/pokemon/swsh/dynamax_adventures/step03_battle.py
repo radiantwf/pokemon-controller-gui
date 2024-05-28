@@ -163,7 +163,7 @@ class SWSHDABattle(BaseSubStep):
                         gray, 689, 351 + 53 * i, 54, 18, zoom=50)
                 pp = self._ocr_move_pp(
                     gray, 872, 335 + 53 * i, 24, 27, zoom=5)
-                print(i, effect, pp)
+                # print(i, effect, pp)
                 effects.append(effect)
                 pps.append(pp)
             choice_first = -1
@@ -191,8 +191,8 @@ class SWSHDABattle(BaseSubStep):
                 target = choice_third
             else:
                 target = choice_forth
-            print(f'Target:{target}')
-            print(f'----------------------------------')
+            # print(f'Target:{target}')
+            # print(f'----------------------------------')
             if target < 0:
                 return False
 
