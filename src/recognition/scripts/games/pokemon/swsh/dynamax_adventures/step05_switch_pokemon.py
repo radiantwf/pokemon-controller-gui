@@ -84,7 +84,7 @@ class SWSHDASwitchPokemon(BaseSubStep):
             text = pytesseract.image_to_string(
                 closing, lang='chi_sim', config=custom_config)
             text = "".join(text.split())
-            print(text)
+            # print(text)
             if text in self._except_moves:
                 return True
         return False
