@@ -57,7 +57,6 @@ class SWSHDAStart(BaseSubStep):
         current_frame = self.script.current_frame
         gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
         if self._match_save_record(gray_frame):
-            print(f"Save Record: {self._save_record_index}")
             if self._save_record_index == 1:
                 self.script.macro_text_run("A:0.1", block=True)
             elif self._save_record_index == 2:
