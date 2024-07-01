@@ -12,6 +12,9 @@ from recognition.scripts.parameter_struct import ScriptParameter
 from recognition.scripts.base.base_script import BaseScript, WorkflowEnum
 from recognition.scripts.base.base_sub_step import SubStepRunningStatus
 
+TRACE_LOG = False
+DYNITE_ORE_PENALTY_LIMIT = 4
+
 
 class SWSHDABallType(Enum):
     NotCatch = "不捕捉"
@@ -44,13 +47,12 @@ class SWSHDABallType(Enum):
 
 class SWSHDAWhenRestart(Enum):
     Never = "不重启"
-    FindCatchLegendaryBestRoad_And_NotShinyLegendary = "寻找击败传说宝可梦最佳路线，找到最佳路线后传说宝可梦未闪光重启"
     NotShiny_And_WonLegendary = "未闪光，击败传说宝可梦重启(寻找最佳路线，保留过程闪光宝可梦)"
+    NotShiny_And_WonLegendary_Limit_Restart = f"未闪光，击败传说宝可梦重启(寻找最佳路线，保留过程闪光宝可梦，极矿石惩罚超过{
+        DYNITE_ORE_PENALTY_LIMIT}时限制重启)"
     NotShinyLegendary_And_WonLegendary = "传说未闪光，击败传说宝可梦重启(寻找最佳路线)"
+    FindCatchLegendaryBestRoad_And_NotShinyLegendary = "寻找击败传说宝可梦最佳路线，找到最佳路线后传说宝可梦未闪光重启"
     NotShinyLegendary = "传说宝可梦未闪光重启(已确认最佳路线)"
-
-
-TRACE_LOG = False
 
 
 class SwshDynamaxAdventures(BaseScript):
@@ -60,6 +62,7 @@ class SwshDynamaxAdventures(BaseScript):
         self._prepare_step_index = -1
         self._cycle_step_index = -1
         self._jump_next_frame = False
+        self._dynite_ore_penalty_count = 0
 
         self._shiny_count = 0
         self._win_count = 0
@@ -126,7 +129,7 @@ class SwshDynamaxAdventures(BaseScript):
         paras["only_keep_shiny_legendary"] = ScriptParameter(
             "only_keep_shiny_legendary", bool, "False", "只带走闪光传说宝可梦", ["False", "True"])
         paras["not_keep_restart"] = ScriptParameter(
-            "not_keep_restart", str, SWSHDAWhenRestart.NotShiny_And_WonLegendary.value, "重启游戏选项（有极巨石惩罚）", [e.value for e in SWSHDAWhenRestart])
+            "not_keep_restart", str, SWSHDAWhenRestart.NotShiny_And_WonLegendary_Limit_Restart.value, "重启游戏选项（有极矿石惩罚）", [e.value for e in SWSHDAWhenRestart])
         paras["secondary"] = ScriptParameter(
             "secondary", bool, "False", "副设备", ["False", "True"])
 
@@ -236,16 +239,22 @@ class SwshDynamaxAdventures(BaseScript):
 
     def on_cycle(self):
         run_time_span = self.run_time_span
+        log_txt = ""
         if self._current_restart_flag == SWSHDAWhenRestart.NotShinyLegendary:
-            self.send_log("脚本运行中，已确认最佳路线，已经运行{}次，成功攻略大冒险{}次，带回闪光宝可梦{}只，耗时{}小时{}分{}秒".format(self.cycle_times, self._win_count,
-                                                                                            self._shiny_count, int(run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
+            log_txt += f"脚本运行中，已确认最佳路线，已经运行{self.cycle_times}次，成功攻略大冒险{
+                self._win_count}次，带回闪光宝可梦{self._shiny_count}只"
         else:
             if self._restart_flag == SWSHDAWhenRestart.FindCatchLegendaryBestRoad_And_NotShinyLegendary:
-                self.send_log("脚本运行中，寻找最佳路线中，已经运行{}次，成功攻略大冒险{}次，带回闪光宝可梦{}只，耗时{}小时{}分{}秒".format(self.cycle_times, self._win_count,
-                                                                                                self._shiny_count, int(run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
+                log_txt += f"脚本运行中，寻找最佳路线中，已经运行{self.cycle_times}次，成功攻略大冒险{
+                    self._win_count}次，带回闪光宝可梦{self._shiny_count}只"
             else:
-                self.send_log("脚本运行中，已经运行{}次，成功攻略大冒险{}次，带回闪光宝可梦{}只，耗时{}小时{}分{}秒".format(self.cycle_times, self._win_count,
-                                                                                        self._shiny_count, int(run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
+                log_txt += f"脚本运行中，已经运行{self.cycle_times}次，成功攻略大冒险{
+                    self._win_count}次，带回闪光宝可梦{self._shiny_count}只"
+        if self._dynite_ore_penalty_count >= 3:
+            log_txt += f"，极矿石惩罚数量为{self._dynite_ore_penalty_count}"
+        log_txt += f"\n耗时{int(run_time_span/3600)}小时{int((run_time_span %
+                                                          3600) / 60)}分{int(run_time_span % 60)}秒"
+        self.send_log(log_txt)
 
     def on_stop(self):
         run_time_span = self.run_time_span
@@ -377,9 +386,7 @@ class SwshDynamaxAdventures(BaseScript):
             if self._current_restart_flag == SWSHDAWhenRestart.NotShinyLegendary:
                 if TRACE_LOG:
                     self.send_log("未击败传说宝可梦，重启开始下一轮大冒险")
-                self.macro_run("recognition.pokemon.swsh.common.restart_game",
-                               1, {"secondary": str(self._secondary)}, True, None)
-                self._re_cycle()
+                self.restart_game()
                 return
             if self._swsh_da_battle.battle_status == SWSHDABattleResult.Lost1:
                 self._cycle_step_index = 5
@@ -478,16 +485,12 @@ class SwshDynamaxAdventures(BaseScript):
                 return
             if self._current_restart_flag == SWSHDAWhenRestart.NotShinyLegendary:
                 self.send_log("传说宝可梦未检测到闪光，重启开始下一轮大冒险")
-                self.macro_run("recognition.pokemon.swsh.common.restart_game",
-                               1, {"secondary": str(self._secondary)}, True, None)
-                self._re_cycle()
+                self.restart_game()
                 return
             if self._swsh_da_shiny_keep.kept_result == SWSHDAShinyKeepResult.Kept:
                 if self._current_restart_flag == SWSHDAWhenRestart.NotShinyLegendary_And_WonLegendary and self._legendary_caught:
                     self.send_log("成功击败传说宝可梦，传说宝可梦未闪光（已忽略其他闪光宝可梦），重启开始下一轮大冒险")
-                    self.macro_run("recognition.pokemon.swsh.common.restart_game",
-                                   1, {"secondary": str(self._secondary)}, True, None)
-                    self._re_cycle()
+                    self.restart_game()
                     return
                 self.send_log("非传说闪光宝可梦保留成功")
                 self._shiny_count += 1
@@ -496,11 +499,17 @@ class SwshDynamaxAdventures(BaseScript):
             if TRACE_LOG:
                 self.send_log("未检测到闪光宝可梦")
 
-            if (self._current_restart_flag == SWSHDAWhenRestart.NotShiny_And_WonLegendary or self._current_restart_flag == SWSHDAWhenRestart.NotShinyLegendary_And_WonLegendary) and self._legendary_caught:
+            if (self._current_restart_flag == SWSHDAWhenRestart.NotShiny_And_WonLegendary
+                or self._current_restart_flag == SWSHDAWhenRestart.NotShinyLegendary_And_WonLegendary
+                or (self._current_restart_flag ==
+                    SWSHDAWhenRestart.NotShiny_And_WonLegendary_Limit_Restart and self._dynite_ore_penalty_count < DYNITE_ORE_PENALTY_LIMIT)) and self._legendary_caught:
                 self.send_log("成功击败传说宝可梦，未检测到闪光宝可梦，重启开始下一轮大冒险")
-                self.macro_run("recognition.pokemon.swsh.common.restart_game",
-                               1, {"secondary": str(self._secondary)}, True, None)
-                self._re_cycle()
+                self.restart_game()
+                return
+            if self._current_restart_flag == SWSHDAWhenRestart.NotShiny_And_WonLegendary_Limit_Restart and self._dynite_ore_penalty_count >= DYNITE_ORE_PENALTY_LIMIT:
+                self.send_log(f"成功击败传说宝可梦，未检测到闪光宝可梦，极矿石惩罚数量超过{DYNITE_ORE_PENALTY_LIMIT}，继续开始下一轮大冒险")
+                self._shiny_count += 1
+                self._cycle_step_index += 1
                 return
             self._win_streaks_count = 0
             self._cycle_step_index += 1
@@ -512,6 +521,7 @@ class SwshDynamaxAdventures(BaseScript):
 
     def step_7_finish(self):
         status = self._swsh_da_finish.run()
+        self._dynite_ore_penalty_count = 0
         if status == SubStepRunningStatus.Running:
             return
         elif status == SubStepRunningStatus.OK:
@@ -521,3 +531,9 @@ class SwshDynamaxAdventures(BaseScript):
             self.send_log("{}函数返回状态为{}".format(
                 "swsh_da_finish", status.name))
             self._finished_process()
+
+    def restart_game(self):
+        self.macro_run("recognition.pokemon.swsh.common.restart_game",
+                       1, {"secondary": str(self._secondary)}, True, None)
+        self._dynite_ore_penalty_count += 1
+        self._re_cycle()
