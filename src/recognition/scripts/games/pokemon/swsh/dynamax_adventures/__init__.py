@@ -508,7 +508,6 @@ class SwshDynamaxAdventures(BaseScript):
                 return
             if self._current_restart_flag == SWSHDAWhenRestart.NotShiny_And_WonLegendary_Limit_Restart and self._dynite_ore_penalty_count >= DYNITE_ORE_PENALTY_LIMIT:
                 self.send_log(f"成功击败传说宝可梦，未检测到闪光宝可梦，极矿石惩罚数量超过{DYNITE_ORE_PENALTY_LIMIT}，继续开始下一轮大冒险")
-                self._shiny_count += 1
                 self._cycle_step_index += 1
                 return
             self._win_streaks_count = 0
