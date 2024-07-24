@@ -35,7 +35,7 @@ def run(script_name, stop_event: multiprocessing.Event, frame_queue: multiproces
             stop_event, frame_queue, controller_input_action_queue, paras)
     elif script_name == SwshDynamaxAdventures.script_name():
         script = SwshDynamaxAdventures(stop_event, frame_queue,
-                        controller_input_action_queue, paras)
+                                       controller_input_action_queue, paras)
     elif script_name == SVEggs.script_name():
         script = SVEggs(stop_event, frame_queue,
                         controller_input_action_queue, paras)

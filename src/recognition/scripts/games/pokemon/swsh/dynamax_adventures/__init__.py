@@ -117,7 +117,7 @@ class SwshDynamaxAdventures(BaseScript):
 
     @staticmethod
     def script_name() -> str:
-        return "宝可梦剑盾极巨大冒险(开发中)"
+        return "宝可梦剑盾极巨大冒险(自测3个月毕业)"
 
     @staticmethod
     def script_paras() -> dict:

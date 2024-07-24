@@ -1,11 +1,10 @@
-import math
 import multiprocessing
 import time
 from recognition.scripts.base.base_script import BaseScript, WorkflowEnum
 import cv2
-import numpy as np
-
 from recognition.scripts.parameter_struct import ScriptParameter
+
+DEBUG = False
 
 
 class SwshBattleShiny(BaseScript):
@@ -17,12 +16,14 @@ class SwshBattleShiny(BaseScript):
         self._cycle_steps = self.init_cycle_steps()
         self._cycle_step_index = -1
         self._template = cv2.imread(
-            "resources/img/recognition/pokemon/swsh/battle_shiny.jpg")
+            "resources/img/recognition/pokemon/swsh/battle_shiny.png")
         self._template = cv2.cvtColor(self._template, cv2.COLOR_BGR2GRAY)
-        self._template_p = (865, 430)
+        self._template_p = (
+            860, 432, self._template.shape[1], self._template.shape[0])
         self.set_paras(paras)
         self._durations = self.get_para("durations")
         self._secondary = self.get_para("secondary")
+        self._span = self.get_para("span")
 
     @staticmethod
     def script_name() -> str:
@@ -35,6 +36,8 @@ class SwshBattleShiny(BaseScript):
             "secondary", bool, False, "副设备")
         paras["durations"] = ScriptParameter(
             "durations", float, -1, "运行时长（分钟）")
+        paras["span"] = ScriptParameter(
+            "span", float, 2.6, "对方精灵登场框消失与己方精灵登场框出现间隔时间（秒）\n 雷吉神庙建议1.1秒，雷吉奇卡斯建议2.6秒")
         return paras
 
     def _check_durations(self):
@@ -132,21 +135,26 @@ class SwshBattleShiny(BaseScript):
 
         image = self.current_frame
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        match = cv2.matchTemplate(gray, self._template, cv2.TM_CCOEFF_NORMED)
+        crop_x, crop_y, crop_w, crop_h = self._template_p[
+            0], self._template_p[1], self._template_p[2], self._template_p[3]
+        crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
+        match = cv2.matchTemplate(
+            crop_gray, self._template, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, p = cv2.minMaxLoc(match)
-        if max_val > 0.75 and abs(p[0] - self._template_p[0]) <= 10 and abs(p[1] - self._template_p[1]) <= 10:
+        if max_val > 0.92:
             if self._cycle_step_2_time_monotonic_check_1 == 0:
                 if self._cycle_step_2_time_monotonic_check_1_temp == 0:
                     self.macro_stop(block=False)
                 self._cycle_step_2_time_monotonic_check_1_temp = time.monotonic()
             else:
                 span = time.monotonic() - self._cycle_step_2_time_monotonic_check_1
-                if span < 1.1:
+                if DEBUG:
+                    self.send_log("time_span:{:.2f}, frames_span:{}".format(
+                        span, self.current_frame_count - self._cycle_step_2_frame_count_check_1))
+                if span < self._span:
                     self._cycle_step_index += 1
                     return
-                elif span < 5:
-                    # self.send_log("time_span:{:.2f}, frames_span:{}".format(
-                    #     span, self.current_frame_count - self._cycle_step_2_frame_count_check_1))
+                elif span < self._span + 3:
                     run_time_span = self.run_time_span
                     if self.current_frame_count - self._cycle_step_2_frame_count_check_1 <= 4:
                         self._cycle_step_index += 1

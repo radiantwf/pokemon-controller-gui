@@ -57,17 +57,25 @@ def get_main_color(image, region=None):
 
 
 def main():
-    _template = cv2.imread(
-        "resources/img/recognition/pokemon/swsh/dynamax_adventures/battle/dynamax_icon.png")
-    template_gray = cv2.cvtColor(
-        _template, cv2.COLOR_BGR2GRAY)
+    template = cv2.imread("resources/img/recognition/pokemon/swsh/battle_shiny.png")
+    template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
+    template_p = (860, 432, template.shape[1], template.shape[0])
 # Captures/20231016101856-recognize.jpg
 # Captures/20231016105433-recognize.jpg
 # Captures/20231016105434-recognize.jpg
 # Captures/20231016105436-recognize.jpg
 
     mat = cv2.imread(
-        "Captures/20240425011448-recognize.jpg")
+        "temp_20240725025043.jpg")
+    
+    gray = cv2.cvtColor(mat, cv2.COLOR_BGR2GRAY)
+    crop_x, crop_y, crop_w, crop_h = template_p[0], template_p[1], template_p[2], template_p[3]
+    crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
+    match = cv2.matchTemplate(crop_gray, template, cv2.TM_CCOEFF_NORMED)
+    _, max_val, _, max_loc = cv2.minMaxLoc(match)
+    print(max_val, max_loc)
+    return
+
     ret = CombatMatch().combat_check(mat)
     print(ret)
     gray = cv2.cvtColor(mat, cv2.COLOR_BGR2GRAY)
