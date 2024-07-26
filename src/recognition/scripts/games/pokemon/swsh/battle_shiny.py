@@ -37,7 +37,7 @@ class SwshBattleShiny(BaseScript):
         paras["durations"] = ScriptParameter(
             "durations", float, -1, "运行时长（分钟）")
         paras["span"] = ScriptParameter(
-            "span", float, 2.6, "对方精灵登场框消失与己方精灵登场框出现间隔时间（秒）\n 雷吉神庙建议1.1秒，雷吉奇卡斯建议2.6秒")
+            "span", float, 1.1, "对方精灵登场框消失与己方精灵登场框出现间隔时间（秒）\n 雷吉神庙建议1.1秒，雷吉奇卡斯建议2.45秒")
         return paras
 
     def _check_durations(self):
