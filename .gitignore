@@ -9,3 +9,4 @@ yolo_training/data/images/**/temp
 **/*.mp4
 **/.DS_Store
 runs
+src/tools

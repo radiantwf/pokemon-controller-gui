@@ -1,4 +1,3 @@
-import time
 import pygame
 from datatype.input import ControllerInput, InputEnum, StickEnum
 from PySide6.QtCore import QObject, Signal
@@ -13,6 +12,7 @@ class Joystick(QObject):
         QObject.__init__(self, parent)
         self._joystick = self._open_joystick(joystick_info)
         self._chkJoystickButtonSwitch = False
+        self._trigger_dualsense = False
         if self._joystick == None:
             return
         self._joystick.init()
@@ -23,14 +23,18 @@ class Joystick(QObject):
     def setButtonSwitch(self, chkJoystickButtonSwitch: bool):
         self._chkJoystickButtonSwitch = chkJoystickButtonSwitch
 
+    def setTriggerDualSense(self, trigger_dualsense: bool):
+        self._trigger_dualsense = trigger_dualsense
+
     def run(self):
         pygame.event.pump()
         if self._joystick == None:
             return
         axes = [self._joystick.get_axis(i) for i in range(
             self._joystick.get_numaxes())]
+        button_num = self._joystick.get_numbuttons()
         buttons = [self._joystick.get_button(
-            i) for i in range(self._joystick.get_numbuttons())]
+            i) for i in range(button_num)]
         hats = [self._joystick.get_hat(i)
                 for i in range(self._joystick.get_numhats())]
         input = ControllerInput()
@@ -52,34 +56,40 @@ class Joystick(QObject):
                 input.set_button(InputEnum.BUTTON_X)
             if buttons[3]:
                 input.set_button(InputEnum.BUTTON_Y)
-        if buttons[4]:
+        if 4 < button_num and buttons[4]:
             input.set_button(InputEnum.BUTTON_MINUS)
-        if buttons[5]:
+        if 5 < button_num and buttons[5]:
             input.set_button(InputEnum.BUTTON_HOME)
-        if buttons[6]:
+        if 6 < button_num and buttons[6]:
             input.set_button(InputEnum.BUTTON_PLUS)
-        if buttons[7]:
+        if 7 < button_num and buttons[7]:
             input.set_button(InputEnum.BUTTON_LPRESS)
-        if buttons[8]:
+        if 8 < button_num and buttons[8]:
             input.set_button(InputEnum.BUTTON_RPRESS)
-        if buttons[9]:
+        if 9 < button_num and buttons[9]:
             input.set_button(InputEnum.BUTTON_L)
-        if buttons[10]:
+        if 10 < button_num and buttons[10]:
             input.set_button(InputEnum.BUTTON_R)
-        if buttons[11]:
+        if 11 < button_num and buttons[11]:
             input.set_button(InputEnum.DPAD_TOP)
-        if buttons[12]:
+        if 12 < button_num and buttons[12]:
             input.set_button(InputEnum.DPAD_BOTTOM)
-        if buttons[13]:
+        if 13 < button_num and buttons[13]:
             input.set_button(InputEnum.DPAD_LEFT)
-        if buttons[14]:
+        if 14 < button_num and buttons[14]:
             input.set_button(InputEnum.DPAD_RIGHT)
-        if buttons[15]:
+        if 15 < button_num and buttons[15]:
             input.set_button(InputEnum.BUTTON_CAPTURE)
-        if axes[4] >= 0.5:
-            input.set_button(InputEnum.BUTTON_ZL)
-        if axes[5] >= 0.5:
-            input.set_button(InputEnum.BUTTON_ZR)
+        if self._trigger_dualsense:
+            if axes[4] >= 0.5:
+                input.set_button(InputEnum.BUTTON_ZL)
+            if axes[5] >= 0.5:
+                input.set_button(InputEnum.BUTTON_ZR)
+        else:
+            if axes[2] >= 0.5:
+                input.set_button(InputEnum.BUTTON_ZL)
+            if axes[5] >= 0.5:
+                input.set_button(InputEnum.BUTTON_ZR) 
         if hats != None and len(hats) > 1:
             if hats[0][0] == -1:
                 input.set_button(InputEnum.DPAD_LEFT)
@@ -89,12 +99,21 @@ class Joystick(QObject):
                 input.set_button(InputEnum.DPAD_TOP)
             if hats[0][1] == 1:
                 input.set_button(InputEnum.DPAD_BOTTOM)
-        x = round((axes[0]+1)/2*0xFF) - 0x80
-        y = round((axes[1]+1)/2*0xFF) - 0x80
-        input.set_stick(StickEnum.LSTICK, x, y)
-        x = round((axes[2]+1)/2*0xFF) - 0x80
-        y = round((axes[3]+1)/2*0xFF) - 0x80
-        input.set_stick(StickEnum.RSTICK, x, y)
+
+        if self._trigger_dualsense:
+            x = round((axes[0]+1)/2*0xFF) - 0x80
+            y = round((axes[1]+1)/2*0xFF) - 0x80
+            input.set_stick(StickEnum.LSTICK, x, y)
+            x = round((axes[2]+1)/2*0xFF) - 0x80
+            y = round((axes[3]+1)/2*0xFF) - 0x80
+            input.set_stick(StickEnum.RSTICK, x, y)
+        else:
+            x = round((axes[0]+1)/2*0xFF) - 0x80
+            y = round((axes[1]+1)/2*0xFF) - 0x80
+            input.set_stick(StickEnum.LSTICK, x, y)
+            x = round((axes[3]+1)/2*0xFF) - 0x80
+            y = round((axes[4]+1)/2*0xFF) - 0x80
+            input.set_stick(StickEnum.RSTICK, x, y)
         if self.joystick_event:
             self.joystick_event.emit(input)
 

@@ -69,6 +69,7 @@ class BaseSubStep(ABC):
             return self._running_status
         try:
             if self._jump_next_frame:
+                self.script.clear_frame_queue()
                 self._jump_next_frame = False
                 return self._running_status
             self._running_status = self._process()

@@ -112,6 +112,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.chkJoystickButtonSwitch.stateChanged.connect(
             self.on_joystick_button_switch_changed)
 
+        self.chkJoystickTriggerDualSense.stateChanged.connect(
+            self.on_joystick_trigger_dualsense_changed)
+
         self.toolBox.setCurrentIndex(0)
 
         self._timer = QTimer()
@@ -350,6 +353,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self._joystick_timer = None
 
         self.chkJoystickButtonSwitch.setChecked(False)
+        self.chkJoystickTriggerDualSense.setChecked(False)
         if self.cbxJoystickList.currentIndex() == 0:
             return
 
@@ -362,6 +366,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.chkJoystickButtonSwitch.setChecked(True)
         else:
             self.chkJoystickButtonSwitch.setChecked(False)
+        if 'DualSense' in joystick_info.name:
+            self.chkJoystickTriggerDualSense.setChecked(True)
+        else:
+            self.chkJoystickTriggerDualSense.setChecked(False)
 
         self._joystick_timer = QTimer()
         self._joystick_timer.timeout.connect(self._current_joystick.run)
@@ -371,6 +379,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if self._current_joystick:
             self._current_joystick.setButtonSwitch(
                 self.chkJoystickButtonSwitch.isChecked())
+
+    def on_joystick_trigger_dualsense_changed(self):
+        if self._current_joystick:
+            self._current_joystick.setTriggerDualSense(
+                self.chkJoystickTriggerDualSense.isChecked())
 
     def on_serial_changed(self):
         self._macro_launcher.macro_stop()
@@ -459,25 +472,36 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def closeEvent(self, event):
         self._camera_launcher.camera_stop()
+        print('camera_stop')
         self._macro_launcher.macro_stop()
+        print('macro_stop')
         self._recognition_launcher.recognition_stop()
+        print('recognition_stop')
         self._controller_launcher.controller_stop()
+        print('controller_stop')
         if self._current_joystick:
             self._current_joystick.stop()
             self._current_joystick = None
+            print('joystick_stop')
         if self._joystick_timer:
             self._joystick_timer.stop()
             self._joystick_timer = None
+            print('joystick_timer_stop')
         if self._timer:
             self._timer.stop()
+            print('timer_stop')
         self.stop_audio()
+        print('audio_stop')
         if self.th_display:
             self.th_display.terminate()
         if self.th_log:
             self.th_log.terminate()
+            print('th_log_stop')
         if self.th_action_display:
             self.th_action_display.terminate()
+            print('th_action_display_stop')
         pygame.quit()
+        print('pygame_quit')
         event.accept()
         QCoreApplication.instance().aboutToQuit.emit()
 

@@ -1047,7 +1047,7 @@
       <widget class="QCheckBox" name="chkJoystickButtonSwitch">
        <property name="geometry">
         <rect>
-         <x>50</x>
+         <x>20</x>
          <y>110</y>
          <width>201</width>
          <height>20</height>
@@ -1060,7 +1060,7 @@
       <widget class="QLabel" name="label">
        <property name="geometry">
         <rect>
-         <x>70</x>
+         <x>40</x>
          <y>130</y>
          <width>171</width>
          <height>16</height>
@@ -1077,6 +1077,41 @@
        </property>
        <property name="text">
         <string>适配Switch Pro以外手柄布局</string>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="chkJoystickTriggerDualSense">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>150</y>
+         <width>221</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>DualSense手柄摇杆、扳机键方案</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_9">
+       <property name="geometry">
+        <rect>
+         <x>40</x>
+         <y>170</y>
+         <width>171</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+         <italic>true</italic>
+        </font>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">color:rgb(140, 140, 140)</string>
+       </property>
+       <property name="text">
+        <string>摇杆、扳机适配有误时启用</string>
        </property>
       </widget>
       <widget class="QLabel" name="label_7">

@@ -372,3 +372,9 @@ class BaseScript(ABC):
     def _on_stop(self):
         self._running_status = WorkflowEnum.End
         self.on_stop()
+
+    # 清空帧队列
+    @final
+    def clear_frame_queue(self):
+        while not self._frame_queue.empty():
+            self._frame_queue.get_nowait()

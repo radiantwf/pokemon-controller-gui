@@ -32,6 +32,7 @@ class SVEggsPicnic(BaseScript):
             if self.current_frame_count == 1:
                 self._cycle_init()
             if self._jump_next_frame:
+                self.clear_frame_queue()
                 self._jump_next_frame = False
                 return
             if self._cycle_step_index >= 0 and self._cycle_step_index < len(self._cycle_step_list):
