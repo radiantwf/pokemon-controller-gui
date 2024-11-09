@@ -471,38 +471,100 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._m_output.write(data)
 
     def closeEvent(self, event):
-        self._camera_launcher.camera_stop()
+        # 停止所有设备和进程
         print('camera_stop')
-        self._macro_launcher.macro_stop()
+        self._camera_launcher.camera_stop()
+        
         print('macro_stop')
-        self._recognition_launcher.recognition_stop()
+        self._macro_launcher.macro_stop()
+        
         print('recognition_stop')
-        self._controller_launcher.controller_stop()
+        self._recognition_launcher.recognition_stop()
+        
         print('controller_stop')
+        self._controller_launcher.controller_stop()
+
+        # 清理手柄相关资源
         if self._current_joystick:
+            print('joystick_stop')
             self._current_joystick.stop()
             self._current_joystick = None
-            print('joystick_stop')
+
+
+        # 先停止所有定时器
+        if self._timer:
+            print('timer_stop')
+            self._timer.stop()
+        
         if self._joystick_timer:
+            print('joystick_timer_stop')
             self._joystick_timer.stop()
             self._joystick_timer = None
-            print('joystick_timer_stop')
-        if self._timer:
-            self._timer.stop()
-            print('timer_stop')
-        self.stop_audio()
+
+        # 停止音频
         print('audio_stop')
+        self.stop_audio()
+        # 停止所有线程
         if self.th_display:
+            print('th_display_stop')
             self.th_display.terminate()
+            for _ in range(10):
+                if not self.th_display.isRunning():
+                    break
+                time.sleep(0.1)
+            
         if self.th_log:
-            self.th_log.terminate()
             print('th_log_stop')
+            self.th_log.terminate()
+            for _ in range(10):
+                if not self.th_log.isRunning():
+                    break
+                time.sleep(0.1)
+            
         if self.th_action_display:
-            self.th_action_display.terminate()
             print('th_action_display_stop')
-        pygame.quit()
+            self.th_action_display.terminate()
+            for _ in range(10):
+                if not self.th_action_display.isRunning():
+                    break
+                time.sleep(0.1)
+
+
+        # 清理 pygame
         print('pygame_quit')
+        pygame.quit()
+
+        # 清理队列
+        print('display_frame_queue_clear')
+        if self._display_frame_queue:
+            while not self._display_frame_queue.empty():
+                try:
+                    self._display_frame_queue.get_nowait()
+                except queue.Empty:
+                    break
+        
+        print('recognition_frame_queue_clear')
+        if self._recognition_frame_queue:
+            while not self._recognition_frame_queue.empty():
+                try:
+                    self._recognition_frame_queue.get_nowait()
+                except queue.Empty:
+                    break
+
+        print('controller_input_action_queue_clear')
+        if self._controller_input_action_queue:
+            while not self._controller_input_action_queue.empty():
+                try:
+                    self._controller_input_action_queue.get_nowait()
+                except queue.Empty:
+                    break
+
+        # 接受关闭事件
+        print('event_accept')
         event.accept()
+        
+        # 发送退出信号
+        print('aboutToQuit_emit')
         QCoreApplication.instance().aboutToQuit.emit()
 
     @Slot()
