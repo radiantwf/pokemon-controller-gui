@@ -92,10 +92,13 @@ class SVGimmighoulPokedex(BaseSubStep):
         self.time_sleep(0.5)
         self._process_step_index += 1
 
-    def _match_pokedex_shiny_icon_template(self, gray, threshold=0.8) -> bool:
+    def _match_pokedex_shiny_icon_template(self, gray, threshold=0.7) -> bool:
         rect = (180, 105, 20, 30)
         crop_gray = gray[rect[1]:rect[1] + rect[3], rect[0]:rect[0] + rect[2]]
         res = cv2.matchTemplate(
             crop_gray, self._pokedex_shiny_icon_template, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+        # cv2.imwrite("./gray_crop.jpg", crop_gray)
+        # cv2.imwrite("./gray.jpg", gray)
+        # print(max_val)
         return max_val >= threshold

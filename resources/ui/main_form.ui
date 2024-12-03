@@ -1079,7 +1079,7 @@
         <string>适配Switch Pro以外手柄布局</string>
        </property>
       </widget>
-      <widget class="QCheckBox" name="chkJoystickTriggerDualSense">
+      <widget class="QCheckBox" name="chkJoystickTriggerModel2">
        <property name="geometry">
         <rect>
          <x>20</x>
@@ -1089,7 +1089,7 @@
         </rect>
        </property>
        <property name="text">
-        <string>DualSense手柄摇杆、扳机键方案</string>
+        <string>手柄摇杆、扳机键方案2</string>
        </property>
       </widget>
       <widget class="QLabel" name="label_9">

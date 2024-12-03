@@ -180,10 +180,13 @@ class BaseScript(ABC):
         return time.monotonic() - self._run_start_time_monotonic
 
     @final
-    def save_temp_image(self):
+    def save_temp_image(self, rect=None):
+        img = self.current_frame
+        if rect is not None:
+            img = img[rect[1]:rect[1] + rect[3], rect[0]:rect[0] + rect[2]]
         time_str = time.strftime(
             "%Y%m%d%H%M%S", time.localtime())
-        cv2.imwrite("./temp_"+time_str+".jpg", self.current_frame)
+        cv2.imwrite("./temp_"+time_str+".jpg", img)
 
     # 运行宏命令
     @final

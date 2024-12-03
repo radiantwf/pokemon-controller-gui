@@ -112,7 +112,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.chkJoystickButtonSwitch.stateChanged.connect(
             self.on_joystick_button_switch_changed)
 
-        self.chkJoystickTriggerDualSense.stateChanged.connect(
+        self.chkJoystickTriggerModel2.stateChanged.connect(
             self.on_joystick_trigger_dualsense_changed)
 
         self.toolBox.setCurrentIndex(0)
@@ -353,7 +353,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self._joystick_timer = None
 
         self.chkJoystickButtonSwitch.setChecked(False)
-        self.chkJoystickTriggerDualSense.setChecked(False)
+        self.chkJoystickTriggerModel2.setChecked(False)
         if self.cbxJoystickList.currentIndex() == 0:
             return
 
@@ -366,10 +366,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.chkJoystickButtonSwitch.setChecked(True)
         else:
             self.chkJoystickButtonSwitch.setChecked(False)
-        if 'DualSense' in joystick_info.name:
-            self.chkJoystickTriggerDualSense.setChecked(True)
-        else:
-            self.chkJoystickTriggerDualSense.setChecked(False)
 
         self._joystick_timer = QTimer()
         self._joystick_timer.timeout.connect(self._current_joystick.run)
@@ -382,8 +378,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def on_joystick_trigger_dualsense_changed(self):
         if self._current_joystick:
-            self._current_joystick.setTriggerDualSense(
-                self.chkJoystickTriggerDualSense.isChecked())
+            self._current_joystick.setTriggerModel2(
+                self.chkJoystickTriggerModel2.isChecked())
 
     def on_serial_changed(self):
         self._macro_launcher.macro_stop()
@@ -423,10 +419,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             msg_box.setText("脚本正在运行")
             msg_box.setInformativeText("是否停止正在运行脚本")
             msg_box.setWindowTitle("提示")
-            msg_box.addButton('确定', QMessageBox.ButtonRole.AcceptRole)
+            ok_button = msg_box.addButton('确定', QMessageBox.ButtonRole.AcceptRole)
             msg_box.addButton('取消', QMessageBox.ButtonRole.RejectRole)
-            ret = msg_box.exec_()
-            if ret == QMessageBox.ButtonRole.AcceptRole.value:
+            msg_box.exec_()
+            if msg_box.clickedButton() == ok_button:
                 if not self._macro_launcher.macro_stop():
                     send_log("已强行终止运行中脚本")
                 self.on_serial_changed()
@@ -441,10 +437,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             msg_box.setText("图像识别脚本正在运行")
             msg_box.setInformativeText("是否停止正在运行脚本")
             msg_box.setWindowTitle("提示")
-            msg_box.addButton('确定', QMessageBox.ButtonRole.AcceptRole)
+            ok_button = msg_box.addButton('确定', QMessageBox.ButtonRole.AcceptRole)
             msg_box.addButton('取消', QMessageBox.ButtonRole.RejectRole)
-            ret = msg_box.exec_()
-            if ret == QMessageBox.ButtonRole.AcceptRole.value:
+            msg_box.exec_()
+            if msg_box.clickedButton() == ok_button:
                 if not self._recognition_launcher.recognition_stop():
                     send_log("已强行终止运行中图像识别脚本")
                 self.on_serial_changed()

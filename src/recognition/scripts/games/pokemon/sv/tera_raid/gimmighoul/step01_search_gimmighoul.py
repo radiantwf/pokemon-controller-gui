@@ -117,6 +117,9 @@ class SVGimmighoulSearch(BaseSubStep):
         res = cv2.matchTemplate(
             crop_gray, self._five_star_template, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+        # print(max_val)
+        # if max_val >= 0.1:
+        #     self.script.save_temp_image(rect)
         return max_val >= threshold
 
     def _match_raid_text_template(self, gray, threshold=0.9) -> bool:
@@ -125,4 +128,7 @@ class SVGimmighoulSearch(BaseSubStep):
         res = cv2.matchTemplate(
             crop_gray, self._raid_text_template, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+        # print(max_val)
+        # if max_val >= 0.1:
+        #     self.script.save_temp_image(rect)
         return max_val >= threshold

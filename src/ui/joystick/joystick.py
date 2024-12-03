@@ -12,7 +12,7 @@ class Joystick(QObject):
         QObject.__init__(self, parent)
         self._joystick = self._open_joystick(joystick_info)
         self._chkJoystickButtonSwitch = False
-        self._trigger_dualsense = False
+        self._trigger_model2 = False
         if self._joystick == None:
             return
         self._joystick.init()
@@ -23,8 +23,8 @@ class Joystick(QObject):
     def setButtonSwitch(self, chkJoystickButtonSwitch: bool):
         self._chkJoystickButtonSwitch = chkJoystickButtonSwitch
 
-    def setTriggerDualSense(self, trigger_dualsense: bool):
-        self._trigger_dualsense = trigger_dualsense
+    def setTriggerModel2(self, trigger_model2: bool):
+        self._trigger_model2 = trigger_model2
 
     def run(self):
         pygame.event.pump()
@@ -80,7 +80,7 @@ class Joystick(QObject):
             input.set_button(InputEnum.DPAD_RIGHT)
         if 15 < button_num and buttons[15]:
             input.set_button(InputEnum.BUTTON_CAPTURE)
-        if self._trigger_dualsense:
+        if not self._trigger_model2:
             if axes[4] >= 0.5:
                 input.set_button(InputEnum.BUTTON_ZL)
             if axes[5] >= 0.5:
@@ -100,7 +100,7 @@ class Joystick(QObject):
             if hats[0][1] == 1:
                 input.set_button(InputEnum.DPAD_BOTTOM)
 
-        if self._trigger_dualsense:
+        if not self._trigger_model2:
             x = round((axes[0]+1)/2*0xFF) - 0x80
             y = round((axes[1]+1)/2*0xFF) - 0x80
             input.set_stick(StickEnum.LSTICK, x, y)
