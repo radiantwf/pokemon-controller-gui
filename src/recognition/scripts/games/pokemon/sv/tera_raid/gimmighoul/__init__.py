@@ -19,6 +19,8 @@ class SvTeraRaidGimmighoul(BaseScript):
         self._prepare_step_index = -1
         self._cycle_step_index = -1
         self._jump_next_frame = False
+        self._step2_retries = 0
+        self._step2_retries_limit = 2
 
         self.set_paras(paras)
 
@@ -27,10 +29,12 @@ class SvTeraRaidGimmighoul(BaseScript):
         self._durations = self.get_para("durations")
         self._secondary = self.get_para(
             "secondary") if "secondary" in paras else False
+        self._find_target_times = 0
+
 
     @staticmethod
     def script_name() -> str:
-        return "宝可梦朱紫索财灵刷闪坑"
+        return "宝可梦朱紫刷闪坑"
 
     @staticmethod
     def script_paras() -> dict:
@@ -93,6 +97,7 @@ class SvTeraRaidGimmighoul(BaseScript):
 
     def on_start(self):
         self._prepare_step_index = 0
+        self._find_target_times = 0
         self.send_log(f"开始运行{SvTeraRaidGimmighoul.script_name()}脚本")
 
     def on_cycle(self):
@@ -140,11 +145,14 @@ class SvTeraRaidGimmighoul(BaseScript):
         self.sv_tera_raid_gimmighoul_search = SVGimmighoulSearch(self)
         self.sv_battle = SVGimmighoulBattle(self)
         self.sv_pokedex = SVGimmighoulPokedex(self)
+        self._step2_retries = 0
+
 
     def _cycle_init(self):
         self.sv_tera_raid_gimmighoul_search = SVGimmighoulSearch(self)
         self.sv_battle = SVGimmighoulBattle(self)
         self.sv_pokedex = SVGimmighoulPokedex(self)
+        self._step2_retries = 0
 
     def step_0(self):
         self.sv_tera_raid_gimmighoul_search.run()
@@ -153,8 +161,9 @@ class SvTeraRaidGimmighoul(BaseScript):
             return
         elif status == SubStepRunningStatus.OK:
             timespan = self.sv_tera_raid_gimmighoul_search.run_time_span
+            self._find_target_times += 1
             self.send_log(
-                f'找到5星索财灵巢穴，耗时{int((timespan % 3600) / 60)}分{int(timespan % 60)}秒')
+                f'第{self._find_target_times}次找到目标巢穴，本次耗时{int((timespan % 3600) / 60)}分{int(timespan % 60)}秒')
         else:
             self.send_log("{}函数返回状态为{}".format(
                 "sv_tera_raid_gimmighoul_search", status.name))
@@ -182,12 +191,24 @@ class SvTeraRaidGimmighoul(BaseScript):
         elif status == SubStepRunningStatus.OK:
             if self.sv_pokedex.result == SVPokedexShinyMatchResult.Shiny:
                 self._cycle_step_index += 1
-                self.send_log("找到闪光索财灵")
+                self.send_log("找到目标闪光宝可梦")
                 self._finished_process()
                 return
-            self.send_log("索财灵未闪光")
+            self.send_log("目标宝可梦未闪光")
             self._cycle_step_index += 1
             return
-        self.send_log("{}函数返回状态为{}".format(
-            "sv_pokedex", status.name))
-        self._finished_process()
+        elif status == SubStepRunningStatus.Timeout:
+            if self._step2_retries >= self._step2_retries_limit:
+                self.send_log("{}函数返回状态为{}".format(
+                "sv_pokedex", status.name))
+                self._finished_process()
+            self.send_log("图鉴校验超时，重新校验")
+            self.script.macro_text_run("B:0.1->0.4", loop=5, block=True)
+            self.time_sleep(0.5)
+            self._step2_retries += 1
+            self.sv_pokedex = SVGimmighoulPokedex(self)
+            return
+        else:
+            self.send_log("{}函数返回状态为{}".format(
+                "sv_pokedex", status.name))
+            self._finished_process()
