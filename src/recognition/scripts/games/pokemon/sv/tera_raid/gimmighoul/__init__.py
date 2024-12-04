@@ -203,8 +203,9 @@ class SvTeraRaidGimmighoul(BaseScript):
                 "sv_pokedex", status.name))
                 self._finished_process()
             self.send_log("图鉴校验超时，重新校验")
-            self.script.macro_text_run("B:0.1->0.4", loop=5, block=True)
-            self.time_sleep(0.5)
+            self.macro_text_run("B:0.1->0.4", loop=5, block=True)
+            time.sleep(0.5)
+            self._jump_next_frame = True
             self._step2_retries += 1
             self.sv_pokedex = SVGimmighoulPokedex(self)
             return
