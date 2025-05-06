@@ -122,7 +122,7 @@ class SVGimmighoulSearch(BaseSubStep):
         #     self.script.save_temp_image(rect)
         return max_val >= threshold
 
-    def _match_raid_text_template(self, gray, threshold=0.9) -> bool:
+    def _match_raid_text_template(self, gray, threshold=0.7) -> bool:
         rect = (140, 90, 160, 35)
         crop_gray = gray[rect[1]:rect[1] + rect[3], rect[0]:rect[0] + rect[2]]
         res = cv2.matchTemplate(
