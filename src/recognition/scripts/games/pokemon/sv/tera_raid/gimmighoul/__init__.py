@@ -155,7 +155,7 @@ class SvTeraRaidGimmighoul(BaseScript):
         self._step2_retries = 0
 
     def step_0(self):
-        self.sv_tera_raid_gimmighoul_search.run()
+        # self.sv_tera_raid_gimmighoul_search.run()
         status = self.sv_tera_raid_gimmighoul_search.run()
         if status == SubStepRunningStatus.Running:
             return

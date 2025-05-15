@@ -61,7 +61,7 @@ class SVGimmighoulSearch(BaseSubStep):
         self._process_step_index += 1
 
     def _process_step_1(self):
-        if self._last_raid_text_match_ts is not None and time.monotonic() - self._last_raid_text_match_ts > 180:
+        if self._last_raid_text_match_ts is not None and time.monotonic() - self._last_raid_text_match_ts > 300:
             self._status = SubStepRunningStatus.Failed
             return
         # current_frame = self.script.current_frame
