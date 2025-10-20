@@ -51,3 +51,20 @@ class Paras(object):
         elif (type(v) is str):
             return int(float(v))
         return 0
+
+    def get_float(self, key) -> int:
+        try:
+            key = key.replace("|space|", " ", -1)
+            v = eval(key, globals())
+        except:
+            return 0
+
+        if v == None:
+            return 0
+        elif (type(v) is int):
+            return float(v)
+        elif (type(v) is float):
+            return v
+        elif (type(v) is str):
+            return float(v)
+        return 0
