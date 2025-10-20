@@ -52,7 +52,7 @@ class Paras(object):
             return int(float(v))
         return 0
 
-    def get_float(self, key) -> int:
+    def get_float(self, key) -> float:
         try:
             key = key.replace("|space|", " ", -1)
             v = eval(key, globals())
