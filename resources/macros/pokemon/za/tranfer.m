@@ -86,3 +86,46 @@ LStick@-*leave_pokemonCenter_x_offset*-,-*leave_pokemonCenter_y_offset*-:-*leave
 0.1
 [do_transfer]
 2
+
+--研究所 巨金怪、黑鲁加、雷电兽--
+<metagross|ZA - 研究所 巨金怪、黑鲁加、雷电兽|-1>
+LStick@-50,-127:0.1->LStick@-50,-127|B:0.1->LStick@-50,-127:1.55->~
+LStick@-127,-40:2.2->LStick@-50,-127:0.6->~
+LStick@-127,0:1.3->LStick@-60,127:1->LStick@-127,0:0.7->LStick@-127,0:0.2->LStick@-127,-127:1->~
+LStick@0,-127:5
+1
+LStick@0,-127:1.5
+0.1
+Plus:0.1
+0.3
+LStick@100,127:0.5
+0.1
+[do_transfer]
+
+--研究所 巨金怪 高效率--
+<metagross2|ZA - 研究所 巨金怪(纯净，高效率，超稳定)|-1>
+LStick@-50,-127:0.1->LStick@-50,-127|B:0.1->LStick@-50,-127:1.55->~
+LStick@-127,-40:2.2->LStick@-50,-127:0.6->~
+LStick@-127,0:1.3->LStick@-60,127:1->LStick@-127,0:0.7->LStick@-127,0:0.2->LStick@-127,-127:1.2->~
+LStick@0,-127:1.65
+1
+LStick@-127,-127:0.1->LStick@-127,-127|B:0.3->~
+body:
+LStick@127,-127:0.2->~
+LStick@0,-127:3.2->~
+LStick@127,-127:1.55->LStick@30,-127:3.2->~
+LStick@-30,127:3.1->LStick@-127,127:1.9->~
+LStick@0,127:3.2->LStick@-127,127:0.5->LStick@127,-127:0.6->~
+
+--研究所 鬼剑--
+<aegislash|ZA - 研究所 鬼剑|-1>
+LStick@90,-127:0.1->LStick@90,-127|B:0.1->LStick@90,-127:1
+body:
+A:0.1
+2.6
+Y:0.1
+0.9
+LStick@0,127:0.1->LStick@0,127|B:0.1->LStick@0,127:0.6
+A:0.1
+2.6
+

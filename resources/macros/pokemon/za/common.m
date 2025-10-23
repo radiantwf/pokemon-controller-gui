@@ -1,0 +1,22 @@
+--打开宝可梦ZA--
+<open_game--ns1|NS1|False>
+A:0.1
+{0.8}?ns1
+0.7
+A:0.1
+{12}?ns1
+7
+{
+    A:0.1
+    1
+}?ns1
+A:0.1
+1
+A:0.1
+{20}?ns1
+3
+
+--重启宝可梦ZA--
+<restart_game|重启ZA|1--ns1|NS1|False>
+[common.close_game]
+[open_game]

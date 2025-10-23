@@ -6,23 +6,27 @@ LPress:0.1
 3
 
 --返回主界面--
-<return_home>
+<return_home--ns1|NS1|True>
 Home:0.1
-1.5
+0.7
+{0.8}?ns1
 
 --返回游戏界面（非Home页面）--
-<return_game>
-[common.return_home]
+<return_game--ns1|NS1|True>
+[return_home]
 A:0.1
-1.5
+0.7
+{0.8}?ns1
 
 --关闭游戏--
-<close_game>
-[common.return_home]
+<close_game--ns1|NS1|True>
+[return_home]
 X:0.1
-0.5
+0.3
+{0.2}?ns1
 A:0.1
-5
+0.8
+{4.2}?ns1
 
 --连续点击A--
 <press_button_a|连续点击A>
@@ -35,8 +39,9 @@ B:0.1
 0.2
 
 --进入休眠--
-<switch_sleep>
-HOME:4
+<switch_sleep--ns1|NS1|True>
+{HOME:4}?ns1
+{HOME:2}?not|space|ns1
 1
 A:0.1
 0.5
