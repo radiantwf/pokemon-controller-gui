@@ -40,8 +40,7 @@ B:0.1
 
 --进入休眠--
 <switch_sleep--ns1|NS1|True>
-{HOME:4}?ns1
-{HOME:2}?not|space|ns1
+HOME:4
 1
 A:0.1
 0.5

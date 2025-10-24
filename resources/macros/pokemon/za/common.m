@@ -11,12 +11,10 @@ A:0.1
     1
 }?ns1
 A:0.1
-1
-A:0.1
+4
 {20}?ns1
-3
 
 --重启宝可梦ZA--
-<restart_game|重启ZA|1--ns1|NS1|False>
+<restart_game--ns1|NS1|False>
 [common.close_game]
 [open_game]

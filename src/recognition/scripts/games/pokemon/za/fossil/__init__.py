@@ -34,7 +34,7 @@ class ZaFossil(BaseScript):
     def script_paras() -> dict:
         paras = dict()
         paras["loop"] = ScriptParameter(
-            "loop", int, 1, "运行次数")
+            "loop", int, -1, "运行次数")
         paras["durations"] = ScriptParameter(
             "durations", float, -1, "运行时长（分钟）")
         paras["ns1"] = ScriptParameter(
@@ -147,7 +147,7 @@ class ZaFossil(BaseScript):
     def step_0(self):
         # 复原30个化石
         self.macro_run("common.press_button_a",
-                       loop=-1, paras={}, block=True, timeout=391)
+                       loop=-1, paras={}, block=True, timeout=390)
         self.macro_run("common.press_button_b",
                        loop=-1, paras={}, block=True, timeout=3)
         self._cycle_step_index += 1

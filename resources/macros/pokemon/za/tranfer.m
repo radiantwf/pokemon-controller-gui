@@ -68,7 +68,7 @@ Plus:0.1
 LStick@-*enter_pokemonCenter_x_offset*-,-*enter_pokemonCenter_y_offset*-:-*enter_pokemonCenter_delay*-
 0.1
 [do_transfer]
-LStick@127,-50:0.03->LStick@127,-50|B:0.02->LStick@127,-50:1.8->~
+LStick@127,-50:0.03->LStick@127,-50|B:0.02->LStick@127,-50:1.6->~
 LStick@30,-127:1.6
 {
     A:0.05->0.05->~
