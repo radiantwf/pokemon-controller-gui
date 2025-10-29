@@ -1,17 +1,23 @@
 --原地传送--
-<tranfer|ZA - 原地传送(默认参数为5区传送覆盖5区、16区)|-1--x_offset|地区传送-摇杆横向位移参数(左-127~127右)|20--y_offset|地区传送-摇杆纵向位移参数(上-127~127下)|-80--delay|地图传送-摇杆移动持续时间|0.06>
+<tranfer|ZA-稳定-原地传送|-1--area|地区传送(2，5，17区)|2>
+EXEC>area_str=str(area)
+EXEC>x_offset=20|space|if|space|area_str=="5"|space|else|space|(80|space|if|space|area_str=="17"|space|else|space|(-40|space|if|space|area_str=="2"|space|else|space|0))
+EXEC>y_offset=-80|space|if|space|area_str=="5"|space|else|space|(-80|space|if|space|area_str=="17"|space|else|space|(-80|space|if|space|area_str=="2"|space|else|space|0))
+EXEC>delay1=0.06|space|if|space|area_str=="5"|space|else|space|(0.06|space|if|space|area_str=="17"|space|else|space|(0.06|space|if|space|area_str=="2"|space|else|space|0))
+EXEC>delay2=3|space|if|space|area_str=="5"|space|else|space|(3.5|space|if|space|area_str=="17"|space|else|space|(3|space|if|space|area_str=="2"|space|else|space|0))
+body:
 Plus:0.1
 0.3
-LStick@-*x_offset*-,-*y_offset*-:-*delay*-
+LStick@-*x_offset*-,-*y_offset*-:-*delay1*-
 0.1
 A:0.1
 0.5
 A:0.1
 A:0.1
-3
+-*delay2*-
 
 --18区刷暴飞龙（走到门口）--
-<tranfer_Area18|ZA - 18区刷暴飞龙（走到门口）|-1>
+<tranfer_Area18|ZA-稳定-18区刷暴飞龙（走到门口）|-1>
 LStick@0,-127:0.03->LStick@0,-127|B:0.02->LStick@0,-127:1
 0.3
 Plus:0.1
@@ -25,7 +31,7 @@ A:0.1
 3
 
 --20区 左侧大范围覆盖--
-<tranfer_area20_left|ZA - 20区左侧大范围覆盖|-1>
+<tranfer_area20_left|ZA-测试中-20区左侧大范围覆盖|-1>
 EXEC>enter_pokemonCenter_x_offset=-60;enter_pokemonCenter_y_offset=-127;enter_pokemonCenter_delay=0.25
 EXEC>leave_pokemonCenter_x_offset=-30;leave_pokemonCenter_y_offset=127;leave_pokemonCenter_delay=0.2
 EXEC>wholeDay_flag=False
@@ -88,7 +94,7 @@ LStick@-*leave_pokemonCenter_x_offset*-,-*leave_pokemonCenter_y_offset*-:-*leave
 2
 
 --研究所 巨金怪、黑鲁加、雷电兽--
-<metagross|ZA - 研究所 巨金怪、黑鲁加、雷电兽|-1>
+<metagross|ZA-废弃(有更高效方法)-研究所 巨金怪、黑鲁加、雷电兽|-1>
 LStick@-50,-127:0.1->LStick@-50,-127|B:0.1->LStick@-50,-127:1.55->~
 LStick@-127,-40:2.2->LStick@-50,-127:0.6->~
 LStick@-127,0:1.3->LStick@-60,127:1->LStick@-127,0:0.7->LStick@-127,0:0.2->LStick@-127,-127:1->~
@@ -102,8 +108,8 @@ LStick@100,127:0.5
 0.1
 [do_transfer]
 
---研究所 巨金怪 高效率--
-<metagross2|ZA - 研究所 巨金怪(纯净，高效率，超稳定)|-1>
+--研究所 巨金怪--
+<metagross2|ZA-稳定-研究所 巨金怪(纯跑路)|-1>
 LStick@-50,-127:0.1->LStick@-50,-127|B:0.1->LStick@-50,-127:1.55->~
 LStick@-127,-40:2.2->LStick@-50,-127:0.6->~
 LStick@-127,0:1.3->LStick@-60,127:1->LStick@-127,0:0.7->LStick@-127,0:0.2->LStick@-127,-127:1.2->~
@@ -118,7 +124,7 @@ LStick@-30,127:3.1->LStick@-127,127:1.9->~
 LStick@0,127:3.2->LStick@-127,127:0.5->LStick@127,-127:0.6->~
 
 --研究所 鬼剑--
-<aegislash|ZA - 研究所 鬼剑|-1>
+<aegislash|ZA-稳定-研究所 鬼剑|-1>
 LStick@90,-127:0.1->LStick@90,-127|B:0.1->LStick@90,-127:1
 body:
 A:0.1
@@ -128,4 +134,10 @@ Y:0.1
 LStick@0,127:0.1->LStick@0,127|B:0.1->LStick@0,127:0.6
 A:0.1
 2.6
+
+--往返跑 下水道 烛光灵--
+<ShuttleRun|ZA-测试中-往返跑 下水道 烛光灵|-1>
+LStick@0,127:0.1->LStick@0,127|B:0.1->LStick@0,127:2.9->~
+body:
+LStick@0,-127:1->LStick@0,-127|A:0.1->LStick@0,-127:2.3->LStick@0,127:3.422->~
 
