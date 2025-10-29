@@ -88,7 +88,7 @@ class Macro(object):
 
     def _load_file(self, filename, dic=dict()) -> dict:
         try:
-            f = open(filename, "rt")
+            f = open(filename, "rt", encoding="utf-8")
         except:
             return dic
         file_tag = filename[len(_MACRO_BASE_PATH) + 1:(
