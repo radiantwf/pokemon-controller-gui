@@ -16,6 +16,46 @@ A:0.1
 A:0.1
 -*delay2*-
 
+--19区刷老翁龙（清晨、传送至19区后启动）--
+<tranfer_Area19|ZA-稳定-19区刷老翁龙（清晨、传送至19区后启动）|-1>
+EXEC>times=0
+EXEC>limit=80
+body:
+LStick@-127,-100:0.1->LStick@-127,-100|B:0.1->LStick@-127,-100:1.3
+0.3
+Plus:0.1
+0.3
+EXEC>times+=1
+{
+    LStick@-64,64:0.1
+    0.1
+    [do_transfer]
+    0.3
+}?times<limit
+{
+    EXEC>times=0
+    LStick@127,127:0.2
+    0.1
+    [do_transfer]
+    0.4
+    LStick@-127,-100:0.1->LStick@-127,-100|B:0.1->LStick@-127,-100:0.2
+    {
+        A:0.05->0.05->~
+    }*10*3
+    14
+    {
+        {
+            LStick@0,127|A:0.05->LStick@0,127:0.05->~
+        }*10*4
+        15
+    }
+    Plus:0.1
+    LStick@-127,-80:0.32
+    0.1
+    [do_transfer]
+    0.5
+}?times>=limit
+
 --18区刷暴飞龙（走到门口）--
 <tranfer_Area18|ZA-稳定-18区刷暴飞龙（走到门口）|-1>
 LStick@0,-127:0.03->LStick@0,-127|B:0.02->LStick@0,-127:1
