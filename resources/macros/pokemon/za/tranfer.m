@@ -56,6 +56,38 @@ EXEC>times+=1
     0.5
 }?times>=limit
 
+--19区刷老翁龙2（阿勃梭罗旁椅子，休息至清晨后启动）--
+<tranfer_Area19_2|ZA-稳定-19区刷老翁龙2（阿勃梭罗旁椅子，休息至清晨后启动）|-1>
+EXEC>times=0
+EXEC>limit=23
+LStick@0,-127:0.1->LStick@0,-127|B:0.1->LStick@0,-127:3.2
+0.5
+LStick@0,127:0.1->LStick@0,127|B:0.1~
+body:
+{
+    EXEC>times+=1
+    LStick@0,127:2.4->LStick@-127,0:1.1->LStick@0,127:0.9->~
+    LStick@0,-127:1->LStick@127,0:1->LStick@0,-127:2.8->LStick@0,127:0.8->~
+}?times<limit
+{
+    LStick@0,127:3
+    {
+        A:0.05->0.05->~
+    }*10*3
+    14
+    {
+        {
+            LStick@0,127|A:0.05->LStick@0,127:0.05->~
+        }*10*4
+        15
+    }
+    EXEC>times=0
+    LStick@0,-127:0.1->LStick@0,-127|B:0.1->LStick@0,-127:3.2
+    0.5
+    LStick@0,127:0.1->LStick@0,127|B:0.1~
+}?times>=limit
+
+
 --18区刷暴飞龙（走到门口）--
 <tranfer_Area18|ZA-稳定-18区刷暴飞龙（走到门口）|-1>
 LStick@0,-127:0.03->LStick@0,-127|B:0.02->LStick@0,-127:1

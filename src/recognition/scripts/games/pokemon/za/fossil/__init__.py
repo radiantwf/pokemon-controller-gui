@@ -25,6 +25,7 @@ class ZaFossil(BaseScript):
         self._loop = self.get_para("loop")
         self._durations = self.get_para("durations")
         self._ns1 = self.get_para("ns1") if "ns1" in paras else False
+        self._type = self.get_para("type") if "type" in paras else "闪光"
 
     @staticmethod
     def script_name() -> str:
@@ -39,6 +40,8 @@ class ZaFossil(BaseScript):
             "durations", float, -1, "运行时长（分钟）")
         paras["ns1"] = ScriptParameter(
             "ns1", bool, False, "是否使用NS1")
+        paras["type"] = ScriptParameter(
+            "type", str, "闪光头目", "宝可梦类型", ["头目", "闪光", "闪光头目"])
         return paras
 
     def _check_durations(self):
@@ -184,18 +187,32 @@ class ZaFossil(BaseScript):
         if self._check_pokemon_index == -1:
             # 打开盒子
             self.macro_text_run(
-                "X:0.1->0.8->A:0.1->0.8", block=True)
+                "X:0.1->1->A:0.1->0.8", block=True)
             self._jump_next_frame = True
             self._check_pokemon_index += 1
             return
+
         # 5行，每行6个宝可梦
+        shiny = False
+        alpha = False
+
         image = self.current_frame
         if self.check_shiny_icon(image):
-            self.send_log("找到目标闪光宝可梦")
+            self.send_log("-----找到目标闪光宝可梦-----")
+            shiny = True
+        if self.check_alpha_icon(image):
+            self.send_log("+++++找到目标头目宝可梦+++++")
+            alpha = True
+
+        if self._type == "闪光" and shiny:
             self._finished_process()
             return
-        if self.check_alpha_icon(image):
-            pass
+        if self._type == "头目" and alpha:
+            self._finished_process()
+            return
+        if self._type == "闪光头目" and shiny and alpha:
+            self._finished_process()
+            return
         self._check_pokemon_index += 1
         if self._check_pokemon_index == 30:
             self._cycle_step_index += 1
@@ -208,7 +225,7 @@ class ZaFossil(BaseScript):
         self._jump_next_frame = True
 
     def step_2(self):
-        self.send_log("所有宝可梦检查完毕，目标宝可梦未闪光，重新启动游戏")
+        self.send_log("所有宝可梦检查完毕，未发现目标宝可梦，重新启动游戏")
         self.macro_run("pokemon.za.common.restart_game",
                        loop=1, paras={"ns1": str(self._ns1)}, block=True, timeout=None)
         self._cycle_step_index += 1
