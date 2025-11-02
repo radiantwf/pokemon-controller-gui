@@ -137,7 +137,7 @@ class SvTeraRaidGimmighoul(BaseScript):
         self.macro_stop(block=True)
         self.macro_run("common.switch_sleep",
                        loop=1, paras={}, block=True, timeout=10)
-        self.send_log("[{}] 脚本完成，已运行{}次，耗时{}小时{}分{}秒".format(SvTeraRaidGimmighoul.script_name(), self.cycle_times, int(
+        self.send_log("[{}] 脚本完成，已运行{}次，耗时{}小时{}分{}秒".format(SvTeraRaidGimmighoul.script_name(), self.cycle_times - 1, int(
             run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
         self.stop_work()
 

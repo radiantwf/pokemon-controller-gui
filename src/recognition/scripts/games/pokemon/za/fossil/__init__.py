@@ -25,7 +25,7 @@ class ZaFossil(BaseScript):
         self._loop = self.get_para("loop")
         self._durations = self.get_para("durations")
         self._ns1 = self.get_para("ns1") if "ns1" in paras else False
-        self._type = self.get_para("type") if "type" in paras else "闪光"
+        self._target = self.get_para("target") if "target" in paras else "闪光"
 
     @staticmethod
     def script_name() -> str:
@@ -40,8 +40,8 @@ class ZaFossil(BaseScript):
             "durations", float, -1, "运行时长（分钟）")
         paras["ns1"] = ScriptParameter(
             "ns1", bool, False, "是否使用NS1")
-        paras["type"] = ScriptParameter(
-            "type", str, "闪光头目", "宝可梦类型", ["头目", "闪光", "闪光头目"])
+        paras["target"] = ScriptParameter(
+            "target", str, "闪光头目", "目标", ["头目", "闪光", "闪光头目"])
         return paras
 
     def _check_durations(self):
@@ -137,7 +137,7 @@ class ZaFossil(BaseScript):
         self.macro_stop(block=True)
         self.macro_run("common.switch_sleep",
                        loop=1, paras={"ns1": str(self._ns1)}, block=True, timeout=10)
-        self.send_log("[{}] 脚本完成，已运行{}次，耗时{}小时{}分{}秒".format(ZaFossil.script_name(), self.cycle_times, int(
+        self.send_log("[{}] 脚本完成，已运行{}次，耗时{}小时{}分{}秒".format(ZaFossil.script_name(), self.cycle_times - 1, int(
             run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
         self.stop_work()
 
@@ -204,13 +204,13 @@ class ZaFossil(BaseScript):
             self.send_log("+++++找到目标头目宝可梦+++++")
             alpha = True
 
-        if self._type == "闪光" and shiny:
+        if self._target == "闪光" and shiny:
             self._finished_process()
             return
-        if self._type == "头目" and alpha:
+        if self._target == "头目" and alpha:
             self._finished_process()
             return
-        if self._type == "闪光头目" and shiny and alpha:
+        if self._target == "闪光头目" and shiny and alpha:
             self._finished_process()
             return
         self._check_pokemon_index += 1
