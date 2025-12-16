@@ -78,6 +78,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self._macro_list = []
         self._macro_launcher = MacroLauncher()
+        self._last_macro_scripts = dict()
         self._recognition_list = []
         self._recognition_launcher = RecognitionLauncher()
         self._controller_launcher = ControllerLauncher()
@@ -125,6 +126,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.build_recognition_list_listView()
 
         self.btn_macro_opt.clicked.connect(self.macro_opt)
+        self.btn_macro_redo.clicked.connect(self.macro_redo)
         self.btn_recognition_opt.clicked.connect(self.recognition_opt)
         self.btn_macro_refresh.clicked.connect(self.macro_refresh)
 
@@ -257,8 +259,32 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             paras = dict()
             for para in script["paras"]:
                 paras[para["name"]] = para["value"]
+            self._last_macro_scripts[script["name"]] = dict(
+                {"loop": script["loop"], "paras": paras.copy()})
             self._macro_launcher.macro_start(
                 script["name"], self._controller_input_action_queue, script["loop"], paras)
+
+    def macro_redo(self):
+        if self.listWidget_macro.currentRow() < 0:
+            return
+        if not self.check_macro_thread_running():
+            return
+
+        self.on_serial_changed()
+
+        if not self._controller_input_action_queue:
+            return
+        macro = self._macro_list[self.listWidget_macro.currentRow()]
+        if "name" not in macro:
+            return
+        script_name = macro["name"]
+        if script_name not in self._last_macro_scripts:
+            return
+        last = self._last_macro_scripts[script_name]
+        loop = last.get("loop", 1)
+        paras = last.get("paras", dict()).copy()
+        self._macro_launcher.macro_start(
+            script_name, self._controller_input_action_queue, loop, paras)
 
     def macro_refresh(self):
         self.build_macro_list_listView()

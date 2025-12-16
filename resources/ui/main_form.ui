@@ -1202,9 +1202,9 @@
       <widget class="QPushButton" name="btn_macro_opt">
        <property name="geometry">
         <rect>
-         <x>187</x>
+         <x>180</x>
          <y>190</y>
-         <width>81</width>
+         <width>80</width>
          <height>32</height>
         </rect>
        </property>
@@ -1215,14 +1215,27 @@
       <widget class="QPushButton" name="btn_macro_refresh">
        <property name="geometry">
         <rect>
-         <x>90</x>
+         <x>95</x>
          <y>190</y>
-         <width>81</width>
+         <width>80</width>
          <height>32</height>
         </rect>
        </property>
        <property name="text">
         <string>刷新</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btn_macro_redo">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>190</y>
+         <width>80</width>
+         <height>32</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>重做</string>
        </property>
       </widget>
      </widget>

@@ -1,15 +1,17 @@
 --原地传送--
-<tranfer|ZA-稳定-原地传送|-1--area|地区传送(2，5，17区)|2>
+<tranfer|ZA-稳定-原地传送|-1--area|地区传送(2，5，17区)，0为异次元洞内|0>
 EXEC>area_str=str(area)
 EXEC>x_offset=20|space|if|space|area_str=="5"|space|else|space|(80|space|if|space|area_str=="17"|space|else|space|(-40|space|if|space|area_str=="2"|space|else|space|0))
 EXEC>y_offset=-80|space|if|space|area_str=="5"|space|else|space|(-80|space|if|space|area_str=="17"|space|else|space|(-80|space|if|space|area_str=="2"|space|else|space|0))
 EXEC>delay1=0.06|space|if|space|area_str=="5"|space|else|space|(0.06|space|if|space|area_str=="17"|space|else|space|(0.06|space|if|space|area_str=="2"|space|else|space|0))
-EXEC>delay2=3|space|if|space|area_str=="5"|space|else|space|(3.5|space|if|space|area_str=="17"|space|else|space|(3|space|if|space|area_str=="2"|space|else|space|0))
+EXEC>delay2=3|space|if|space|area_str=="5"|space|else|space|(3.5|space|if|space|area_str=="17"|space|else|space|(3|space|if|space|area_str=="2"|space|else|space|(3|space|if|space|area_str=="0"|space|else|space|0)))
 body:
 Plus:0.1
 0.3
-LStick@-*x_offset*-,-*y_offset*-:-*delay1*-
-0.1
+{
+    LStick@-*x_offset*-,-*y_offset*-:-*delay1*-
+    0.1
+}?area_str!="0"
 A:0.1
 0.5
 A:0.1
