@@ -1,0 +1,16 @@
+--Magearna--
+<Magearna|ZA-Magearna|1>
+[pokemon.za.common.restart_game]
+{
+    A:0.1
+    0.1
+}*5*75
+{
+    B:0.1
+    0.1
+}*5*3
+X:0.1
+0.5
+A:0.1
+0.8
+RPress:0.1

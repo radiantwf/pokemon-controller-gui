@@ -1,22 +1,21 @@
 --甜甜圈--
-<doughnut|ZA-甜甜圈(材料树果脚本中设置)|1>
+<donut|ZA-甜甜圈(材料树果脚本中设置)|1>
 EXEC>restore_backup=True
 # 树果1位置(向上移动次数)，树果1（数量1-8）
 # 树果2位置(树果1位置开始向上移动次数)，树果2（数量1-8）
 # 树果3位置(树果2位置开始向上移动次数)，树果3（数量1-8）
-# 树果4位置(树果3位置开始向上移动次数)，树果4（数量1-8）
-# 树果5位置(树果4位置开始向上移动次数)，树果5（数量1-8）
 EXEC>berry2_position=0;berry2_count=0;
 EXEC>berry3_position=0;berry3_count=0;
-EXEC>berry4_position=0;berry4_count=0;
-EXEC>berry5_position=0;berry5_count=0;
 
 # 酸
-EXEC>berry1_position=1;berry1_count=3;
-EXEC>berry2_position=5;berry2_count=2;
-EXEC>berry3_position=1;berry3_count=3;
+EXEC>berry1_position=3;berry1_count=4;
+EXEC>berry2_position=1;berry2_count=4;
 
-# 甜
+# 甜1
+# EXEC>berry1_position=5;berry1_count=4;
+# EXEC>berry2_position=3;berry2_count=4;
+
+# 甜2
 # EXEC>berry1_position=5;berry1_count=8;
 
 body:
@@ -70,42 +69,9 @@ A:0.05
     A:0.05
     0.1
 }*berry3_count
-{
-    LStick@0,-127:0.05
-    0.2
-}*berry4_position
-{
-    A:0.05
-    0.1
-}*berry4_count
-{
-    LStick@0,-127:0.05
-    0.2
-}*berry5_position
-{
-    A:0.05
-    0.1
-}*berry5_count
 0.1
 Plus:0.1
 {
     A:0.1
     0.5
 }*10
-
---Magearna--
-<Magearna|ZA-Magearna|1>
-[pokemon.za.common.restart_game]
-{
-    A:0.1
-    0.1
-}*5*75
-{
-    B:0.1
-    0.1
-}*5*3
-X:0.1
-0.5
-A:0.1
-0.8
-RPress:0.1

@@ -5,6 +5,7 @@ from recognition.scripts.games.pokemon.sv.tera_raid.gimmighoul import SvTeraRaid
 from recognition.scripts.games.pokemon.swsh.battle_shiny import SwshBattleShiny
 from recognition.scripts.games.pokemon.swsh.dynamax_adventures import SwshDynamaxAdventures
 from recognition.scripts.games.pokemon.za.fossil import ZaFossil
+from recognition.scripts.games.pokemon.za.dlc.donut import ZaDlcDonut
 
 
 def list_recognition_script():
@@ -15,6 +16,7 @@ def list_recognition_script():
         SvTeraRaidGimmighoul.script_name(),
         DQM3Synthesis.script_name(),
         ZaFossil.script_name(),
+        ZaDlcDonut.script_name(),
     ]
     return scripts
 
@@ -33,6 +35,8 @@ def get_default_parameters(scritp_name: str) -> dict:
         paras = DQM3Synthesis.script_paras()
     elif scritp_name == ZaFossil.script_name():
         paras = ZaFossil.script_paras()
+    elif scritp_name == ZaDlcDonut.script_name():
+        paras = ZaDlcDonut.script_paras()
     return paras
 
 
@@ -56,6 +60,9 @@ def run(script_name, stop_event: multiprocessing.Event, frame_queue: multiproces
     elif script_name == ZaFossil.script_name():
         script = ZaFossil(stop_event, frame_queue,
                           controller_input_action_queue, paras)
+    elif script_name == ZaDlcDonut.script_name():
+        script = ZaDlcDonut(stop_event, frame_queue,
+                               controller_input_action_queue, paras)
     else:
         pass
     if script:

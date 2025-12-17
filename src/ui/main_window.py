@@ -30,6 +30,7 @@ from ui.macro.launcher import MacroLauncher
 from ui.recognition.dialog import LaunchRecognitionParasDialog
 
 from ui.recognition.launcher import RecognitionLauncher
+from recognition.scripts.parameter_struct import ScriptParameter
 Ui_MainWindow, QMainWindowBase = loadUiType("./resources/ui/main_form.ui")
 
 
@@ -81,6 +82,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._last_macro_scripts = dict()
         self._recognition_list = []
         self._recognition_launcher = RecognitionLauncher()
+        self._last_recognition_scripts = dict()
         self._controller_launcher = ControllerLauncher()
         self._camera_launcher = CameraLauncher()
 
@@ -97,6 +99,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.btnRescan.clicked.connect(self.on_rescan_clicked)
         self.btnSerialRescan.clicked.connect(self.on_serial_rescan_clicked)
         self.btnJoystickRescan.clicked.connect(self.on_joystick_rescan_clicked)
+        self.btnClearLog.clicked.connect(self.clear_log)
 
         self.th_log = LogThread(self)
         self.th_log.log.connect(self.setLog)
@@ -128,6 +131,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.btn_macro_opt.clicked.connect(self.macro_opt)
         self.btn_macro_redo.clicked.connect(self.macro_redo)
         self.btn_recognition_opt.clicked.connect(self.recognition_opt)
+        self.btn_recognition_redo.clicked.connect(self.recognition_redo)
+
         self.btn_macro_refresh.clicked.connect(self.macro_refresh)
 
     def build_serial_device_list_comboBox(self):
@@ -313,9 +318,43 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         ret = dialog.exec_()
         if ret == QtWidgets.QDialog.Accepted:
             paras = dialog.get_paras()
+            self._last_recognition_scripts[recognition] = self._clone_recognition_paras(
+                paras)
             self._recognition_launcher.recognition_start(
                 recognition, self._recognition_frame_queue, self._controller_input_action_queue, paras)
 
+    def recognition_redo(self):
+        if self.listWidget_recognition.currentRow() < 0:
+            return
+        if not self.check_recognition_thread_running():
+            return
+
+        self.on_serial_changed()
+
+        if not self._controller_input_action_queue:
+            return
+        recognition = self._recognition_list[self.listWidget_recognition.currentRow(
+        )]
+        if recognition not in self._last_recognition_scripts:
+            return
+        paras = self._clone_recognition_paras(
+            self._last_recognition_scripts[recognition])
+        self._recognition_launcher.recognition_start(
+            recognition, self._recognition_frame_queue, self._controller_input_action_queue, paras)
+
+    def _clone_recognition_paras(self, paras: dict):
+        if paras is None:
+            return None
+        cloned = dict()
+        for name, p in paras.items():
+            if not isinstance(p, ScriptParameter):
+                continue
+            para = ScriptParameter(p.name, p.value_type, p.default_value,
+                                   p.description, p.items)
+            para.set_value(p.value)
+            cloned[name] = para
+        return cloned
+        
     def play_audio(self):
         self.stop_audio()
         if self.cbxAudioList.currentIndex == 0:
@@ -496,13 +535,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # 停止所有设备和进程
         print('camera_stop')
         self._camera_launcher.camera_stop()
-        
+
         print('macro_stop')
         self._macro_launcher.macro_stop()
-        
+
         print('recognition_stop')
         self._recognition_launcher.recognition_stop()
-        
+
         print('controller_stop')
         self._controller_launcher.controller_stop()
 
@@ -512,12 +551,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self._current_joystick.stop()
             self._current_joystick = None
 
-
         # 先停止所有定时器
         if self._timer:
             print('timer_stop')
             self._timer.stop()
-        
+
         if self._joystick_timer:
             print('joystick_timer_stop')
             self._joystick_timer.stop()
@@ -534,7 +572,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 if not self.th_display.isRunning():
                     break
                 time.sleep(0.1)
-            
+
         if self.th_log:
             print('th_log_stop')
             self.th_log.terminate()
@@ -542,7 +580,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 if not self.th_log.isRunning():
                     break
                 time.sleep(0.1)
-            
+
         if self.th_action_display:
             print('th_action_display_stop')
             self.th_action_display.terminate()
@@ -550,7 +588,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 if not self.th_action_display.isRunning():
                     break
                 time.sleep(0.1)
-
 
         # 清理 pygame
         print('pygame_quit')
@@ -564,7 +601,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     self._display_frame_queue.get_nowait()
                 except queue.Empty:
                     break
-        
+
         print('recognition_frame_queue_clear')
         if self._recognition_frame_queue:
             while not self._recognition_frame_queue.empty():
@@ -584,7 +621,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # 接受关闭事件
         print('event_accept')
         event.accept()
-        
+
         # 发送退出信号
         print('aboutToQuit_emit')
         QCoreApplication.instance().aboutToQuit.emit()
@@ -899,6 +936,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def setLog(self, log):
         now_str = datetime.datetime.now().strftime('%H:%M:%S')
         self.textBrowserLog.append("{}\t{}".format(now_str, log))
+
+    def clear_log(self):
+        self.textBrowserLog.clear()
 
     @Slot(ControllerInput)
     def displayAction(self, action):

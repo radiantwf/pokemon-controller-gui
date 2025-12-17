@@ -63,7 +63,7 @@ class LaunchRecognitionParasDialog(QDialog):
             para_label = QLabel(f'{para_summary}')
             if para.items:
                 para_edit = QComboBox()
-                para_edit.addItems(para.items)
+                para_edit.addItems([str(item) for item in para.items])
                 para_edit.setCurrentText(str(para_default))
             else:
                 para_edit = QLineEdit(str(para_default))
