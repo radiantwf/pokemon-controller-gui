@@ -27,7 +27,7 @@ class SVEggs(BaseScript):
 
     @staticmethod
     def script_name() -> str:
-        return "宝可梦朱紫孵蛋"
+        return "宝可梦-朱紫-孵蛋"
 
     @staticmethod
     def script_paras() -> dict:

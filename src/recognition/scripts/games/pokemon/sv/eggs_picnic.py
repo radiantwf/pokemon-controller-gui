@@ -17,7 +17,7 @@ class SVEggsPicnic(BaseScript):
         self._menu_arrow_template = cv2.cvtColor(self._menu_arrow_template, cv2.COLOR_BGR2GRAY)
     @staticmethod
     def script_name() -> str:
-        return "宝可梦朱紫野餐取蛋"
+        return "宝可梦-朱紫-野餐取蛋"
 
     def process_frame(self):
         if self.running_status == WorkflowEnum.Preparation:

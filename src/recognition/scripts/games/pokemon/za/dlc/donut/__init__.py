@@ -93,7 +93,7 @@ class ZaDlcDonut(BaseScript):
 
     @staticmethod
     def script_name() -> str:
-        return "宝可梦ZA-DLC刷三明治"
+        return "宝可梦-ZA-DLC-刷三明治"
 
     @staticmethod
     def script_paras() -> dict:

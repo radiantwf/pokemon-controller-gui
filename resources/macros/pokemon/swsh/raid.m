@@ -1,5 +1,5 @@
 --极巨团战开团--
-<raid|剑盾 - 极巨团战开团|-1--secondary|副设备(副设备启动游戏时校验)|False>
+<raid|宝可梦-剑盾-极巨团战开团|-1--secondary|副设备(副设备启动游戏时校验)|False>
 {
     body:
 	[pokemon.swsh.common.restart_game]

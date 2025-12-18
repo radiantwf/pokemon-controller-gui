@@ -1,5 +1,5 @@
 --Magearna--
-<Magearna|ZA-Magearna|1>
+<Magearna|宝可梦-ZA-DLC-Magearna|1>
 [pokemon.za.common.restart_game]
 {
     A:0.1

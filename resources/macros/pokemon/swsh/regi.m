@@ -1,5 +1,5 @@
 --雷吉艾勒奇--
-<regieleki|剑盾 - 雷吉艾勒奇（定点）|999999--secondary|副设备(副设备启动游戏时校验)|False>
+<regieleki|宝可梦-剑盾-雷吉艾勒奇（定点）|999999--secondary|副设备(副设备启动游戏时校验)|False>
 {
 	[pokemon.swsh.common.restart_game]
 	body:
@@ -37,7 +37,7 @@
 }
 
 --雷吉铎拉戈--
-<regidrago|剑盾 - 雷吉铎拉戈（定点）|999999--secondary|副设备(副设备启动游戏时校验)|True>
+<regidrago|宝可梦-剑盾-雷吉铎拉戈（定点）|999999--secondary|副设备(副设备启动游戏时校验)|True>
 {
 	[pokemon.swsh.common.restart_game]
 	body:
@@ -78,7 +78,7 @@
 }
 
 --雷吉艾斯--
-<regice|剑盾 - 雷吉艾斯（定点）|999999--secondary|副设备(副设备启动游戏时校验)|True>
+<regice|宝可梦-剑盾-雷吉艾斯（定点）|999999--secondary|副设备(副设备启动游戏时校验)|True>
 {
 	[pokemon.swsh.common.restart_game]
 	body:
@@ -115,7 +115,7 @@
 }
 
 --雷吉洛克/雷吉斯奇鲁--
-<regirock|剑盾 - 雷吉洛克/雷吉斯奇鲁（定点）|999999--secondary|副设备(副设备启动游戏时校验)|True>
+<regirock|宝可梦-剑盾-雷吉洛克/雷吉斯奇鲁（定点）|999999--secondary|副设备(副设备启动游戏时校验)|True>
 {
 	[pokemon.swsh.common.restart_game]
 	body:

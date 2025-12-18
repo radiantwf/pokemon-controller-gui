@@ -25,7 +25,7 @@ class DQM3Synthesis(BaseScript):
 
     @staticmethod
     def script_name() -> str:
-        return "勇者斗恶龙怪兽篇3配种"
+        return "勇者斗恶龙-怪兽篇3-配种"
 
     @staticmethod
     def script_paras() -> dict:

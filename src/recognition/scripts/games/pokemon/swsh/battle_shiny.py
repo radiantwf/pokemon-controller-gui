@@ -27,7 +27,7 @@ class SwshBattleShiny(BaseScript):
 
     @staticmethod
     def script_name() -> str:
-        return "宝可梦剑盾刷定点闪"
+        return "宝可梦-剑盾-刷定点闪"
 
     @staticmethod
     def script_paras() -> dict:

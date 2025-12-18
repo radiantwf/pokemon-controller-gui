@@ -1,5 +1,5 @@
 --朱紫孵蛋--
-<hatch_eggs|朱紫孵蛋|1--start_col|起始列(0-5)|0--last_col|终止列(0-5)|5--last_page|终止页面(0为当前页面)|0--cycles|孵化周期|20--flame_body|火焰身躯(默认为True)|True>
+<hatch_eggs|宝可梦-朱紫-孵蛋|1--start_col|起始列(0-5)|0--last_col|终止列(0-5)|5--last_page|终止页面(0为当前页面)|0--cycles|孵化周期|20--flame_body|火焰身躯(默认为True)|True>
 body:
 EXEC>last_page=int(last_page);last_col=int(last_col);start_col=int(start_col);flame_body=flame_body.lower()=='true'
 EXEC>current_page=0;current_col=start_col;
@@ -127,7 +127,7 @@ A:0.01->0.008->A:0.05
 
 
 --朱紫野餐取蛋--
-<get_eggs|朱紫野餐|1>
+<get_eggs|宝可梦-朱紫-野餐|1>
 [pokemon.sv.common.restart_game]
 X:0.1
 0.8
@@ -212,7 +212,7 @@ X:0.1
 
 
 --朱紫放生--
-<release_pokemons|朱紫放生|1--start_col|起始列(0-5)|0--last_col|终止列(0-5)|5--last_page|终止页面(0为当前页面)|0>
+<release_pokemons|宝可梦-朱紫-放生|1--start_col|起始列(0-5)|0--last_col|终止列(0-5)|5--last_page|终止页面(0为当前页面)|0>
 body:
 EXEC>current_page=0;current_col=int(start_col);
 EXEC>loop_times=int(last_page)*6+int(last_col)-int(start_col)+1

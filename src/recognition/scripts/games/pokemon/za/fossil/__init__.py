@@ -29,7 +29,7 @@ class ZaFossil(BaseScript):
 
     @staticmethod
     def script_name() -> str:
-        return "宝可梦ZA刷闪化石"
+        return "宝可梦-ZA-刷闪化石"
 
     @staticmethod
     def script_paras() -> dict:

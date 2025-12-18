@@ -34,7 +34,7 @@ class SvTeraRaidGimmighoul(BaseScript):
 
     @staticmethod
     def script_name() -> str:
-        return "宝可梦朱紫刷闪坑"
+        return "宝可梦-朱紫-刷闪坑"
 
     @staticmethod
     def script_paras() -> dict:

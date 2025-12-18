@@ -9,7 +9,7 @@ import numpy
 import pygame
 from const import ConstClass
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import QMessageBox, QLabel, QListWidgetItem
+from PySide6.QtWidgets import QMessageBox, QLabel, QListWidgetItem, QTreeWidgetItem
 from camera.device import CameraDevice
 from PySide6.QtCore import Slot, Qt, QEvent, QTimer, QCoreApplication
 from PySide6.QtGui import QImage, QPixmap
@@ -80,9 +80,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._macro_list = []
         self._macro_launcher = MacroLauncher()
         self._last_macro_scripts = dict()
+        self._macro_script_group_delimiter = "-"
+        self._macro_tree = None
         self._recognition_list = []
         self._recognition_launcher = RecognitionLauncher()
         self._last_recognition_scripts = dict()
+        self._recognition_script_group_delimiter = "-"
+        self._recognition_tree = None
+        self._script_tree_indent = 8
         self._controller_launcher = ControllerLauncher()
         self._camera_launcher = CameraLauncher()
 
@@ -126,6 +131,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._timer.start(1)
 
         self.build_macro_list_listView()
+        self._setup_recognition_tree()
         self.build_recognition_list_listView()
 
         self.btn_macro_opt.clicked.connect(self.macro_opt)
@@ -134,6 +140,36 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.btn_recognition_redo.clicked.connect(self.recognition_redo)
 
         self.btn_macro_refresh.clicked.connect(self.macro_refresh)
+
+    def _setup_macro_tree(self):
+        if getattr(self, "treeWidget_macro", None) is not None:
+            self._macro_tree = self.treeWidget_macro
+            return
+        geo = self.listWidget_macro.geometry()
+        parent = self.listWidget_macro.parent()
+        self.treeWidget_macro = QtWidgets.QTreeWidget(parent)
+        self.treeWidget_macro.setGeometry(geo)
+        self.treeWidget_macro.setHeaderHidden(True)
+        self.treeWidget_macro.setSelectionMode(
+            QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
+        self.treeWidget_macro.setIndentation(self._script_tree_indent)
+        self.listWidget_macro.hide()
+        self._macro_tree = self.treeWidget_macro
+
+    def _setup_recognition_tree(self):
+        if getattr(self, "treeWidget_recognition", None) is not None:
+            self._recognition_tree = self.treeWidget_recognition
+            return
+        geo = self.listWidget_recognition.geometry()
+        parent = self.listWidget_recognition.parent()
+        self.treeWidget_recognition = QtWidgets.QTreeWidget(parent)
+        self.treeWidget_recognition.setGeometry(geo)
+        self.treeWidget_recognition.setHeaderHidden(True)
+        self.treeWidget_recognition.setSelectionMode(
+            QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
+        self.treeWidget_recognition.setIndentation(self._script_tree_indent)
+        self.listWidget_recognition.hide()
+        self._recognition_tree = self.treeWidget_recognition
 
     def build_serial_device_list_comboBox(self):
         try:
@@ -241,13 +277,86 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def build_macro_list_listView(self):
         self._macro_list = self._macro_launcher.list_macro()
-        self.listWidget_macro.clear()
+        if self._macro_tree is None:
+            self._setup_macro_tree()
+        self._macro_tree.clear()
+
+        root_items: dict[str, QTreeWidgetItem] = dict()
+        delimiter = self._macro_script_group_delimiter
         for macro in self._macro_list:
-            item = QListWidgetItem(macro["summary"])
-            self.listWidget_macro.addItem(item)
+            summary = macro.get("summary")
+            if not summary:
+                continue
+            parts = [p.strip() for p in str(summary).split(delimiter) if p.strip() != ""]
+            if not parts:
+                continue
+            current_item = None
+            for idx, part in enumerate(parts):
+                is_leaf = idx == len(parts) - 1
+                if current_item is None:
+                    if part not in root_items:
+                        root_items[part] = QTreeWidgetItem([part])
+                        root_items[part].setData(0, Qt.UserRole, None)
+                        self._macro_tree.addTopLevelItem(root_items[part])
+                    current_item = root_items[part]
+                else:
+                    child = None
+                    for i in range(current_item.childCount()):
+                        if current_item.child(i).text(0) == part:
+                            child = current_item.child(i)
+                            break
+                    if child is None:
+                        child = QTreeWidgetItem([part])
+                        child.setData(0, Qt.UserRole, None)
+                        current_item.addChild(child)
+                    current_item = child
+
+                if is_leaf:
+                    current_item.setToolTip(0, str(macro.get("summary", "")))
+                    current_item.setData(0, Qt.UserRole, macro)
+
+        def compress(item: QTreeWidgetItem):
+            changed = True
+            while changed:
+                changed = False
+                if item.childCount() == 1:
+                    child = item.child(0)
+                    if child is not None and child.childCount() > 0:
+                        item.setText(0, f"{item.text(0)}{delimiter}{child.text(0)}")
+                        item.takeChild(0)
+                        while child.childCount() > 0:
+                            item.addChild(child.takeChild(0))
+                        changed = True
+            for i in range(item.childCount()):
+                compress(item.child(i))
+
+        for i in range(self._macro_tree.topLevelItemCount()):
+            compress(self._macro_tree.topLevelItem(i))
+
+        def mark_selectable(item: QTreeWidgetItem):
+            is_leaf = item.childCount() == 0 and item.data(0, Qt.UserRole) is not None
+            if not is_leaf:
+                item.setFlags(item.flags() & ~Qt.ItemIsSelectable)
+            for i in range(item.childCount()):
+                mark_selectable(item.child(i))
+
+        for i in range(self._macro_tree.topLevelItemCount()):
+            mark_selectable(self._macro_tree.topLevelItem(i))
+
+        def sort_item(item: QTreeWidgetItem):
+            item.sortChildren(0, Qt.SortOrder.AscendingOrder)
+            for i in range(item.childCount()):
+                sort_item(item.child(i))
+
+        self._macro_tree.sortItems(0, Qt.SortOrder.AscendingOrder)
+        for i in range(self._macro_tree.topLevelItemCount()):
+            sort_item(self._macro_tree.topLevelItem(i))
+
+        self._macro_tree.collapseAll()
 
     def macro_opt(self):
-        if self.listWidget_macro.currentRow() < 0:
+        macro = self._current_macro_script()
+        if macro is None:
             return
         if not self.check_macro_thread_running():
             return
@@ -256,7 +365,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         if not self._controller_input_action_queue:
             return
-        macro = self._macro_list[self.listWidget_macro.currentRow()]
         dialog = LaunchMacroParasDialog(self, macro)
         ret = dialog.exec_()
         if ret == QtWidgets.QDialog.Accepted:
@@ -270,7 +378,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 script["name"], self._controller_input_action_queue, script["loop"], paras)
 
     def macro_redo(self):
-        if self.listWidget_macro.currentRow() < 0:
+        macro = self._current_macro_script()
+        if macro is None:
             return
         if not self.check_macro_thread_running():
             return
@@ -279,7 +388,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         if not self._controller_input_action_queue:
             return
-        macro = self._macro_list[self.listWidget_macro.currentRow()]
         if "name" not in macro:
             return
         script_name = macro["name"]
@@ -294,15 +402,111 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def macro_refresh(self):
         self.build_macro_list_listView()
 
+    def _current_macro_script(self):
+        if self._macro_tree is None:
+            return None
+        item = self._macro_tree.currentItem()
+        if item is None:
+            return None
+        if item.childCount() != 0:
+            return None
+        value = item.data(0, Qt.UserRole)
+        if not isinstance(value, dict):
+            return None
+        return value
+
     def build_recognition_list_listView(self):
         self._recognition_list = self._recognition_launcher.list_recognition()
-        self.listWidget_recognition.clear()
+        if self._recognition_tree is None:
+            self._setup_recognition_tree()
+        self._recognition_tree.clear()
+
+        root_items: dict[str, QTreeWidgetItem] = dict()
+        delimiter = self._recognition_script_group_delimiter
         for recognition in self._recognition_list:
-            item = QListWidgetItem(recognition)
-            self.listWidget_recognition.addItem(item)
+            parts = [p.strip() for p in str(recognition).split(delimiter) if p.strip() != ""]
+            if not parts:
+                continue
+            current_item = None
+            for idx, part in enumerate(parts):
+                is_leaf = idx == len(parts) - 1
+                if current_item is None:
+                    if part not in root_items:
+                        root_items[part] = QTreeWidgetItem([part])
+                        root_items[part].setData(0, Qt.UserRole, None)
+                        self._recognition_tree.addTopLevelItem(root_items[part])
+                    current_item = root_items[part]
+                else:
+                    child = None
+                    for i in range(current_item.childCount()):
+                        if current_item.child(i).text(0) == part:
+                            child = current_item.child(i)
+                            break
+                    if child is None:
+                        child = QTreeWidgetItem([part])
+                        child.setData(0, Qt.UserRole, None)
+                        current_item.addChild(child)
+                    current_item = child
+
+                if is_leaf:
+                    current_item.setData(0, Qt.UserRole, recognition)
+
+        def compress(item: QTreeWidgetItem):
+            changed = True
+            while changed:
+                changed = False
+                if item.childCount() == 1:
+                    child = item.child(0)
+                    if child is not None and child.childCount() > 0:
+                        item.setText(0, f"{item.text(0)}{delimiter}{child.text(0)}")
+                        item.takeChild(0)
+                        while child.childCount() > 0:
+                            item.addChild(child.takeChild(0))
+                        changed = True
+            for i in range(item.childCount()):
+                compress(item.child(i))
+
+        for i in range(self._recognition_tree.topLevelItemCount()):
+            top = self._recognition_tree.topLevelItem(i)
+            compress(top)
+
+        def mark_selectable(item: QTreeWidgetItem):
+            is_leaf = item.childCount() == 0 and item.data(0, Qt.UserRole) is not None
+            if not is_leaf:
+                item.setFlags(item.flags() & ~Qt.ItemIsSelectable)
+            for i in range(item.childCount()):
+                mark_selectable(item.child(i))
+
+        for i in range(self._recognition_tree.topLevelItemCount()):
+            mark_selectable(self._recognition_tree.topLevelItem(i))
+
+        def sort_item(item: QTreeWidgetItem):
+            item.sortChildren(0, Qt.SortOrder.AscendingOrder)
+            for i in range(item.childCount()):
+                sort_item(item.child(i))
+
+        self._recognition_tree.sortItems(0, Qt.SortOrder.AscendingOrder)
+        for i in range(self._recognition_tree.topLevelItemCount()):
+            sort_item(self._recognition_tree.topLevelItem(i))
+
+        self._recognition_tree.collapseAll()
+
+    def _current_recognition_script_name(self):
+        if self._recognition_tree is None:
+            return None
+        item = self._recognition_tree.currentItem()
+        if item is None:
+            return None
+        if item.childCount() != 0:
+            return None
+        value = item.data(0, Qt.UserRole)
+        if value is None:
+            return None
+        return value
 
     def recognition_opt(self):
-        if self.listWidget_recognition.currentRow() < 0:
+        recognition = self._current_recognition_script_name()
+        if recognition is None:
             return
         if not self.check_recognition_thread_running():
             return
@@ -311,8 +515,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         if not self._controller_input_action_queue:
             return
-        recognition = self._recognition_list[self.listWidget_recognition.currentRow(
-        )]
         paras = self._recognition_launcher.get_default_parameters(recognition)
         dialog = LaunchRecognitionParasDialog(self, paras)
         ret = dialog.exec_()
@@ -324,7 +526,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 recognition, self._recognition_frame_queue, self._controller_input_action_queue, paras)
 
     def recognition_redo(self):
-        if self.listWidget_recognition.currentRow() < 0:
+        recognition = self._current_recognition_script_name()
+        if recognition is None:
             return
         if not self.check_recognition_thread_running():
             return
@@ -333,8 +536,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         if not self._controller_input_action_queue:
             return
-        recognition = self._recognition_list[self.listWidget_recognition.currentRow(
-        )]
         if recognition not in self._last_recognition_scripts:
             return
         paras = self._clone_recognition_paras(
