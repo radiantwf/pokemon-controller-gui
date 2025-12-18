@@ -33,7 +33,6 @@ class ZaDlcDonutItemType(Enum):
 
 
 class ZaDlcTypeType(Enum):
-    Any = "任意"
     All = "全属性"
     Normal = "一般"
     Flying = "飞行"
@@ -84,12 +83,12 @@ class ZaDlcDonut(BaseScript):
                 for idx, item in enumerate(recipe_items[:len(self._recipe)]):
                     self._recipe[idx] = item
         self._sparkling_power_level = self.get_para("SparklingPowerLevel") if paras and "SparklingPowerLevel" in paras else 0
-        self._sparkling_power_type = self.get_para("SparklingPowerType") if paras and "SparklingPowerType" in paras else ZaDlcTypeType.Any.value
+        self._sparkling_power_type_list = self.get_para("SparklingPowerType") if paras and "SparklingPowerType" in paras else [e.value for e in ZaDlcTypeType]
         self._alpha_power_level = self.get_para("AlphaPowerLevel") if paras and "AlphaPowerLevel" in paras else 0
         self._humungo_power_level = self.get_para("HumungoPowerLevel") if paras and "HumungoPowerLevel" in paras else 0
         self._teensy_power_level = self.get_para("TeensyPowerLevel") if paras and "TeensyPowerLevel" in paras else 0
         self._item_power_level = self.get_para("ItemPowerLevel") if paras and "ItemPowerLevel" in paras else 0
-        self._item_power_type = self.get_para("ItemPowerType") if paras and "ItemPowerType" in paras else ZaDlcDonutItemType.Berries.value
+        self._item_power_type_list = self.get_para("ItemPowerType") if paras and "ItemPowerType" in paras else [e.value for e in ZaDlcDonutItemType]
         self._big_haul_power_level = self.get_para("BigHaulPowerLevel") if paras and "BigHaulPowerLevel" in paras else 0
 
     @staticmethod
@@ -111,7 +110,7 @@ class ZaDlcDonut(BaseScript):
         paras["SparklingPowerLevel"] = ScriptParameter(
             "SparklingPowerLevel", int, ZaDlcDonutPowerLevels1[len(ZaDlcDonutPowerLevels1) - 1], "闪耀力等级", ZaDlcDonutPowerLevels1)
         paras["SparklingPowerType"] = ScriptParameter(
-            "SparklingPowerType", str, ZaDlcTypeType.Any.value, "闪耀力属性", [e.value for e in ZaDlcTypeType])
+            "SparklingPowerType", list, [e.value for e in ZaDlcTypeType], "闪耀力属性", [e.value for e in ZaDlcTypeType])
         paras["AlphaPowerLevel"] = ScriptParameter(
             "AlphaPowerLevel", int, ZaDlcDonutPowerLevels2[0], "头目力等级(-1时排除这个条件)", ZaDlcDonutPowerLevels2)
         paras["HumungoPowerLevel"] = ScriptParameter(
@@ -121,7 +120,7 @@ class ZaDlcDonut(BaseScript):
         paras["ItemPowerLevel"] = ScriptParameter(
             "ItemPowerLevel", int, ZaDlcDonutPowerLevels1[0], "道具力等级", ZaDlcDonutPowerLevels1)
         paras["ItemPowerType"] = ScriptParameter(
-            "ItemPowerType", str, ZaDlcDonutItemType.Berries.value, "道具力类型", [e.value for e in ZaDlcDonutItemType])
+            "ItemPowerType", list, [e.value for e in ZaDlcDonutItemType], "道具力类型", [e.value for e in ZaDlcDonutItemType])
         paras["BigHaulPowerLevel"] = ScriptParameter(
             "BigHaulPowerLevel", int, ZaDlcDonutPowerLevels1[0], "多多力等级", ZaDlcDonutPowerLevels1)
 
@@ -414,7 +413,12 @@ class ZaDlcDonut(BaseScript):
             return False
         if not (isinstance(subPower, ZaDlcTypeType)):
             return False
-        if self._sparkling_power_type == ZaDlcTypeType.Any.value or subPower == ZaDlcTypeType.All or self._sparkling_power_type == subPower.value:
+        allow_types = self._sparkling_power_type_list if isinstance(self._sparkling_power_type_list, list) else [self._sparkling_power_type_list]
+        if not allow_types:
+            return True
+        if subPower == ZaDlcTypeType.All:
+            return True
+        if subPower.value in allow_types:
             return True
         return False
 
@@ -446,7 +450,10 @@ class ZaDlcDonut(BaseScript):
             return False
         if not (isinstance(subPower, ZaDlcDonutItemType)):
             return False
-        if self._item_power_type == subPower.value:
+        allow_types = self._item_power_type_list if isinstance(self._item_power_type_list, list) else [self._item_power_type_list]
+        if not allow_types:
+            return True
+        if subPower.value in allow_types:
             return True
         return False
 

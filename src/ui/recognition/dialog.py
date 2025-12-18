@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QGridLayout, QDialogButtonBox, QHBoxLayout, QComboBox
+from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QGridLayout, QDialogButtonBox, QHBoxLayout, QComboBox, QListWidget
 from PySide6.QtGui import QIntValidator, QDoubleValidator, QRegularExpressionValidator, QValidator, QFont
 from PySide6.QtCore import QRegularExpression
 from PySide6.QtWidgets import QSpacerItem, QSizePolicy
@@ -33,6 +33,12 @@ class LaunchRecognitionParasDialog(QDialog):
                 text = edit_widgets.text()
             elif isinstance(edit_widgets, QComboBox):
                 text = edit_widgets.currentText()
+            elif isinstance(edit_widgets, QListWidget):
+                selected = [item.text() for item in edit_widgets.selectedItems()]
+                if not selected and isinstance(para.default_value, list):
+                    selected = para.default_value
+                para.set_value(selected)
+                continue
             if para.value_type == bool:
                 if text.lower() == 'true':
                     para.set_value(True)
@@ -61,20 +67,36 @@ class LaunchRecognitionParasDialog(QDialog):
             para_summary = para.description
             para_default = para.default_value
             para_label = QLabel(f'{para_summary}')
-            if para.items:
+            if para.items and para.value_type == list:
+                para_edit = QListWidget()
+                para_edit.addItems([str(item) for item in para.items])
+                para_edit.setSelectionMode(QListWidget.SelectionMode.MultiSelection)
+                if isinstance(para_default, list):
+                    for i in range(para_edit.count()):
+                        item = para_edit.item(i)
+                        if item.text() in para_default:
+                            item.setSelected(True)
+                if para_edit.count() > 0:
+                    row_height = para_edit.sizeHintForRow(0)
+                    if row_height <= 0:
+                        row_height = para_edit.fontMetrics().height() + 8
+                    content_height = row_height * para_edit.count() + para_edit.frameWidth() * 2 + 6
+                    para_edit.setMaximumHeight(content_height)
+            elif para.items:
                 para_edit = QComboBox()
                 para_edit.addItems([str(item) for item in para.items])
                 para_edit.setCurrentText(str(para_default))
             else:
                 para_edit = QLineEdit(str(para_default))
-            self._set_lineEdit_validator(para_edit, para.value_type)
+            if not isinstance(para_edit, QListWidget):
+                self._set_lineEdit_validator(para_edit, para.value_type)
             self.layout.addWidget(para_label, row, 0, 1, 2)
             self.layout.addWidget(para_edit, row, 2, 1, 2)
             self._edit_widgets[para.name] = para_edit
             row += 1
         return row
 
-    def _set_lineEdit_validator(self, widget: QLineEdit, value_type: type):
+    def _set_lineEdit_validator(self, widget, value_type: type):
         if value_type == bool:
             widget.setValidator(self._bool_validator)
         elif value_type == int:

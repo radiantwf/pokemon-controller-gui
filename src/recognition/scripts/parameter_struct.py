@@ -6,8 +6,8 @@ class ScriptParameter(object):
             raise TypeError("name must be str")
         if not isinstance(description, str):
             raise TypeError("description must be str")
-        if value_type not in [int, float, str, bool]:
-            raise TypeError("type must be int, float, str or bool")
+        if value_type not in [int, float, str, bool, list]:
+            raise TypeError("type must be int, float, str, bool or list")
         if name == "":
             raise ValueError("name cannot be empty")
         self._name = name
@@ -18,8 +18,15 @@ class ScriptParameter(object):
         self._items = items
 
     def set_value(self, value):
+        if self._value_type == list:
+            if isinstance(value, (list, tuple, set)):
+                self._value = list(value)
+            else:
+                self._value = self._default_value
+            return
         if not isinstance(value, self._value_type):
             self._value = self._default_value
+            return
         self._value = value
 
     @property
