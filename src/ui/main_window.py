@@ -2,6 +2,7 @@ import datetime
 import math
 import multiprocessing
 import os
+import platform
 import queue
 import time
 import cv2
@@ -67,6 +68,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._current_controller_input_joystick: ControllerInput = None
         self._current_controller_input_keyboard: ControllerInput = None
         self._last_sent_input = ControllerInput()
+        self._last_operation_type = None
 
         start_color = (170, 170, 170)
         end_color = (0, 0, 255)
@@ -93,6 +95,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def setupUi(self):
         Ui_MainWindow.setupUi(self, self)
+        if platform.system() == 'Darwin':
+            self.btn_macro_redo.setText("重做(Cmd+R)")
+            self.btn_recognition_redo.setText("重做(Cmd+R)")
+
         self.build_camera_list_comboBox()
         self.build_audio_list_comboBox()
         self.build_serial_device_list_comboBox()
@@ -140,6 +146,23 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.btn_recognition_redo.clicked.connect(self.recognition_redo)
 
         self.btn_macro_refresh.clicked.connect(self.macro_refresh)
+
+    def _trigger_page_redo(self):
+        page = self.toolBox.currentWidget()
+        if page is None:
+            return
+        page_name = page.objectName()
+        if page_name == "page_macro":
+            self.btn_macro_redo.click()
+        elif page_name == "page_recognition":
+            self.btn_recognition_redo.click()
+        elif page_name == "page_realtime":
+            if self._last_operation_type == "macro":
+                self.toolBox.setCurrentIndex(1)
+                self.btn_macro_redo.click()
+            elif self._last_operation_type == "recognition":
+                self.toolBox.setCurrentIndex(2)
+                self.btn_recognition_redo.click()
 
     def _setup_macro_tree(self):
         if getattr(self, "treeWidget_macro", None) is not None:
@@ -376,6 +399,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 {"loop": script["loop"], "paras": paras.copy()})
             self._macro_launcher.macro_start(
                 script["name"], self._controller_input_action_queue, script["loop"], paras)
+            self._last_operation_type = "macro"
 
     def macro_redo(self):
         macro = self._current_macro_script()
@@ -398,6 +422,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         paras = last.get("paras", dict()).copy()
         self._macro_launcher.macro_start(
             script_name, self._controller_input_action_queue, loop, paras)
+        self._last_operation_type = "macro"
 
     def macro_refresh(self):
         self.build_macro_list_listView()
@@ -524,6 +549,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 paras)
             self._recognition_launcher.recognition_start(
                 recognition, self._recognition_frame_queue, self._controller_input_action_queue, paras)
+            self._last_operation_type = "recognition"
 
     def recognition_redo(self):
         recognition = self._current_recognition_script_name()
@@ -542,6 +568,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self._last_recognition_scripts[recognition])
         self._recognition_launcher.recognition_start(
             recognition, self._recognition_frame_queue, self._controller_input_action_queue, paras)
+        self._last_operation_type = "recognition"
 
     def _clone_recognition_paras(self, paras: dict):
         if paras is None:
@@ -555,7 +582,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             para.set_value(p.value)
             cloned[name] = para
         return cloned
-        
+
     def play_audio(self):
         self.stop_audio()
         if self.cbxAudioList.currentIndex == 0:
@@ -876,6 +903,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.Type.KeyPress:
+            if event.key() == Qt.Key_R and (event.modifiers() & Qt.ControlModifier):
+                self._trigger_page_redo()
+                return True
             self._key_press_map[event.key()] = time.monotonic()
         elif event.type() == QEvent.Type.KeyRelease:
             self._key_press_map.pop(event.key(), None)
