@@ -6,6 +6,7 @@ PySide6
 pyserial
 pygame
 pytesseract
+rapidocr_onnxruntime
 # torch
 # ultralytics
 #torchvision

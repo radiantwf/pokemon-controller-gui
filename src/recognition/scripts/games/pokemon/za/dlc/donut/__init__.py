@@ -5,7 +5,7 @@ from recognition.scripts.parameter_struct import ScriptParameter
 from recognition.scripts.base.base_script import BaseScript, WorkflowEnum
 import cv2
 import numpy as np
-import pytesseract
+import recognition.ocr as ocr
 
 ZaDlcDonutRecipes = {
     "闪耀力 - 混合": [(5, 4), (3, 4)],
@@ -58,7 +58,7 @@ tessedit_char_whitelist = "".join(dict.fromkeys(
     "".join(e.value for e in ZaDlcDonutPowerType)
     + "".join(e.value for e in ZaDlcDonutItemType)
     + "".join(e.value for e in ZaDlcTypeType)
-    + "Lv:0123"
+    + "Lv.:：0123"
 ))
 
 
@@ -319,52 +319,33 @@ class ZaDlcDonut(BaseScript):
         crop_x2, crop_y2, crop_w2, crop_h2 = 125, 435, 150, 22
         crop_x3, crop_y3, crop_w3, crop_h3 = 125, 460, 150, 22
         crop_gray1 = gray[crop_y1:crop_y1+crop_h1, crop_x1:crop_x1+crop_w1]
-        crop_gray1 = cv2.resize(crop_gray1, (crop_w1*60, crop_h1*60))
+        crop_gray1 = cv2.resize(crop_gray1, (crop_w1*3, crop_h1*3))
         crop_gray2 = gray[crop_y2:crop_y2+crop_h2, crop_x2:crop_x2+crop_w2]
-        crop_gray2 = cv2.resize(crop_gray2, (crop_w2*60, crop_h2*60))
+        crop_gray2 = cv2.resize(crop_gray2, (crop_w2*3, crop_h2*3))
         crop_gray3 = gray[crop_y3:crop_y3+crop_h3, crop_x3:crop_x3+crop_w3]
-        crop_gray3 = cv2.resize(crop_gray3, (crop_w3*60, crop_h3*60))
+        crop_gray3 = cv2.resize(crop_gray3, (crop_w3*3, crop_h3*3))
         custom_config = r'--oem 3 --psm 7 -c tessedit_char_whitelist="' + tessedit_char_whitelist + '"'
 
-        # 对图片进行二值化处理
-        _, thresh = cv2.threshold(
-            crop_gray1, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)
-        kernel = np.ones((3, 3), np.uint8)
-        opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
-        closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
-
-        # 使用Tesseract进行文字识别
-        text1 = pytesseract.image_to_string(
-            closing, lang='chi_sim+eng', config=custom_config)
+        # 使用RapidOCR进行文字识别
+        # RapidOCR不需要二值化和形态学处理，直接使用灰度图或原图效果更好
+        text1 = ocr.image_to_string(
+            crop_gray1, lang='chi_sim+eng', config=custom_config)
         text1 = " ".join(text1.split())
 
-        # 对图片进行二值化处理
-        _, thresh = cv2.threshold(
-            crop_gray2, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)
-        kernel = np.ones((3, 3), np.uint8)
-        opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
-        closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
-
-        # 使用Tesseract进行文字识别
-        text2 = pytesseract.image_to_string(
-            closing, lang='chi_sim+eng', config=custom_config)
+        # 使用RapidOCR进行文字识别
+        text2 = ocr.image_to_string(
+            crop_gray2, lang='chi_sim+eng', config=custom_config)
         text2 = " ".join(text2.split())
 
-        # 对图片进行二值化处理
-        _, thresh = cv2.threshold(
-            crop_gray3, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)
-        kernel = np.ones((3, 3), np.uint8)
-        opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
-        closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
-
-        # 使用Tesseract进行文字识别
-        text3 = pytesseract.image_to_string(
-            closing, lang='chi_sim+eng', config=custom_config)
+        # 使用RapidOCR进行文字识别
+        text3 = ocr.image_to_string(
+            crop_gray3, lang='chi_sim+eng', config=custom_config)
         text3 = " ".join(text3.split())
 
         return (text1, text2, text3)
 
     def _split_ocr_power_text(self, text: str):
+        text = text.replace('：', ':')
         powerStr, subPowerStr, lv = None, None, 0
         try:
             lindex = text.rindex('L')
