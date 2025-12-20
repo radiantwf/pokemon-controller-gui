@@ -5,7 +5,7 @@ from recognition.scripts.parameter_struct import ScriptParameter
 from recognition.scripts.base.base_script import BaseScript, WorkflowEnum
 import cv2
 import numpy as np
-import recognition.ocr as ocr
+from recognition.ocr import RapidOCRWithStrictChars
 
 ZaDlcDonutRecipes = {
     "闪耀力 - 混合": [(5, 4), (3, 4)],
@@ -90,6 +90,12 @@ class ZaDlcDonut(BaseScript):
         self._item_power_level = self.get_para("ItemPowerLevel") if paras and "ItemPowerLevel" in paras else 0
         self._item_power_type_list = self.get_para("ItemPowerType") if paras and "ItemPowerType" in paras else [e.value for e in ZaDlcDonutItemType]
         self._big_haul_power_level = self.get_para("BigHaulPowerLevel") if paras and "BigHaulPowerLevel" in paras else 0
+
+        self.ocr_engine = RapidOCRWithStrictChars(
+            allowed_chars=tessedit_char_whitelist,
+            upscale=2.5,              # 放大倍数
+            enable_preprocess=True,   # 启用预处理
+        )
 
     @staticmethod
     def script_name() -> str:
@@ -246,8 +252,7 @@ class ZaDlcDonut(BaseScript):
 
     def step_1(self):
         current_frame = self.current_frame
-        gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
-        text1, text2, text3 = self._ocr_power_text(gray_frame)
+        text1, text2, text3 = self._ocr_power_text(current_frame)
         power1 = self._split_ocr_power_text(text1)
         power2 = self._split_ocr_power_text(text2)
         power3 = self._split_ocr_power_text(text3)
@@ -314,38 +319,27 @@ class ZaDlcDonut(BaseScript):
         self._finished_process()
         self._cycle_step_index += 1
 
-    def _ocr_power_text(self, gray):
-        crop_x1, crop_y1, crop_w1, crop_h1 = 125, 410, 150, 22
-        crop_x2, crop_y2, crop_w2, crop_h2 = 125, 435, 150, 22
-        crop_x3, crop_y3, crop_w3, crop_h3 = 125, 460, 150, 22
-        crop_gray1 = gray[crop_y1:crop_y1+crop_h1, crop_x1:crop_x1+crop_w1]
-        crop_gray1 = cv2.resize(crop_gray1, (crop_w1*3, crop_h1*3))
-        crop_gray2 = gray[crop_y2:crop_y2+crop_h2, crop_x2:crop_x2+crop_w2]
-        crop_gray2 = cv2.resize(crop_gray2, (crop_w2*3, crop_h2*3))
-        crop_gray3 = gray[crop_y3:crop_y3+crop_h3, crop_x3:crop_x3+crop_w3]
-        crop_gray3 = cv2.resize(crop_gray3, (crop_w3*3, crop_h3*3))
-        custom_config = r'--oem 3 --psm 7 -c tessedit_char_whitelist="' + tessedit_char_whitelist + '"'
+    def _ocr_power_text(self, img):
+        regions = [
+            (125, 410, 150, 22),
+            (125, 435, 150, 22),
+            (125, 460, 150, 22),
+        ]
 
-        # 使用RapidOCR进行文字识别
-        # RapidOCR不需要二值化和形态学处理，直接使用灰度图或原图效果更好
-        text1 = ocr.image_to_string(
-            crop_gray1, lang='chi_sim+eng', config=custom_config)
-        text1 = " ".join(text1.split())
+        # 使用RapidOCR进行批量文字识别
+        results = self.ocr_engine.batch_recognize_regions(img, regions)
 
-        # 使用RapidOCR进行文字识别
-        text2 = ocr.image_to_string(
-            crop_gray2, lang='chi_sim+eng', config=custom_config)
-        text2 = " ".join(text2.split())
+        texts = []
+        for result in results:
+            text = result['text'] if result['text'] else ""
+            text = " ".join(text.split())
+            print(text)
+            texts.append(text)
 
-        # 使用RapidOCR进行文字识别
-        text3 = ocr.image_to_string(
-            crop_gray3, lang='chi_sim+eng', config=custom_config)
-        text3 = " ".join(text3.split())
-
-        return (text1, text2, text3)
+        return tuple(texts)
 
     def _split_ocr_power_text(self, text: str):
-        text = text.replace('：', ':')
+        text = text.replace('：', ':').replace('.', '').replace('Lvv', 'Lv')
         powerStr, subPowerStr, lv = None, None, 0
         try:
             lindex = text.rindex('L')
