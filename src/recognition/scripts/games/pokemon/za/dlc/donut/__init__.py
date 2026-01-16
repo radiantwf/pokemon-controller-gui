@@ -53,15 +53,6 @@ class ZaDlcTypeType(Enum):
     Ground = "地面"
     Fairy = "妖精"
 
-
-tessedit_char_whitelist = "".join(dict.fromkeys(
-    "".join(e.value for e in ZaDlcDonutPowerType)
-    + "".join(e.value for e in ZaDlcDonutItemType)
-    + "".join(e.value for e in ZaDlcTypeType)
-    + "Lv.:：0123"
-))
-
-
 class ZaDlcDonut(BaseScript):
     def __init__(self, stop_event: multiprocessing.Event, frame_queue: multiprocessing.Queue, controller_input_action_queue: multiprocessing.Queue, paras: dict = None):
         super().__init__(ZaDlcDonut.script_name(), stop_event,
@@ -92,7 +83,6 @@ class ZaDlcDonut(BaseScript):
         self._big_haul_power_level = self.get_para("BigHaulPowerLevel") if paras and "BigHaulPowerLevel" in paras else 0
 
         self.ocr_engine = RapidOCRWithStrictChars(
-            allowed_chars=tessedit_char_whitelist,
             upscale=2.5,              # 放大倍数
             enable_preprocess=True,   # 启用预处理
         )
@@ -261,22 +251,22 @@ class ZaDlcDonut(BaseScript):
             self.send_log(f"行1：{power1[0].value}{sub_text} Lv.{power1[2]}")
         else:
             self.send_log("行1：未匹配到有效数据")
-            if text1 and text1 != '':
-                self.send_log(f"行1：原始文本：{text1}")
+        if text1 and text1 != '':
+            self.send_log(f"行1原始文本：{text1}")
         if power2[0] is not None:
             sub_text = f": {power2[1].value}" if power2[1] is not None else ""
             self.send_log(f"行2：{power2[0].value}{sub_text} Lv.{power2[2]}")
         else:
             self.send_log("行2：未匹配到有效数据")
-            if text2 and text2 != '':
-                self.send_log(f"行2：原始文本：{text2}")
+        if text2 and text2 != '':
+            self.send_log(f"行2原始文本：{text2}")
         if power3[0] is not None:
             sub_text = f": {power3[1].value}" if power3[1] is not None else ""
             self.send_log(f"行3：{power3[0].value}{sub_text} Lv.{power3[2]}")
         else:
             self.send_log("行3：未匹配到有效数据")
-            if text3 and text3 != '':
-                self.send_log(f"行3：原始文本：{text3}")
+        if text3 and text3 != '':
+            self.send_log(f"行3原始文本：{text3}")
 
         result = True
         result &= (self._check_sparkling_power(power1[0], power1[1], power1[2])
@@ -339,7 +329,7 @@ class ZaDlcDonut(BaseScript):
         return tuple(texts)
 
     def _split_ocr_power_text(self, text: str):
-        text = text.replace('：', ':').replace('.', '').replace('Lvv', 'Lv')
+        text = text.replace('：', ':')
         powerStr, subPowerStr, lv = None, None, 0
         try:
             lindex = text.rindex('L')
@@ -352,9 +342,6 @@ class ZaDlcDonut(BaseScript):
         powerStr = splits[0].strip()
         if len(splits) >= 2:
             subPowerStr = splits[1].strip()
-        match powerStr:
-            case '闪力' | '闪闪力':
-                powerStr = '闪耀力'
         try:
             power = ZaDlcDonutPowerType(powerStr)
         except ValueError:
