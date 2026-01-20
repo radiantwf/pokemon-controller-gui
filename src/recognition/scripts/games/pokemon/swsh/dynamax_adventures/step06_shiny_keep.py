@@ -51,8 +51,8 @@ class SWSHDAShinyKeep(BaseSubStep):
         ]
 
     def _process_steps_0(self):
-        current_frame = self.script.current_frame
-        gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
+        current_frame_960x480 = self.script.current_frame_960x480
+        gray_frame = cv2.cvtColor(current_frame_960x480, cv2.COLOR_BGR2GRAY)
         if not self._match_keep_pokemon_page(gray_frame):
             self.time_sleep(0.5)
             return
@@ -67,8 +67,8 @@ class SWSHDAShinyKeep(BaseSubStep):
         self._process_step_index += 1
 
     def _process_steps_1(self):
-        current_frame = self.script.current_frame
-        gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
+        current_frame_960x480 = self.script.current_frame_960x480
+        gray_frame = cv2.cvtColor(current_frame_960x480, cv2.COLOR_BGR2GRAY)
         if self._match_shiny(gray_frame):
             self._quit_pokemon_detail()
             self._keep()

@@ -64,8 +64,8 @@ class SVGimmighoulSearch(BaseSubStep):
         if self._last_raid_text_match_ts is not None and time.monotonic() - self._last_raid_text_match_ts > 300:
             self._status = SubStepRunningStatus.Failed
             return
-        # current_frame = self.script.current_frame
-        # gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
+        # current_frame_960x480 = self.script.current_frame_960x480
+        # gray_frame = cv2.cvtColor(current_frame_960x480, cv2.COLOR_BGR2GRAY)
         # is_match = MapNIconMatch().match_map_N_icon_template(gray_frame)
         # if not is_match:
         #     self.script.send_log("未检测到右下角小地图N图标，无法继续")
@@ -77,8 +77,8 @@ class SVGimmighoulSearch(BaseSubStep):
         self._process_step_index += 1
 
     def _process_step_2(self):
-        current_frame = self.script.current_frame
-        gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
+        current_frame_960x480 = self.script.current_frame_960x480
+        gray_frame = cv2.cvtColor(current_frame_960x480, cv2.COLOR_BGR2GRAY)
         is_match = self._match_raid_text_template(gray_frame)
         if not is_match:
             if self._raid_text_match_times < 2:

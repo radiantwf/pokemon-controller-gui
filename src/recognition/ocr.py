@@ -9,10 +9,10 @@ class RapidOCRWithStrictChars:
     支持ROI放大与可选预处理
     """
 
-    def __init__(self, upscale=2.5, enable_preprocess=True, **kwargs):
+    def __init__(self, upscale=2.0, enable_preprocess=True, **kwargs):
         """
         Args:
-            upscale: ROI放大倍数（针对960x540小文字），默认2.5
+            upscale: ROI最大放大倍数（针对1920x1080小文字），默认2.0
             enable_preprocess: 是否启用预处理（锐化、去噪等）
             **kwargs: RapidOCR 的其他参数
         """
@@ -23,7 +23,7 @@ class RapidOCRWithStrictChars:
         default_kwargs = {
             # === 检测模块参数 ===
             'det_use_cuda': False,
-            'det_limit_side_len': 960,
+            'det_limit_side_len': 1920,
             'det_limit_type': 'max',
             'det_thresh': 0.25,
             'det_box_thresh': 0.45,
@@ -61,9 +61,12 @@ class RapidOCRWithStrictChars:
         h, w = roi.shape[:2]
 
         # 1. 放大小图
-        if min(h, w) < 32 and self.upscale and self.upscale != 1:
-            new_h = max(1, int(round(h * self.upscale)))
-            new_w = max(1, int(round(w * self.upscale)))
+        target_min_h = 48
+        if h > 0 and target_min_h and self.upscale and self.upscale > 1:
+            scale = target_min_h / float(h)
+            scale = max(1.0, min(float(self.upscale), scale))
+            new_h = max(1, int(round(h * scale)))
+            new_w = max(1, int(round(w * scale)))
             roi = cv2.resize(roi, (new_w, new_h), interpolation=cv2.INTER_CUBIC)
 
         if not self.enable_preprocess:

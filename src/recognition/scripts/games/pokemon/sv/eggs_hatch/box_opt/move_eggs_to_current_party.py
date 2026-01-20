@@ -48,7 +48,7 @@ class SVBoxMoveEggs(BaseSubStep):
         ]
 
     def move_step_0(self):
-        image = self.script.current_frame
+        image = self.script.current_frame_960x480
         box, current_cursor = BoxMatch().match(image)
         if current_cursor is None:
             self._status = SubStepRunningStatus.Failed
@@ -81,7 +81,7 @@ class SVBoxMoveEggs(BaseSubStep):
 
     def move_step_1(self):
         move_target = (self._target_col, 0)
-        image = self.script.current_frame
+        image = self.script.current_frame_960x480
         current_cursor = BoxMatch().match_arrow(image)
         if current_cursor is None:
             self.script.send_log("{}函数返回状态为{}".format(
@@ -102,7 +102,7 @@ class SVBoxMoveEggs(BaseSubStep):
 
     def move_step_3(self):
         move_target = (self._target_col, 4)
-        image = self.script.current_frame
+        image = self.script.current_frame_960x480
         current_cursor = BoxMatch().match_arrow(image)
         if current_cursor is None:
             self.script.send_log("{}函数返回状态为{}".format(
@@ -126,7 +126,7 @@ class SVBoxMoveEggs(BaseSubStep):
 
     def move_step_6(self):
         move_target = (0, 1)
-        image = self.script.current_frame
+        image = self.script.current_frame_960x480
         current_cursor = BoxMatch().match_arrow(image)
         if current_cursor is None:
             self.script.send_log("{}函数返回状态为{}".format(

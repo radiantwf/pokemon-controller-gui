@@ -60,8 +60,8 @@ class SWSHDACatch(BaseSubStep):
 
 
     def _process_step_1(self):
-        current_frame = self.script.current_frame
-        gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
+        current_frame_960x480 = self.script.current_frame_960x480
+        gray_frame = cv2.cvtColor(current_frame_960x480, cv2.COLOR_BGR2GRAY)
         # 识别球种
         current_ball = self._ocr_current_ball(gray_frame)
         num = self._ocr_current_ball_left_num(gray_frame)

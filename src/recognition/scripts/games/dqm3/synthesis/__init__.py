@@ -170,7 +170,7 @@ class DQM3Synthesis(BaseScript):
         self._cycle_step_index += 1
 
     def shiny_check_1(self):
-        image = self.current_frame
+        image = self.current_frame_960x480
 
         monster_size = self.paras['monster_size'].value
         if monster_size == "普通体型":
@@ -245,7 +245,7 @@ class DQM3Synthesis(BaseScript):
         # self.save_temp_image()
 
         # 转为灰度图片
-        image = self.current_frame
+        image = self.current_frame_960x480
         # 转为灰度图片
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]

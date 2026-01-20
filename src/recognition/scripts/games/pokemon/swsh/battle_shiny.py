@@ -133,7 +133,7 @@ class SwshBattleShiny(BaseScript):
             self._cycle_step_index += 1
             return
 
-        image = self.current_frame
+        image = self.current_frame_960x480
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         crop_x, crop_y, crop_w, crop_h = self._template_p[
             0], self._template_p[1], self._template_p[2], self._template_p[3]

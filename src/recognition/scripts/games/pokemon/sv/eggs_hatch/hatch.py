@@ -49,7 +49,7 @@ class SVHatchPokemon(BaseSubStep):
         self._process_step_index += 1
 
     def hatch_step_2(self):
-        image = self.script.current_frame
+        image = self.script.current_frame_960x480
         ret = HatchMatch().hatched_tag_check(image)
         if ret:
             self.script.macro_stop(True)

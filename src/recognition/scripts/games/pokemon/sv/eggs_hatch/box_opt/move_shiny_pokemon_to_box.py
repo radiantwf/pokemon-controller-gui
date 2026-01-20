@@ -35,7 +35,7 @@ class SVBoxMoveShinyPokemon(BaseSubStep):
         ]
 
     def move_step_0(self):
-        image = self.script.current_frame
+        image = self.script.current_frame_960x480
         box, current_cursor = BoxMatch().match(image)
         target_shiny_pokemon: tuple[int, int] = (0, 1)
         if box[target_shiny_pokemon[0]][target_shiny_pokemon[1]] == 0:
@@ -61,7 +61,7 @@ class SVBoxMoveShinyPokemon(BaseSubStep):
         self.time_sleep(0.5)
 
     def move_step_1(self):
-        image = self.script.current_frame
+        image = self.script.current_frame_960x480
         ret = BoxMatch().shiny_tag_check(image)
         if not ret:
             self._status = SubStepRunningStatus.Failed
@@ -71,7 +71,7 @@ class SVBoxMoveShinyPokemon(BaseSubStep):
 
     def move_step_2(self):
         self._move_target: tuple[int, int] = (-1, -1)
-        image = self.script.current_frame
+        image = self.script.current_frame_960x480
         box, _ = BoxMatch().match(image)
         for x in range(0, len(box)):
             if x == 0:
@@ -95,7 +95,7 @@ class SVBoxMoveShinyPokemon(BaseSubStep):
         self._process_step_index += 1
 
     def move_step_3(self):
-        image = self.script.current_frame
+        image = self.script.current_frame_960x480
         current_cursor = BoxMatch().match_arrow(image)
         if current_cursor is None:
             self.script.send_log("{}函数返回状态为{}".format("move_step_3",SubStepRunningStatus.Failed))

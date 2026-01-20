@@ -59,8 +59,8 @@ class SWSHDAChoosePath(BaseSubStep):
             self._process_step_2_start_monotonic = 0
             self._status = SubStepRunningStatus.OK
             return
-        current_frame = self.script.current_frame
-        gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
+        current_frame_960x480 = self.script.current_frame_960x480
+        gray_frame = cv2.cvtColor(current_frame_960x480, cv2.COLOR_BGR2GRAY)
         if not self._match_choose_path(gray_frame):
             if self._battle_index > 0:
                 if self._check_times >= 2:

@@ -43,7 +43,7 @@ class SVEnterMenuItem(BaseSubStep):
         ]
 
     def step_0(self):
-        image = self.script.current_frame
+        image = self.script.current_frame_960x480
 
         ret = MenuCursorMatch().match(image, 0.5)
         if ret is None:
@@ -77,7 +77,7 @@ class SVEnterMenuItem(BaseSubStep):
         self._process_step_index += 1
 
     def step_2(self):
-        image = self.script.current_frame
+        image = self.script.current_frame_960x480
         ret = MenuCursorMatch().match(image, 0.5)
         if ret is None:
             self.time_sleep(0.3)

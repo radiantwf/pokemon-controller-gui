@@ -43,8 +43,8 @@ class SWSHDASwitchPokemon(BaseSubStep):
             self._process_step_index += 1
             return
 
-        current_frame = self.script.current_frame
-        gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
+        current_frame_960x480 = self.script.current_frame_960x480
+        gray_frame = cv2.cvtColor(current_frame_960x480, cv2.COLOR_BGR2GRAY)
         if self._match_switch_pokemon(gray_frame):
             if self._ocr_moves_defective(gray_frame):
                 self._switch_pokemon = False

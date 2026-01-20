@@ -16,8 +16,8 @@ class ConstClass(object):
     DisplayCameraWidth = 640
     DisplayCameraHeight = 360
 
-    RecognizeVideoWidth = 960
-    RecognizeVideoHeight = 540
+    RecognizeVideoWidth = 1920
+    RecognizeVideoHeight = 1080
     RecognizeVideoFps = 10
 
     LogSocketPort = 39008

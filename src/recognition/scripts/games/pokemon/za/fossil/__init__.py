@@ -196,7 +196,7 @@ class ZaFossil(BaseScript):
         shiny = False
         alpha = False
 
-        image = self.current_frame
+        image = self.current_frame_960x480
         if self.check_shiny_icon(image):
             self.send_log("-----找到目标闪光宝可梦-----")
             shiny = True

@@ -871,10 +871,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 "%Y%m%d%H%M%S", time.localtime())
             cv2.imwrite("./Captures/"+time_str+".jpg", mat)
 
-            recognize_mat = cv2.resize(
-                mat, (self._my_const.RecognizeVideoWidth, self._my_const.RecognizeVideoHeight), interpolation=cv2.INTER_AREA)
-            cv2.imwrite("./Captures/{}-recognize.jpg".format(time_str),
-                        recognize_mat)
+            if self._my_const.RecognizeVideoWidth != frame.width or self._my_const.RecognizeVideoHeight != frame.height:
+                recognize_mat = cv2.resize(
+                    mat, (self._my_const.RecognizeVideoWidth, self._my_const.RecognizeVideoHeight), interpolation=cv2.INTER_AREA)
+                cv2.imwrite("./Captures/{}-recognize.jpg".format(time_str),
+                            recognize_mat)
             self._capture = False
 
         np_array = numpy.frombuffer(

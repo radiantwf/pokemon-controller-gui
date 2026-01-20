@@ -54,8 +54,8 @@ class SVGimmighoulBattle(BaseSubStep):
         self._process_step_index += 1
 
     def _process_step_1(self):
-        current_frame = self.script.current_frame
-        gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
+        current_frame_960x480 = self.script.current_frame_960x480
+        gray_frame = cv2.cvtColor(current_frame_960x480, cv2.COLOR_BGR2GRAY)
         is_match = self._match_combat_icon_template(gray_frame)
         if is_match:
             self._process_step_index += 1

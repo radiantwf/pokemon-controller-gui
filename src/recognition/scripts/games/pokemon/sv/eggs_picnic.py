@@ -136,7 +136,7 @@ class SVEggsPicnic(BaseScript):
     def picnic_2(self):
         if time.monotonic() - self._picnic_open_menu_ts < 0.5:
             return
-        image = self.current_frame
+        image = self.current_frame_960x480
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         match = cv2.matchTemplate(gray, self._menu_arrow_template, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, p = cv2.minMaxLoc(match)

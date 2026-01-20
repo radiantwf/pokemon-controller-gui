@@ -45,7 +45,7 @@ class SVOpenMenu(BaseSubStep):
         self._process_step_index += 1
 
     def step_2(self):
-        image = self.script.current_frame
+        image = self.script.current_frame_960x480
         ret = MenuCursorMatch().match(image, 0.5)
         if ret is None:
             self._process_step_index = 0
