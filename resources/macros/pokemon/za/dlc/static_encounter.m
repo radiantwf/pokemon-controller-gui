@@ -1,0 +1,36 @@
+--Latias--
+<Latias|宝可梦-ZA-DLC-拉帝亚斯(Latias)|-1--ns1|NS1|False>
+[pokemon.za.common.restart_game]
+LStick@0,-127:0.475->LStick@0,-127|B:0.1->LStick@0,-127:5->LStick@0,-127|B:0.1->LStick@-30,-127:2->~
+body:
+LStick@30,127:2->LStick@30,127:0.5->LStick@0,127|B:0.1->LStick@0,127:4->LStick@0,127|B:0.1->LStick@0,127:1.5
+0.77
+LStick@0,-127:0.475->LStick@0,-127|B:0.1->LStick@0,-127:6->LStick@0,-127|B:0.1->LStick@-35,-127:2.4->~
+
+--Cobalion--
+<Cobalion|宝可梦-ZA-DLC-稳定-勾帕路翁(Cobalion)|1--ns1|NS1|False>
+[pokemon.za.common.restart_game]
+LStick@127,0:0.1->LStick@127,0|B:0.1->LStick@127,0:0.3->~
+body:
+{
+    LStick@-127,0:6.7->LStick@127,0:6.7->~
+}*18
+0.2
+Plus:0.1
+
+--Magearna--
+<Magearna|宝可梦-ZA-DLC-稳定-玛机雅娜(Magearna)|1>
+[pokemon.za.common.restart_game]
+{
+    A:0.1
+    0.1
+}*5*75
+{
+    B:0.1
+    0.1
+}*5*3
+X:0.1
+0.5
+A:0.1
+0.8
+RPress:0.1
