@@ -36,7 +36,28 @@ class ZaDlcDonutItemType(Enum):
 
 class ZaDlcTypeType(Enum):
     All = "全属性"
-    All2 = "所有属性"
+    Normal = "一般"
+    Flying = "飞行"
+    Fire = "火"
+    Psychic = "超能力"
+    Water = "水"
+    Bug = "虫"
+    Electric = "电"
+    Rock = "岩石"
+    Grass = "草"
+    Ghost = "幽灵"
+    Ice = "冰"
+    Dragon = "龙"
+    Fighting = "格斗"
+    Dark = "恶"
+    Poison = "毒"
+    Steel = "钢"
+    Ground = "地面"
+    Fairy = "妖精"
+
+
+class ZaDlcTypeType2(Enum):
+    All = "所有属性"
     Normal = "一般"
     Flying = "飞行"
     Fire = "火"
@@ -113,7 +134,7 @@ class ZaDlcDonut(BaseScript):
         paras["SparklingPowerType"] = ScriptParameter(
             "SparklingPowerType", list, [e.value for e in ZaDlcTypeType], "闪耀力属性", [e.value for e in ZaDlcTypeType])
         paras["CatchingPowerLevel"] = ScriptParameter(
-            "CatchingPowerLevel", int, ZaDlcDonutPowerLevels1[len(ZaDlcDonutPowerLevels1) - 1], "捕获力等级(属性与闪耀力属性相同)", ZaDlcDonutPowerLevels1)
+            "CatchingPowerLevel", int, ZaDlcDonutPowerLevels1[0], "捕获力等级(属性与制作完成甜甜圈闪耀力属性相同)", ZaDlcDonutPowerLevels1)
         paras["AlphaPowerLevel"] = ScriptParameter(
             "AlphaPowerLevel", int, ZaDlcDonutPowerLevels2[0], "头目力等级(-1时排除这个条件)", ZaDlcDonutPowerLevels2)
         paras["HumungoPowerLevel"] = ScriptParameter(
@@ -277,17 +298,21 @@ class ZaDlcDonut(BaseScript):
 
         result = True
 
-        result &= (self._check_sparkling_power(power1[0], power1[1], power1[2])
-                   or self._check_sparkling_power(power2[0], power2[1], power2[2])
-                   or self._check_sparkling_power(power3[0], power3[1], power3[2]))
-        if not result:
+        sparkling_type = None
+        if self._check_sparkling_power(ZaDlcDonutPowerType.Sparkling, power1[1], power1[2]):
+            sparkling_type = power1[1]
+        elif self._check_sparkling_power(ZaDlcDonutPowerType.Sparkling, power2[1], power2[2]):
+            sparkling_type = power2[1]
+        elif self._check_sparkling_power(ZaDlcDonutPowerType.Sparkling, power3[1], power3[2]):
+            sparkling_type = power3[1]
+        if sparkling_type is None:
             self.send_log("闪耀力检测未通过")
             self._cycle_step_index += 1
             return
 
-        result &= (self._check_catching_power(power1[0], power1[1], power1[2])
-                   or self._check_catching_power(power2[0], power2[1], power2[2])
-                   or self._check_catching_power(power3[0], power3[1], power3[2]))
+        result &= (self._check_catching_power(sparkling_type, power1[0], power1[1], power1[2])
+                   or self._check_catching_power(sparkling_type, power2[0], power2[1], power2[2])
+                   or self._check_catching_power(sparkling_type, power3[0], power3[1], power3[2]))
         if not result:
             self.send_log("捕获力检测未通过")
             self._cycle_step_index += 1
@@ -364,9 +389,14 @@ class ZaDlcDonut(BaseScript):
         except ValueError:
             power = None
 
-        if power == ZaDlcDonutPowerType.Sparkling or power == ZaDlcDonutPowerType.Catching:
+        if power == ZaDlcDonutPowerType.Sparkling:
             try:
                 subPower = ZaDlcTypeType(subPowerStr)
+            except ValueError:
+                subPower = None
+        elif power == ZaDlcDonutPowerType.Catching:
+            try:
+                subPower = ZaDlcTypeType2(subPowerStr)
             except ValueError:
                 subPower = None
         elif power == ZaDlcDonutPowerType.Item:
@@ -401,19 +431,25 @@ class ZaDlcDonut(BaseScript):
             return True
         return False
 
-    def _check_catching_power(self, power: ZaDlcDonutPowerType, subPower, lv: int):
+    def _check_catching_power(self, sparkling_type: ZaDlcTypeType, power: ZaDlcDonutPowerType, subPower, lv: int):
         if (self._catching_power_level <= 0):
             return True
         if power != ZaDlcDonutPowerType.Catching or lv < self._catching_power_level:
             return False
-        if not (isinstance(subPower, ZaDlcTypeType)):
+        if not (isinstance(subPower, ZaDlcTypeType2)):
             return False
-        allow_types = self._sparkling_power_type_list if isinstance(self._sparkling_power_type_list, list) else [self._sparkling_power_type_list]
-        if not allow_types:
+        if subPower == ZaDlcTypeType2.All:
             return True
-        if subPower == ZaDlcTypeType.All2:
-            return True
-        if subPower.value in allow_types:
+        if sparkling_type != ZaDlcTypeType.All:
+            if subPower == sparkling_type:
+                return True
+            else:
+                return False
+        allow_types = []
+        for t in self._sparkling_power_type_list:
+            if t != ZaDlcTypeType.All:
+                allow_types.append(t)
+        if sparkling_type == ZaDlcTypeType.All and subPower in allow_types:
             return True
         return False
 
