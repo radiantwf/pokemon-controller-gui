@@ -18,6 +18,18 @@ body:
 0.2
 Plus:0.1
 
+--Virizion--
+<Virizion|宝可梦-ZA-DLC-稳定-毕力吉翁(Virizion)|1--ns1|NS1|False>
+[pokemon.za.common.restart_game]
+RStick@-127,0:0.02
+LStick@0,-127:0.1->LStick@0,-127|B:0.1->LStick@0,-127:2.3->~
+body:
+{
+    LStick@0,127:4.3->LStick@0,-127:4.161->~
+}*27
+0.2
+Plus:0.1
+
 --Magearna--
 <Magearna|宝可梦-ZA-DLC-稳定-玛机雅娜(Magearna)|1>
 [pokemon.za.common.restart_game]

@@ -8,6 +8,7 @@ import numpy as np
 from recognition.ocr import RapidOCRWithStrictChars
 
 ZaDlcDonutRecipes = {
+    "闪耀力(捕获) - 混合": [(5, 7), (3, 1)],
     "闪耀力 - 混合": [(5, 4), (3, 4)],
     "道具力 - 混合": [(3, 4), (1, 4)],
     "闪耀力 - 扁樱果": [(8, 8)],
@@ -20,6 +21,7 @@ ZaDlcDonutPowerLevels2 = [-1, 0, 1, 2, 3]
 
 class ZaDlcDonutPowerType(Enum):
     Sparkling = "闪耀力"
+    Catching = "捕获力"
     Alpha = "头目力"
     Humungo = "大大力"
     Teensy = "小小力"
@@ -34,6 +36,7 @@ class ZaDlcDonutItemType(Enum):
 
 class ZaDlcTypeType(Enum):
     All = "全属性"
+    All2 = "所有属性"
     Normal = "一般"
     Flying = "飞行"
     Fire = "火"
@@ -52,6 +55,7 @@ class ZaDlcTypeType(Enum):
     Steel = "钢"
     Ground = "地面"
     Fairy = "妖精"
+
 
 class ZaDlcDonut(BaseScript):
     def __init__(self, stop_event: multiprocessing.Event, frame_queue: multiprocessing.Queue, controller_input_action_queue: multiprocessing.Queue, paras: dict = None):
@@ -75,6 +79,7 @@ class ZaDlcDonut(BaseScript):
                     self._recipe[idx] = item
         self._sparkling_power_level = self.get_para("SparklingPowerLevel") if paras and "SparklingPowerLevel" in paras else 0
         self._sparkling_power_type_list = self.get_para("SparklingPowerType") if paras and "SparklingPowerType" in paras else [e.value for e in ZaDlcTypeType]
+        self._catching_power_level = self.get_para("CatchingPowerLevel") if paras and "CatchingPowerLevel" in paras else 0
         self._alpha_power_level = self.get_para("AlphaPowerLevel") if paras and "AlphaPowerLevel" in paras else 0
         self._humungo_power_level = self.get_para("HumungoPowerLevel") if paras and "HumungoPowerLevel" in paras else 0
         self._teensy_power_level = self.get_para("TeensyPowerLevel") if paras and "TeensyPowerLevel" in paras else 0
@@ -107,6 +112,8 @@ class ZaDlcDonut(BaseScript):
             "SparklingPowerLevel", int, ZaDlcDonutPowerLevels1[len(ZaDlcDonutPowerLevels1) - 1], "闪耀力等级", ZaDlcDonutPowerLevels1)
         paras["SparklingPowerType"] = ScriptParameter(
             "SparklingPowerType", list, [e.value for e in ZaDlcTypeType], "闪耀力属性", [e.value for e in ZaDlcTypeType])
+        paras["CatchingPowerLevel"] = ScriptParameter(
+            "CatchingPowerLevel", int, ZaDlcDonutPowerLevels1[len(ZaDlcDonutPowerLevels1) - 1], "捕获力等级(属性与闪耀力属性相同)", ZaDlcDonutPowerLevels1)
         paras["AlphaPowerLevel"] = ScriptParameter(
             "AlphaPowerLevel", int, ZaDlcDonutPowerLevels2[0], "头目力等级(-1时排除这个条件)", ZaDlcDonutPowerLevels2)
         paras["HumungoPowerLevel"] = ScriptParameter(
@@ -269,6 +276,7 @@ class ZaDlcDonut(BaseScript):
             self.send_log(f"行3原始文本：{text3}")
 
         result = True
+
         result &= (self._check_sparkling_power(power1[0], power1[1], power1[2])
                    or self._check_sparkling_power(power2[0], power2[1], power2[2])
                    or self._check_sparkling_power(power3[0], power3[1], power3[2]))
@@ -276,6 +284,15 @@ class ZaDlcDonut(BaseScript):
             self.send_log("闪耀力检测未通过")
             self._cycle_step_index += 1
             return
+
+        result &= (self._check_catching_power(power1[0], power1[1], power1[2])
+                   or self._check_catching_power(power2[0], power2[1], power2[2])
+                   or self._check_catching_power(power3[0], power3[1], power3[2]))
+        if not result:
+            self.send_log("捕获力检测未通过")
+            self._cycle_step_index += 1
+            return
+
         result &= (self._alpha_power_level == -1 and self._humungo_power_level == -1 and self._teensy_power_level == -1) or (
             (self._alpha_power_level != -1 and
              (self._check_alpha_power(power1[0], power1[1], power1[2])
@@ -347,7 +364,7 @@ class ZaDlcDonut(BaseScript):
         except ValueError:
             power = None
 
-        if power == ZaDlcDonutPowerType.Sparkling:
+        if power == ZaDlcDonutPowerType.Sparkling or power == ZaDlcDonutPowerType.Catching:
             try:
                 subPower = ZaDlcTypeType(subPowerStr)
             except ValueError:
@@ -379,6 +396,22 @@ class ZaDlcDonut(BaseScript):
         if not allow_types:
             return True
         if subPower == ZaDlcTypeType.All:
+            return True
+        if subPower.value in allow_types:
+            return True
+        return False
+
+    def _check_catching_power(self, power: ZaDlcDonutPowerType, subPower, lv: int):
+        if (self._catching_power_level <= 0):
+            return True
+        if power != ZaDlcDonutPowerType.Catching or lv < self._catching_power_level:
+            return False
+        if not (isinstance(subPower, ZaDlcTypeType)):
+            return False
+        allow_types = self._sparkling_power_type_list if isinstance(self._sparkling_power_type_list, list) else [self._sparkling_power_type_list]
+        if not allow_types:
+            return True
+        if subPower == ZaDlcTypeType.All2:
             return True
         if subPower.value in allow_types:
             return True
