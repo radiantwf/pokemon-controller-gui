@@ -13,8 +13,10 @@ class FrlgDeoxys(BaseScript):
         self._prepare_step_index = -1
         self._cycle_step_index = -1
         self._jump_next_frame = False
-        self._battle_text_template = cv2.imread(
-            "resources/img/recognition/pokemon/frlg/deoxys-battle-text.png", cv2.IMREAD_GRAYSCALE)
+        self._battle_hp_template = cv2.imread(
+            "resources/img/recognition/pokemon/frlg/battle-hp.png", cv2.IMREAD_GRAYSCALE)
+        self._battle_arrow_template = cv2.imread(
+            "resources/img/recognition/pokemon/frlg/battle-arrow.png", cv2.IMREAD_GRAYSCALE)
         self._check_pokemon_index = -1
 
         self.set_paras(paras)
@@ -125,22 +127,25 @@ class FrlgDeoxys(BaseScript):
         return [
             self.step_0,
             self.step_1,
+            self.step_2,
         ]
 
     def _finished_process(self):
         run_time_span = self.run_time_span
         self.macro_stop(block=True)
-        self.macro_run("common.switch_sleep",
-                       loop=1, paras={"ns1": str(self._ns1)}, block=True, timeout=10)
+        # self.macro_run("common.switch_sleep",
+        #                loop=1, paras={"ns1": str(self._ns1)}, block=True, timeout=10)
         self.send_log("[{}] 脚本完成，已运行{}次，耗时{}小时{}分{}秒".format(FrlgDeoxys.script_name(), self.cycle_times - 1, int(
             run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
         self.stop_work()
 
     def _re_cycle(self):
         self._cycle_step_1_start_time_monotonic = 0
+        self._cycle_step_2_start_time_monotonic = 0
 
     def _cycle_init(self):
         self._cycle_step_1_start_time_monotonic = 0
+        self._cycle_step_2_start_time_monotonic = 0
 
     def step_0(self):
         self.macro_text_run("X|Y|A|B:0.1\n0.1", loop=1, block=True)
@@ -149,11 +154,21 @@ class FrlgDeoxys(BaseScript):
         self._jump_next_frame = True
         self._cycle_step_index += 1
 
-    def check_battle_text(self, image):
-        crop_x, crop_y, crop_w, crop_h = 240, 806, 865, 70
+    def check_battle_hp(self, image):
+        crop_x, crop_y, crop_w, crop_h = 400, 200, 150, 60
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
-        match = cv2.matchTemplate(crop_gray, self._battle_text_template, cv2.TM_CCOEFF_NORMED)
+        match = cv2.matchTemplate(crop_gray, self._battle_hp_template, cv2.TM_CCOEFF_NORMED)
+        _, max_val1, _, _ = cv2.minMaxLoc(match)
+        if max_val1 >= 0.85:
+            return True
+        return False
+
+    def check_battle_arrow(self, image):
+        crop_x, crop_y, crop_w, crop_h = 240, 805, 1420, 185
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
+        match = cv2.matchTemplate(crop_gray, self._battle_arrow_template, cv2.TM_CCOEFF_NORMED)
         _, max_val1, _, _ = cv2.minMaxLoc(match)
         if max_val1 >= 0.7:
             return True
@@ -162,13 +177,27 @@ class FrlgDeoxys(BaseScript):
     def step_1(self):
         if self._cycle_step_1_start_time_monotonic == 0:
             self._cycle_step_1_start_time_monotonic = time.monotonic()
+        time_span = time.monotonic() - self._cycle_step_1_start_time_monotonic
+        if time_span > 8:
+            self._cycle_step_index += 2
+            return
         
         current_frame = self.current_frame
-        if not self.check_battle_text(current_frame):
+        if self.check_battle_hp(current_frame):
+            self._cycle_step_index += 1
+            self._jump_next_frame = True
             return
-        time_span = time.monotonic() - self._cycle_step_1_start_time_monotonic
-        self.send_log(f"检测到 进入战斗文本，耗时{time_span:.2f}秒")
-        if time_span > 6:
+        return
+
+    def step_2(self):
+        if self._cycle_step_2_start_time_monotonic == 0:
+            self._cycle_step_2_start_time_monotonic = time.monotonic()
+        
+        current_frame = self.current_frame
+        if not self.check_battle_arrow(current_frame):
+            return
+        time_span = time.monotonic() - self._cycle_step_2_start_time_monotonic
+        if time_span > 0.1:
             self.send_log(f"成功检测到闪光代欧奇希斯")
             self._finished_process()
             return
