@@ -11,4 +11,4 @@ rapidocr_onnxruntime
 # ultralytics
 #torchvision
 #scikit-learn
-#auto-py-to-exe
+imageio-ffmpeg

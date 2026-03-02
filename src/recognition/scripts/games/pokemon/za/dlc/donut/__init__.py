@@ -279,22 +279,24 @@ class ZaDlcDonut(BaseScript):
             self.send_log(f"行1：{power1[0].value}{sub_text} Lv.{power1[2]}")
         else:
             self.send_log("行1：未匹配到有效数据")
-        if text1 and text1 != '':
-            self.send_log(f"行1原始文本：{text1}")
         if power2[0] is not None:
             sub_text = f": {power2[1].value}" if power2[1] is not None else ""
             self.send_log(f"行2：{power2[0].value}{sub_text} Lv.{power2[2]}")
         else:
             self.send_log("行2：未匹配到有效数据")
-        if text2 and text2 != '':
-            self.send_log(f"行2原始文本：{text2}")
         if power3[0] is not None:
             sub_text = f": {power3[1].value}" if power3[1] is not None else ""
             self.send_log(f"行3：{power3[0].value}{sub_text} Lv.{power3[2]}")
         else:
             self.send_log("行3：未匹配到有效数据")
+        self.send_log("---------原始文本---------")
+        if text1 and text1 != '':
+            self.send_log(f"{text1}")
+        if text2 and text2 != '':
+            self.send_log(f"{text2}")
         if text3 and text3 != '':
-            self.send_log(f"行3原始文本：{text3}")
+            self.send_log(f"{text3}")
+        self.send_log("--------------------------")
 
         result = True
 
