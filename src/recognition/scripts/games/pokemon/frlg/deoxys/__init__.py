@@ -133,24 +133,28 @@ class FrlgDeoxys(BaseScript):
     def _finished_process(self):
         run_time_span = self.run_time_span
         self.macro_stop(block=True)
-        # self.macro_run("common.switch_sleep",
-        #                loop=1, paras={"ns1": str(self._ns1)}, block=True, timeout=10)
+        self.macro_run("common.switch_sleep",
+                       loop=1, paras={"ns1": str(self._ns1)}, block=True, timeout=10)
         self.send_log("[{}] 脚本完成，已运行{}次，耗时{}小时{}分{}秒".format(FrlgDeoxys.script_name(), self.cycle_times - 1, int(
             run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
         self.stop_work()
 
     def _re_cycle(self):
         self._cycle_step_1_start_time_monotonic = 0
-        self._cycle_step_2_start_time_monotonic = 0
+        self._battle_text_arrow_spawn_time_monotonic = 0
 
     def _cycle_init(self):
         self._cycle_step_1_start_time_monotonic = 0
-        self._cycle_step_2_start_time_monotonic = 0
+        self._battle_text_arrow_spawn_time_monotonic = 0
 
     def step_0(self):
         self.macro_text_run("X|Y|A|B:0.1\n0.1", loop=1, block=True)
         self.macro_run("common.press_button_a",
-                       loop=-1, paras={}, block=True, timeout=20)
+                       loop=-1, paras={}, block=True, timeout=7.5)
+        self.macro_run("common.press_button_b",
+                       loop=-1, paras={}, block=True, timeout=2)
+        self.macro_run("common.press_button_a",
+                       loop=-1, paras={}, block=True, timeout=5)
         self._jump_next_frame = True
         self._cycle_step_index += 1
 
@@ -185,20 +189,20 @@ class FrlgDeoxys(BaseScript):
         current_frame = self.current_frame
         if self.check_battle_hp(current_frame):
             self._cycle_step_index += 1
+            # self.save_temp_image()
+            self._battle_text_arrow_spawn_time_monotonic = time.monotonic()
             self._jump_next_frame = True
             return
         return
 
     def step_2(self):
-        if self._cycle_step_2_start_time_monotonic == 0:
-            self._cycle_step_2_start_time_monotonic = time.monotonic()
-        
         current_frame = self.current_frame
         if not self.check_battle_arrow(current_frame):
             return
-        time_span = time.monotonic() - self._cycle_step_2_start_time_monotonic
-        if time_span > 0.1:
-            self.send_log(f"成功检测到闪光代欧奇希斯")
+        # self.save_temp_image()
+        time_span = time.monotonic() - self._battle_text_arrow_spawn_time_monotonic
+        if time_span > 0.5:
+            self.send_log(f"成功检测到闪光代欧奇希斯，战斗文本间隔{time_span:.2f}秒")
             self._finished_process()
             return
         self._cycle_step_index += 1
