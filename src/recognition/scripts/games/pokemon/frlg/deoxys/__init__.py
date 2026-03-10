@@ -159,7 +159,7 @@ class FrlgDeoxys(BaseScript):
         self._cycle_step_index += 1
 
     def check_battle_hp(self, image):
-        crop_x, crop_y, crop_w, crop_h = 400, 200, 150, 60
+        crop_x, crop_y, crop_w, crop_h = 0, 200, 550, 60
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
         match = cv2.matchTemplate(crop_gray, self._battle_hp_template, cv2.TM_CCOEFF_NORMED)
@@ -201,7 +201,8 @@ class FrlgDeoxys(BaseScript):
             return
         # self.save_temp_image()
         time_span = time.monotonic() - self._battle_text_arrow_spawn_time_monotonic
-        if time_span > 0.5:
+        # self.send_log(f"战斗文本间隔{time_span:.2f}秒")
+        if time_span > 0.3:
             self.send_log(f"成功检测到闪光代欧奇希斯，战斗文本间隔{time_span:.2f}秒")
             self._finished_process()
             return
