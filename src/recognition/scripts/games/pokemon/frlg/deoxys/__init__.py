@@ -182,7 +182,7 @@ class FrlgDeoxys(BaseScript):
         if self._cycle_step_1_start_time_monotonic == 0:
             self._cycle_step_1_start_time_monotonic = time.monotonic()
         time_span = time.monotonic() - self._cycle_step_1_start_time_monotonic
-        if time_span > 10:
+        if time_span > 12:
             self._cycle_step_index += 2
             return
         
