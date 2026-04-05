@@ -72,13 +72,13 @@ class SVBoxReleasePokemon(BaseSubStep):
             self._process_step_index = 0
             return
         self.script.macro_text_run(
-            "A:0.01->0.005->A:0.05\n0.3\nTOP:0.05\n0.1\nTOP:0.05\n0.1", block=True)
+            "A:0.01->0.005->A:0.05\n0.3\nTOP:0.05\n0.1\nTOP:0.05", block=True)
         self.time_sleep(0.05)
         self._process_step_index += 1
 
     def release_step_2(self):
         image = self.script.current_frame_960x540
-        ret = BoxMatch().release_tag_check(image)
+        ret = BoxMatch().release_tag_check(image, threshold=0.85)
         if ret:
             self.script.macro_text_run(
                 "A:0.01->0.005->A:0.05\n0.6\nTOP:0.05\n0.1\nA:0.01->0.005->A:0.05\n1.6\nA:0.01->0.005->A:0.05\n", block=True)
@@ -87,5 +87,6 @@ class SVBoxReleasePokemon(BaseSubStep):
         else:
             self.script.send_log("{}函数返回状态为{}".format(
                 "release_step_2", SubStepRunningStatus.Failed))
+            self.script.send_log("请核对菜单模板图片语言，可能是游戏语言不一致导致无法识别菜单")
             self._status = SubStepRunningStatus.Failed
             return
