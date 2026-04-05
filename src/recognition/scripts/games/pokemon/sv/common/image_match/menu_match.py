@@ -60,6 +60,7 @@ class MenuCursorMatch:
         if max_val < max_value_threshold:
             return None
 
+
         x = -1
         y = -1
 

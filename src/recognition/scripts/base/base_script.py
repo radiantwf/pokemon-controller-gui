@@ -137,15 +137,17 @@ class BaseScript(ABC):
         return frame_mat
 
     @final
-    def current_frame_960x480(self) -> cv2.Mat:
-        frame = self.current_frame
-        if frame is None:
-            return None
-        if frame.width != 960 or frame.height != 480:
+    @property
+    def current_frame_960x540(self) -> cv2.Mat:
+        np_array = numpy.frombuffer(
+            self._current_frame.bytes(), dtype=numpy.uint8)
+        mat = np_array.reshape(
+            (self._current_frame.height, self._current_frame.width, self._current_frame.channels))
+        if self._current_frame.height != 540 or self._current_frame.width != 960:
             recognize_mat = cv2.resize(
-                frame, (self._my_const.RecognizeVideoWidth, self._my_const.RecognizeVideoHeight), interpolation=cv2.INTER_AREA)
+                mat, (960, 540), interpolation=cv2.INTER_AREA)
         else:
-            recognize_mat = frame[:, :]
+            recognize_mat = mat
         return recognize_mat    
 
     # 运行状态

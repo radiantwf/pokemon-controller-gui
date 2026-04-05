@@ -170,7 +170,7 @@ class SVEggs(BaseScript):
             self._finished_process()
             return
         elif status == SubStepRunningStatus.OK:
-            image = self.current_frame_960x480
+            image = self.current_frame_960x540
             eggs = BoxMatch().current_party_eggs(image)
             if eggs <= 0:
                 self._cycle_step_index = 0

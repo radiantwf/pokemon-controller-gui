@@ -1,3 +1,23 @@
+import time
+
+def sleep_precise_ms(ms: float):
+    target = ms / 1000.0
+    start = time.perf_counter()
+    # 当剩余时间 > 0.1 秒时，用 sleep 节省 CPU
+    while True:
+        elapsed = time.perf_counter() - start
+        remaining = target - elapsed
+        if remaining <= 0:
+            break
+        if remaining > 0.1:
+            # 睡一半剩余时间，避免睡过头太多
+            time.sleep(remaining / 2)
+        else:
+            # 剩余时间 <= 0.1 秒，开始忙等
+            while time.perf_counter() - start < target:
+                pass
+            break
+
 class Paras(object):
     def __init__(self, default_para: dict, para: dict):
         paras = None

@@ -141,11 +141,11 @@ class FrlgDeoxys(BaseScript):
 
     def _re_cycle(self):
         self._cycle_step_1_start_time_monotonic = 0
-        self._battle_text_arrow_spawn_time_monotonic = 0
+        self._battle_hp_appear_time_monotonic = 0
 
     def _cycle_init(self):
         self._cycle_step_1_start_time_monotonic = 0
-        self._battle_text_arrow_spawn_time_monotonic = 0
+        self._battle_hp_appear_time_monotonic = 0
 
     def step_0(self):
         self.macro_text_run("X|Y|A|B:0.1\n0.1", loop=1, block=True)
@@ -190,7 +190,7 @@ class FrlgDeoxys(BaseScript):
         if self.check_battle_hp(current_frame):
             self._cycle_step_index += 1
             # self.save_temp_image()
-            self._battle_text_arrow_spawn_time_monotonic = time.monotonic()
+            self._battle_hp_appear_time_monotonic = time.monotonic()
             self._jump_next_frame = True
             return
         return
@@ -200,7 +200,7 @@ class FrlgDeoxys(BaseScript):
         if not self.check_battle_arrow(current_frame):
             return
         # self.save_temp_image()
-        time_span = time.monotonic() - self._battle_text_arrow_spawn_time_monotonic
+        time_span = time.monotonic() - self._battle_hp_appear_time_monotonic
         # self.send_log(f"战斗文本间隔{time_span:.2f}秒")
         if time_span > 0.3:
             self.send_log(f"成功检测到闪光代欧奇希斯，战斗文本间隔{time_span:.2f}秒")
