@@ -31,12 +31,12 @@ class ChampoinsTeamID(BaseScript):
     @staticmethod
     def script_paras() -> dict:
         paras = dict()
+        paras["teamid"] = ScriptParameter(
+            "teamid", str, "", "队伍ID")
         paras["loop"] = ScriptParameter(
             "loop", int, 1, "运行次数")
         paras["durations"] = ScriptParameter(
             "durations", float, -1, "运行时长（分钟）")
-        paras["teamid"] = ScriptParameter(
-            "teamid", str, "ULUG3FD87Y", "队伍ID")
         return paras
 
     def _check_durations(self):
@@ -172,8 +172,9 @@ class ChampoinsTeamID(BaseScript):
     def step_3(self):
         current_frame = self.current_frame
         self._team.process_states_image(current_frame)
-        
-        # 复制str(self._team)至电脑剪切版
+        print('----------------------------------------\n\n')
+        print(str(self._team))
+        print('----------------------------------------\n\n')
         try:
             import pyperclip
             pyperclip.copy(str(self._team))

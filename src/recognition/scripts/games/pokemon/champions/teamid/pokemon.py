@@ -38,7 +38,7 @@ class Pokemon:
 
     def process_moves_image(self, image):
         regions = [
-            (80, 32, 230, 38),  # name
+            (80, 32, 230, 40),  # name
             (90, 82, 226, 32),  # ability
             (90, 130, 226, 38),  # item
             (500, 39, 175, 30),  # move1
@@ -49,12 +49,57 @@ class Pokemon:
 
         result = self.ocr_engine.recognize_english_roi(image, regions[0])
         self._name = result['text'].strip()
+        if self._name == 'Gvarados' or self._name == 'Garadbs':
+            self._name = 'Gyarados'
+        elif self._name == 'Tvranitar':
+            self._name = 'Tyranitar'
+        elif self._name == 'Svlveon':
+            self._name = 'Sylveon'
+        elif self._name == 'Rhvperior':
+            self._name = 'Rhyperior'
+        elif self._name == 'Kommo-0':
+            self._name = 'Kommo-o'
+        elif self._name == 'Aejodacty':
+            self._name = 'Aerodactyl'
+            
         result = self.ocr_engine.recognize_english_roi(image, regions[1])
         self._ability = result['text'].strip()
         result = self.ocr_engine.recognize_english_roi(image, regions[2])
         self._item = result['text'].strip()
-        
+
         self._moves = [self.ocr_engine.recognize_english_roi(image, regions[i])['text'].strip() for i in range(3, 7)]
+        for i in range(4):
+            if self._moves[i].startswith('Psv'):
+                self._moves[i] = self._moves[i].replace('Psv', 'Psy')
+            elif self._moves[i] == 'Jet Aqua':
+                self._moves[i] = 'Aqua Jet'
+            elif self._moves[i] == 'Rough Play':
+                self._moves[i] = 'Play Rough'
+            elif self._moves[i] == 'Sphere Aura':
+                self._moves[i] = 'Aura Sphere'
+            elif self._moves[i] == 'Bellv Drum':
+                self._moves[i] = 'Belly Drum'
+            elif self._moves[i] == 'Icv Wind':
+                self._moves[i] = 'Icy Wind'
+            elif self._moves[i] == 'Bite Bug':
+                self._moves[i] = 'Bug Bite'
+            elif self._moves[i] == 'Sunn Day':
+                self._moves[i] = 'Sunny Day'
+            elif self._moves[i] == 'IzonHead':
+                self._moves[i] = 'Iron Head'
+            elif self._moves[i] == 'Fllare Blitz':
+                self._moves[i] = 'Flare Blitz'
+            elif self._moves[i] == 'Bodv Slam':
+                self._moves[i] = 'Body Slam'
+
+        if self._item == 'Beak Sharp':
+            self._item == 'Sharp Beak'
+
+        if self._name == 'Rotom':
+            if any(move == 'Hydro Pump' for move in self._moves):
+                self._name = 'Rotom-Wash'
+            elif any(move == 'Overheat' for move in self._moves):
+                self._name = 'Rotom-Heat'
 
     def process_states_image(self, image):
         regions = [
@@ -93,7 +138,6 @@ class Pokemon:
             else:
                 return "spe"
 
-
     def _set_nature(self, up_point, down_point):
         if up_point is None or down_point is None:
             return
@@ -121,6 +165,8 @@ class Pokemon:
         str = f"{self._name}"
         if self._item != '':
             str += f" @ {self._item}\n"
+        else:
+            str += "\n"
         if self._ability != '':
             str += f"Ability: {self._ability}\n"
         if any([var != 0 for var in self._evs]):
