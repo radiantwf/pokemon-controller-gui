@@ -1,5 +1,5 @@
 --刷新太晶团战--
-<refresh_raid>
+<refresh_raid|宝可梦-朱紫-刷新时间|1>
 [common.return_home]
 [pokemon.sv.common.set_time_from_home]
 [pokemon.sv.common.set_time]

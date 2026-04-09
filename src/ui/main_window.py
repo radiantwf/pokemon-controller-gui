@@ -5,6 +5,10 @@ import os
 import platform
 import queue
 import time
+from runtime_bootstrap import bootstrap_runtime
+
+bootstrap_runtime()
+
 import cv2
 import numpy
 import pygame
@@ -12,7 +16,7 @@ from const import ConstClass
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QMessageBox, QLabel, QListWidgetItem, QTreeWidgetItem
 from camera.device import CameraDevice
-from PySide6.QtCore import Slot, Qt, QEvent, QTimer, QCoreApplication
+from PySide6.QtCore import Slot, Qt, QEvent, QTimer, QCoreApplication, QSignalBlocker
 from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtMultimedia import QAudioFormat, QAudioSource, QAudioSink, QMediaDevices
 from PySide6.QtUiTools import loadUiType
@@ -99,6 +103,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.btn_macro_redo.setText("重做(Cmd+R)")
             self.btn_recognition_redo.setText("重做(Cmd+R)")
 
+        self._connect_combo_box_signals()
         self.build_camera_list_comboBox()
         self.build_audio_list_comboBox()
         self.build_serial_device_list_comboBox()
@@ -194,12 +199,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.listWidget_recognition.hide()
         self._recognition_tree = self.treeWidget_recognition
 
+    def _connect_combo_box_signals(self):
+        self.cbxCameraList.currentIndexChanged.connect(self.on_camera_changed)
+        self.cbxAudioList.currentIndexChanged.connect(self.on_audio_changed)
+        self.cbxSerialList.currentIndexChanged.connect(self.on_serial_changed)
+        self.cbxJoystickList.currentIndexChanged.connect(self.on_joystick_changed)
+        self.cbxFps.currentIndexChanged.connect(self.on_fps_changed)
+
     def build_serial_device_list_comboBox(self):
-        try:
-            self.cbxSerialList.currentIndexChanged.disconnect(
-                self.on_serial_changed)
-        except:
-            None
+        blocker = QSignalBlocker(self.cbxSerialList)
         self.cbxSerialList.clear()
 
         self._serial_devices = self._controller_launcher.list_controller()
@@ -210,15 +218,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.cbxSerialList.addItems(devices)
         self.cbxSerialList.setCurrentIndex(0)
-        self.cbxSerialList.currentIndexChanged.connect(self.on_serial_changed)
+        del blocker
         self.on_serial_changed()
 
     def build_joystick_device_list_comboBox(self):
-        try:
-            self.cbxJoystickList.currentIndexChanged.disconnect(
-                self.on_joystick_changed)
-        except:
-            None
+        blocker = QSignalBlocker(self.cbxJoystickList)
         self.cbxJoystickList.clear()
         self._joystick_devices = JoystickDevice.list_device()
         devices = []
@@ -228,16 +232,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.cbxJoystickList.addItems(devices)
         self.cbxJoystickList.setCurrentIndex(0)
-        self.cbxJoystickList.currentIndexChanged.connect(
-            self.on_joystick_changed)
+        del blocker
         self.on_joystick_changed()
 
     def build_camera_list_comboBox(self):
-        try:
-            self.cbxCameraList.currentIndexChanged.disconnect(
-                self.on_camera_changed)
-        except:
-            None
+        blocker = QSignalBlocker(self.cbxCameraList)
         self.cbxCameraList.clear()
         self._cameras = CameraDevice.list_device()
         cameras = []
@@ -246,14 +245,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             cameras.append(camera_info.name)
         self.cbxCameraList.addItems(cameras)
         self.cbxCameraList.setCurrentIndex(0)
-        self.cbxCameraList.currentIndexChanged.connect(self.on_camera_changed)
+        del blocker
         self.on_camera_changed()
 
     def build_fps_comboBox(self):
-        try:
-            self.cbxFps.currentIndexChanged.disconnect(self.on_fps_changed)
-        except:
-            None
+        blocker = QSignalBlocker(self.cbxFps)
         self.cbxFps.clear()
         if self._current_camera == None:
             minFps = 0
@@ -279,15 +275,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 fps.append(cbxText)
         self.cbxFps.addItems(fps)
         self.cbxFps.setCurrentText(cbxText)
-        self.cbxFps.currentIndexChanged.connect(self.on_fps_changed)
+        del blocker
         self.on_fps_changed()
 
     def build_audio_list_comboBox(self):
-        try:
-            self.cbxAudioList.currentIndexChanged.disconnect(
-                self.on_audio_changed)
-        except:
-            None
+        blocker = QSignalBlocker(self.cbxAudioList)
         self.cbxAudioList.clear()
         audios = []
         audios.append("选择音频输入设备")
@@ -295,7 +287,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             audios.append(audio_info.description())
         self.cbxAudioList.addItems(audios)
         self.cbxAudioList.setCurrentIndex(0)
-        self.cbxAudioList.currentIndexChanged.connect(self.on_audio_changed)
+        del blocker
         self.on_audio_changed()
 
     def build_macro_list_listView(self):
