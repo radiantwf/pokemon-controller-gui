@@ -1,5 +1,30 @@
 import time
 
+_qwer_keyboards = [['1','2','3','4','5','6','7','8','9','0','@'] \
+    ,['Q','W','E','R','T','Y','U','I','O','P','='] \
+    ,['A','S','D','F','G','H','J','K','L','&',';'] \
+    ,['Z','X','C','V','B','N','M','*','#','!','?']]
+
+def input_text_by_qwer(text: str):
+    text = text.upper()
+    keyboard_pos = dict()
+    for y, row in enumerate(_qwer_keyboards):
+        for x, char in enumerate(row):
+            keyboard_pos[char] = (x, y)
+
+    current_x, current_y = keyboard_pos['1']
+    moves = []
+
+    for char in text:
+        if char not in keyboard_pos:
+            return []
+
+        target_x, target_y = keyboard_pos[char]
+        moves.append((target_x - current_x, target_y - current_y))
+        current_x, current_y = target_x, target_y
+
+    return moves
+
 def sleep_precise_ms(ms: float):
     target = ms / 1000.0
     start = time.perf_counter()

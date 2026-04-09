@@ -45,3 +45,42 @@ HOME:4
 A:0.1
 0.5
 A:0.1
+
+<input_text_by_qwer|输入文本(输入框强制大写)|1--input_text|待输入文本|>
+EXEC>inputs=input_text_by_qwer(input_text)
+EXEC>input_lens=len(inputs);current_input_index=0;
+{
+    EXEC>x,y=inputs[current_input_index]
+    {
+        {
+            LStick@127,0:0.05
+            0.2
+        }*x
+    }?x>0
+    {
+        EXEC>x=-x
+        {
+            LStick@-127,0:0.05
+            0.2
+        }*x
+    }?x<0
+    {
+        {
+            LStick@0,127:0.05
+            0.2
+        }*y
+    }?y>0
+    {
+        EXEC>y=-y
+        {
+            LStick@0,-127:0.05
+            0.2
+        }*y
+    }?y<0
+    A:0.05
+    0.2
+    EXEC>current_input_index=current_input_index+1
+}*input_lens
+PLUS:0.1
+0.3
+A:0.1

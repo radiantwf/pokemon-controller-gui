@@ -52,6 +52,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         JoystickDevice.list_device()
         self._my_const = ConstClass()
         self._timer = None
+        self._script_state_timer = None
         self._joystick_timer = None
         self._m_audioSink = None
         self._audio_input = None
@@ -88,11 +89,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._last_macro_scripts = dict()
         self._macro_script_group_delimiter = "-"
         self._macro_tree = None
+        self._macro_running_last = False
+        self._macro_stop_requested = False
         self._recognition_list = []
         self._recognition_launcher = RecognitionLauncher()
         self._last_recognition_scripts = dict()
         self._recognition_script_group_delimiter = "-"
         self._recognition_tree = None
+        self._recognition_running_last = False
+        self._recognition_stop_requested = False
         self._script_tree_indent = 8
         self._controller_launcher = ControllerLauncher()
         self._camera_launcher = CameraLauncher()
@@ -140,6 +145,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._timer = QTimer()
         self._timer.timeout.connect(self.realtime_control_action_send)
         self._timer.start(1)
+        self._script_state_timer = QTimer()
+        self._script_state_timer.timeout.connect(self._sync_script_finish_state)
+        self._script_state_timer.start(100)
 
         self.build_macro_list_listView()
         self._setup_recognition_tree()
@@ -168,6 +176,31 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             elif self._last_operation_type == "recognition":
                 self.toolBox.setCurrentIndex(2)
                 self.btn_recognition_redo.click()
+
+    def _switch_to_realtime_tab(self):
+        if self.toolBox.currentIndex() != 0:
+            self.toolBox.setCurrentIndex(0)
+
+    def _request_script_stop_from_ui(self, macro=False, recognition=False):
+        if macro and self._macro_launcher.macro_running():
+            self._macro_stop_requested = True
+        if recognition and self._recognition_launcher.recognition_running():
+            self._recognition_stop_requested = True
+
+    def _sync_script_finish_state(self):
+        macro_running = self._macro_launcher.macro_running()
+        if self._macro_running_last and not macro_running:
+            if not self._macro_stop_requested:
+                self._switch_to_realtime_tab()
+            self._macro_stop_requested = False
+        self._macro_running_last = macro_running
+
+        recognition_running = self._recognition_launcher.recognition_running()
+        if self._recognition_running_last and not recognition_running:
+            if not self._recognition_stop_requested:
+                self._switch_to_realtime_tab()
+            self._recognition_stop_requested = False
+        self._recognition_running_last = recognition_running
 
     def _setup_macro_tree(self):
         if getattr(self, "treeWidget_macro", None) is not None:
@@ -392,6 +425,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self._macro_launcher.macro_start(
                 script["name"], self._controller_input_action_queue, script["loop"], paras)
             self._last_operation_type = "macro"
+            self._macro_running_last = True
+            self._macro_stop_requested = False
 
     def macro_redo(self):
         macro = self._current_macro_script()
@@ -415,6 +450,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._macro_launcher.macro_start(
             script_name, self._controller_input_action_queue, loop, paras)
         self._last_operation_type = "macro"
+        self._macro_running_last = True
+        self._macro_stop_requested = False
 
     def macro_refresh(self):
         self.build_macro_list_listView()
@@ -542,6 +579,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self._recognition_launcher.recognition_start(
                 recognition, self._recognition_frame_queue, self._controller_input_action_queue, paras)
             self._last_operation_type = "recognition"
+            self._recognition_running_last = True
+            self._recognition_stop_requested = False
 
     def recognition_redo(self):
         recognition = self._current_recognition_script_name()
@@ -561,6 +600,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._recognition_launcher.recognition_start(
             recognition, self._recognition_frame_queue, self._controller_input_action_queue, paras)
         self._last_operation_type = "recognition"
+        self._recognition_running_last = True
+        self._recognition_stop_requested = False
 
     def _clone_recognition_paras(self, paras: dict):
         if paras is None:
@@ -667,6 +708,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.chkJoystickTriggerModel2.isChecked())
 
     def on_serial_changed(self):
+        self._request_script_stop_from_ui(macro=True, recognition=True)
         self._macro_launcher.macro_stop()
         self._recognition_launcher.recognition_stop()
         self._controller_launcher.controller_stop()
@@ -708,6 +750,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             msg_box.addButton('取消', QMessageBox.ButtonRole.RejectRole)
             msg_box.exec_()
             if msg_box.clickedButton() == ok_button:
+                self._request_script_stop_from_ui(macro=True)
                 if not self._macro_launcher.macro_stop():
                     send_log("已强行终止运行中脚本")
                 self.on_serial_changed()
@@ -726,6 +769,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             msg_box.addButton('取消', QMessageBox.ButtonRole.RejectRole)
             msg_box.exec_()
             if msg_box.clickedButton() == ok_button:
+                self._request_script_stop_from_ui(recognition=True)
                 if not self._recognition_launcher.recognition_stop():
                     send_log("已强行终止运行中图像识别脚本")
                 self.on_serial_changed()
@@ -757,9 +801,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._camera_launcher.camera_stop()
 
         print('macro_stop')
+        self._request_script_stop_from_ui(macro=True)
         self._macro_launcher.macro_stop()
 
         print('recognition_stop')
+        self._request_script_stop_from_ui(recognition=True)
         self._recognition_launcher.recognition_stop()
 
         print('controller_stop')

@@ -1,11 +1,9 @@
 from enum import Enum
 import multiprocessing
-import time
 from recognition.scripts.parameter_struct import ScriptParameter
 from recognition.scripts.base.base_script import BaseScript, WorkflowEnum
-import cv2
-import numpy as np
-from recognition.ocr import RapidOCRWithStrictChars
+from recognition.ocr.rapidocr import RapidOCR
+
 
 ZaDlcDonutRecipes = {
     "闪耀力(捕获) - 混合": [(5, 7), (3, 1)],
@@ -108,7 +106,7 @@ class ZaDlcDonut(BaseScript):
         self._item_power_type_list = self.get_para("ItemPowerType") if paras and "ItemPowerType" in paras else [e.value for e in ZaDlcDonutItemType]
         self._big_haul_power_level = self.get_para("BigHaulPowerLevel") if paras and "BigHaulPowerLevel" in paras else 0
 
-        self.ocr_engine = RapidOCRWithStrictChars(
+        self.ocr_engine = RapidOCR(
             upscale=2.5,              # 放大倍数
             enable_preprocess=True,   # 启用预处理
         )

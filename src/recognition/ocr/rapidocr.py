@@ -1,9 +1,8 @@
 import cv2
-import numpy as np
-from rapidocr_onnxruntime import RapidOCR
+from rapidocr_onnxruntime import RapidOCR as RapidOCREngine
 
 
-class RapidOCRWithStrictChars:
+class RapidOCR:
     """
     RapidOCR 封装类
     支持ROI放大与可选预处理
@@ -54,7 +53,7 @@ class RapidOCRWithStrictChars:
         final_kwargs.update(kwargs)
 
         # 初始化引擎
-        self.engine = RapidOCR(**final_kwargs)
+        self.engine = RapidOCREngine(**final_kwargs)
 
     def _preprocess_roi(self, roi):
         """预处理ROI区域（放大、锐化、去噪）"""
