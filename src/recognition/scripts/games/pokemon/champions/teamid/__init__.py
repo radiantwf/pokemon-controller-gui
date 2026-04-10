@@ -5,6 +5,7 @@ from recognition.scripts.parameter_struct import ScriptParameter
 from recognition.scripts.base.base_script import BaseScript, WorkflowEnum
 import cv2
 from recognition.scripts.games.pokemon.champions.teamid.team import Team
+from recognition.scripts.games.pokemon.champions.teamid.offsets import offsets_y
 
 
 class ChampoinsTeamID(BaseScript):
@@ -139,7 +140,7 @@ class ChampoinsTeamID(BaseScript):
         self.stop_work()
 
     def _re_cycle(self):
-        pass
+        self._cycle_step_index = 0
 
     def _cycle_init(self):
         pass
@@ -187,9 +188,11 @@ class ChampoinsTeamID(BaseScript):
         self._cycle_step_index += 1
 
     def _check_teamid_form(self, image):
-        crop_x, crop_y, crop_w, crop_h = 531, 201, 853, 47
+        crop_x, crop_y, crop_w, crop_h = 531, 201+offsets_y, 853, 47
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
+        # cv2.imshow("crop_gray", crop_gray)
+        # cv2.waitKey(1)
         match = cv2.matchTemplate(crop_gray, self._teamid_form_template, cv2.TM_CCOEFF_NORMED)
         _, max_val1, _, _ = cv2.minMaxLoc(match)
         if max_val1 >= 0.9:
