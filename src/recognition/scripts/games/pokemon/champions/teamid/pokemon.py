@@ -1,6 +1,4 @@
-from recognition.ocr.easy import EasyOCR
-from recognition.ocr.rapidocr import RapidOCR
-from recognition.scripts.games.pokemon.champions.teamid.offsets import offsets_y
+from recognition.ocr.paddle import PaddleOCRWrapper
 import cv2
 
 
@@ -8,11 +6,8 @@ class Pokemon:
     def __init__(self):
         self._name = ''
         self._nature = 'Serious'
-        self.ocr_engine_number = EasyOCR()
-        self.ocr_engine = RapidOCR(
-            upscale=2.5,              # 放大倍数
-            enable_preprocess=True,   # 启用预处理
-        )
+        self.ocr_engine = PaddleOCRWrapper(lang='en', use_angle_cls=False)
+        self.ocr_engine_number = self.ocr_engine
         self._stat_up_template = cv2.imread(
             "resources/img/recognition/pokemon/champions/stat_up.png", cv2.IMREAD_GRAYSCALE)
         self._stat_down_template = cv2.imread(
@@ -44,38 +39,43 @@ class Pokemon:
 
     def process_moves_image(self, image):
         regions = [
-            (80, 32+offsets_y, 230, 40),  # name
-            (90, 82+offsets_y, 226, 32),  # ability
-            (90, 130+offsets_y, 226, 38),  # item
-            (500, 39+offsets_y, 175, 30),  # move1
-            (500, 86+offsets_y, 175, 30),  # move2
-            (500, 129+offsets_y, 175, 30),  # move3
-            (500, 174+offsets_y, 175, 30),  # move4
+            (80, 32, 230, 40),  # name
+            (90, 82, 226, 32),  # ability
+            (90, 130, 226, 38),  # item
+            (500, 39, 175, 30),  # move1
+            (500, 86, 175, 30),  # move2
+            (500, 129, 175, 30),  # move3
+            (500, 174, 175, 30),  # move4
         ]
-        cv2.imwrite("name.png", image[regions[0][1]:regions[0][1] + regions[0][3], regions[0][0]:regions[0][0] + regions[0][2]])
-        cv2.imwrite("ability.png", image[regions[1][1]:regions[1][1] + regions[1][3], regions[1][0]:regions[1][0] + regions[1][2]])
-        cv2.imwrite("item.png", image[regions[2][1]:regions[2][1] + regions[2][3], regions[2][0]:regions[2][0] + regions[2][2]])
-        cv2.imwrite("move1.png", image[regions[3][1]:regions[3][1] + regions[3][3], regions[3][0]:regions[3][0] + regions[3][2]])
-        cv2.imwrite("move2.png", image[regions[4][1]:regions[4][1] + regions[4][3], regions[4][0]:regions[4][0] + regions[4][2]])
-        cv2.imwrite("move3.png", image[regions[5][1]:regions[5][1] + regions[5][3], regions[5][0]:regions[5][0] + regions[5][2]])
-        cv2.imwrite("move4.png", image[regions[6][1]:regions[6][1] + regions[6][3], regions[6][0]:regions[6][0] + regions[6][2]])
-        results = self.ocr_engine.batch_recognize_regions(image, regions)
+        # cv2.imwrite("name.png", image[regions[0][1]:regions[0][1] + regions[0][3], regions[0][0]:regions[0][0] + regions[0][2]])
+        # cv2.imwrite("ability.png", image[regions[1][1]:regions[1][1] + regions[1][3], regions[1][0]:regions[1][0] + regions[1][2]])
+        # cv2.imwrite("item.png", image[regions[2][1]:regions[2][1] + regions[2][3], regions[2][0]:regions[2][0] + regions[2][2]])
+        # cv2.imwrite("move1.png", image[regions[3][1]:regions[3][1] + regions[3][3], regions[3][0]:regions[3][0] + regions[3][2]])
+        # cv2.imwrite("move2.png", image[regions[4][1]:regions[4][1] + regions[4][3], regions[4][0]:regions[4][0] + regions[4][2]])
+        # cv2.imwrite("move3.png", image[regions[5][1]:regions[5][1] + regions[5][3], regions[5][0]:regions[5][0] + regions[5][2]])
+        # cv2.imwrite("move4.png", image[regions[6][1]:regions[6][1] + regions[6][3], regions[6][0]:regions[6][0] + regions[6][2]])
+        results = self.ocr_engine.batch_recognize_regions(
+            image,
+            regions,
+            upscale=2.5,
+            enable_preprocess=True,
+        )
 
         self._name = results[0]['text'].strip()
-        if self._name == 'Gvarados' or self._name == 'Garadbs':
-            self._name = 'Gyarados'
-        elif self._name == 'Tvranitar':
-            self._name = 'Tyranitar'
-        elif self._name == 'Svlveon':
-            self._name = 'Sylveon'
-        elif self._name == 'Rhvperior':
-            self._name = 'Rhyperior'
-        elif self._name == 'Kommo-0':
-            self._name = 'Kommo-o'
-        elif self._name == 'Aejodacty':
-            self._name = 'Aerodactyl'
-        elif self._name == 'Kinoamhit':
-            self._name = 'Kingambit'
+        # if self._name == 'Gvarados' or self._name == 'Garadbs':
+        #     self._name = 'Gyarados'
+        # elif self._name == 'Tvranitar':
+        #     self._name = 'Tyranitar'
+        # elif self._name == 'Svlveon':
+        #     self._name = 'Sylveon'
+        # elif self._name == 'Rhvperior':
+        #     self._name = 'Rhyperior'
+        # elif self._name == 'Kommo-0':
+        #     self._name = 'Kommo-o'
+        # elif self._name == 'Aejodacty':
+        #     self._name = 'Aerodactyl'
+        # elif self._name == 'Kinoamhit':
+        #     self._name = 'Kingambit'
 
         self._ability = results[1]['text'].strip()
 
@@ -103,8 +103,10 @@ class Pokemon:
                 self._moves[i] = 'Iron Head'
             elif self._moves[i] == 'Fllare Blitz':
                 self._moves[i] = 'Flare Blitz'
-            elif self._moves[i] == 'Bodv Slam':
-                self._moves[i] = 'Body Slam'
+            elif self._moves[i].startswith('lce '):
+                self._moves[i] = self._moves[i].replace('lce ', 'Ice ')
+            elif self._moves[i].startswith('lron '):
+                self._moves[i] = self._moves[i].replace('lron ', 'Iron ')
 
         if self._item == 'Beak Sharp':
             self._item == 'Sharp Beak'
@@ -114,22 +116,25 @@ class Pokemon:
                 self._name = 'Rotom-Wash'
             elif any(move == 'Overheat' for move in self._moves):
                 self._name = 'Rotom-Heat'
+            elif any(move == 'Blizzard' for move in self._moves):
+                self._name = 'Rotom-Frost'
+                
 
     def process_states_image(self, image):
         regions = [
-            (322, 83+offsets_y, 32, 28),  # evs hp
-            (322, 127+offsets_y, 32, 29),  # atk
-            (322, 172+offsets_y, 32, 29),  # def
-            (672, 83+offsets_y, 32, 28),  # spa
-            (672, 127+offsets_y, 32, 29),  # spd
-            (672, 172+offsets_y, 32, 29),  # spe
+            (322, 83, 32, 28),  # evs hp
+            (322, 127, 32, 29),  # atk
+            (322, 172, 32, 29),  # def
+            (672, 83, 32, 28),  # spa
+            (672, 127, 32, 29),  # spd
+            (672, 172, 32, 29),  # spe
         ]
-        cv2.imwrite("hp.png", image[regions[0][1]:regions[0][1] + regions[0][3], regions[0][0]:regions[0][0] + regions[0][2]])
-        cv2.imwrite("atk.png", image[regions[1][1]:regions[1][1] + regions[1][3], regions[1][0]:regions[1][0] + regions[1][2]])
-        cv2.imwrite("def.png", image[regions[2][1]:regions[2][1] + regions[2][3], regions[2][0]:regions[2][0] + regions[2][2]])
-        cv2.imwrite("spa.png", image[regions[3][1]:regions[3][1] + regions[3][3], regions[3][0]:regions[3][0] + regions[3][2]])
-        cv2.imwrite("spd.png", image[regions[4][1]:regions[4][1] + regions[4][3], regions[4][0]:regions[4][0] + regions[4][2]])
-        cv2.imwrite("spe.png", image[regions[5][1]:regions[5][1] + regions[5][3], regions[5][0]:regions[5][0] + regions[5][2]])
+        # cv2.imwrite("hp.png", image[regions[0][1]:regions[0][1] + regions[0][3], regions[0][0]:regions[0][0] + regions[0][2]])
+        # cv2.imwrite("atk.png", image[regions[1][1]:regions[1][1] + regions[1][3], regions[1][0]:regions[1][0] + regions[1][2]])
+        # cv2.imwrite("def.png", image[regions[2][1]:regions[2][1] + regions[2][3], regions[2][0]:regions[2][0] + regions[2][2]])
+        # cv2.imwrite("spa.png", image[regions[3][1]:regions[3][1] + regions[3][3], regions[3][0]:regions[3][0] + regions[3][2]])
+        # cv2.imwrite("spd.png", image[regions[4][1]:regions[4][1] + regions[4][3], regions[4][0]:regions[4][0] + regions[4][2]])
+        # cv2.imwrite("spe.png", image[regions[5][1]:regions[5][1] + regions[5][3], regions[5][0]:regions[5][0] + regions[5][2]])
         results = [
             self.ocr_engine_number.recognize_number_roi(image, region)
             for region in regions
@@ -199,7 +204,7 @@ class Pokemon:
                     str += f"EVs: "
                 else:
                     str += " / "
-                str += f"{(self._evs[i]-1)*8+4}"
+                str += f"{self._evs[i]}"
                 if i == 0:
                     str += " HP"
                 elif i == 1:

@@ -1,14 +1,14 @@
-import cv2
 from recognition.scripts.games.pokemon.champions.teamid.pokemon import Pokemon
 
 
 class Team:
-    def __init__(self):
+    def __init__(self, offsets_y: int):
+        self._offsets_y = offsets_y
         self._pokemons = [None, None, None, None, None, None]
 
     def split_pokemon(self, image):
         width, height = 750, 217
-        pokes = [(184, 247), (985, 247), (184, 464), (985, 464), (184, 682), (985, 682)
+        pokes = [(184, 247+self._offsets_y), (985, 247+self._offsets_y), (184, 464+self._offsets_y), (985, 464+self._offsets_y), (184, 682+self._offsets_y), (985, 682+self._offsets_y)
                  ]
         poke_images = []
         for poke in pokes:

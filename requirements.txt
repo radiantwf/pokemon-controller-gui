@@ -7,10 +7,11 @@ pyserial
 pygame
 pytesseract
 rapidocr_onnxruntime
-easyocr
 pyperclip
 # torch
 # ultralytics
 #torchvision
 #scikit-learn
 imageio-ffmpeg
+paddlepaddle
+paddleocr

@@ -5,7 +5,6 @@ from recognition.scripts.parameter_struct import ScriptParameter
 from recognition.scripts.base.base_script import BaseScript, WorkflowEnum
 import cv2
 from recognition.scripts.games.pokemon.champions.teamid.team import Team
-from recognition.scripts.games.pokemon.champions.teamid.offsets import offsets_y
 
 
 class ChampoinsTeamID(BaseScript):
@@ -17,13 +16,14 @@ class ChampoinsTeamID(BaseScript):
         self._jump_next_frame = False
         self._teamid_form_template = cv2.imread(
             "resources/img/recognition/pokemon/champions/teamid_form.png", cv2.IMREAD_GRAYSCALE)
-        self._team = Team()
         self.set_paras(paras)
 
         # 获取脚本参数
         self._loop = self.get_para("loop")
         self._durations = self.get_para("durations")
         self._teamid = self.get_para("teamid")
+        self._offsets_y = 0
+        self._team = None
 
     @staticmethod
     def script_name() -> str:
@@ -161,6 +161,7 @@ class ChampoinsTeamID(BaseScript):
                            loop=-1, paras={}, block=True, timeout=12)
             self._re_cycle()
             return
+        self._team = Team(self._offsets_y)
         self._cycle_step_index += 1
 
     def step_2(self):
@@ -188,13 +189,12 @@ class ChampoinsTeamID(BaseScript):
         self._cycle_step_index += 1
 
     def _check_teamid_form(self, image):
-        crop_x, crop_y, crop_w, crop_h = 531, 201+offsets_y, 853, 47
+        crop_x, crop_y, crop_w, crop_h = 531, 181, 853, 97
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         crop_gray = gray[crop_y:crop_y+crop_h, crop_x:crop_x+crop_w]
-        # cv2.imshow("crop_gray", crop_gray)
-        # cv2.waitKey(1)
         match = cv2.matchTemplate(crop_gray, self._teamid_form_template, cv2.TM_CCOEFF_NORMED)
-        _, max_val1, _, _ = cv2.minMaxLoc(match)
+        _, max_val1, _, p = cv2.minMaxLoc(match)
         if max_val1 >= 0.9:
+            self._offsets_y = p[1]-20
             return True
         return False

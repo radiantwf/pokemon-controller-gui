@@ -1,5 +1,6 @@
 #!/bin/bash
-python3.14 -m venv venv
+rm -rf venv
+python3.13 -m venv venv
 
 source ./venv/bin/activate
 
