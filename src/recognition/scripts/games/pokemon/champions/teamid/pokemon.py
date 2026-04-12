@@ -12,6 +12,8 @@ class Pokemon:
             "resources/img/recognition/pokemon/champions/stat_up.png", cv2.IMREAD_GRAYSCALE)
         self._stat_down_template = cv2.imread(
             "resources/img/recognition/pokemon/champions/stat_down.png", cv2.IMREAD_GRAYSCALE)
+        self._gender_female_template = cv2.imread(
+            "resources/img/recognition/pokemon/champions/gender/female.png", cv2.IMREAD_GRAYSCALE)
 
         self._dict: dict = {
             "atk,def": "Lonely",
@@ -37,23 +39,32 @@ class Pokemon:
             "others": "Serious",
         }
 
-    def process_moves_image(self, image):
+    def process_moves_image(self, image, i):
         regions = [
-            (80, 32, 230, 40),  # name
-            (90, 82, 226, 32),  # ability
-            (90, 130, 226, 38),  # item
-            (500, 39, 175, 30),  # move1
-            (500, 86, 175, 30),  # move2
-            (500, 129, 175, 30),  # move3
-            (500, 174, 175, 30),  # move4
+            (80, 32, 230, 40)  # name
+            , (90, 82, 226, 32)  # ability
+            , (90, 130, 226, 38)  # item
+            , (500, 39, 175, 30)  # move1
+            , (500, 86, 175, 30)  # move2
+            , (500, 129, 175, 30)  # move3
+            , (500, 174, 175, 30)  # move4
+            , (315, 34, 33, 33)  # gender
+            , (353, 35, 32, 32)  # type1
+            , (395, 35, 32, 32)  # type2
+            , (10, 2, 72, 72)  # pokemon
         ]
-        # cv2.imwrite("name.png", image[regions[0][1]:regions[0][1] + regions[0][3], regions[0][0]:regions[0][0] + regions[0][2]])
-        # cv2.imwrite("ability.png", image[regions[1][1]:regions[1][1] + regions[1][3], regions[1][0]:regions[1][0] + regions[1][2]])
-        # cv2.imwrite("item.png", image[regions[2][1]:regions[2][1] + regions[2][3], regions[2][0]:regions[2][0] + regions[2][2]])
-        # cv2.imwrite("move1.png", image[regions[3][1]:regions[3][1] + regions[3][3], regions[3][0]:regions[3][0] + regions[3][2]])
-        # cv2.imwrite("move2.png", image[regions[4][1]:regions[4][1] + regions[4][3], regions[4][0]:regions[4][0] + regions[4][2]])
-        # cv2.imwrite("move3.png", image[regions[5][1]:regions[5][1] + regions[5][3], regions[5][0]:regions[5][0] + regions[5][2]])
-        # cv2.imwrite("move4.png", image[regions[6][1]:regions[6][1] + regions[6][3], regions[6][0]:regions[6][0] + regions[6][2]])
+        # cv2.imwrite(f"./name{i}.png", image[regions[0][1]:regions[0][1] + regions[0][3], regions[0][0]:regions[0][0] + regions[0][2]])
+        # cv2.imwrite(f"./ability{i}.png", image[regions[1][1]:regions[1][1] + regions[1][3], regions[1][0]:regions[1][0] + regions[1][2]])
+        # cv2.imwrite(f"./item{i}.png", image[regions[2][1]:regions[2][1] + regions[2][3], regions[2][0]:regions[2][0] + regions[2][2]])
+        # cv2.imwrite(f"./move1{i}.png", image[regions[3][1]:regions[3][1] + regions[3][3], regions[3][0]:regions[3][0] + regions[3][2]])
+        # cv2.imwrite(f"./move2{i}.png", image[regions[4][1]:regions[4][1] + regions[4][3], regions[4][0]:regions[4][0] + regions[4][2]])
+        # cv2.imwrite(f"./move3{i}.png", image[regions[5][1]:regions[5][1] + regions[5][3], regions[5][0]:regions[5][0] + regions[5][2]])
+        # cv2.imwrite(f"./move4{i}.png", image[regions[6][1]:regions[6][1] + regions[6][3], regions[6][0]:regions[6][0] + regions[6][2]])
+        # cv2.imwrite(f"./gender{i}.png", image[regions[7][1]:regions[7][1] + regions[7][3], regions[7][0]:regions[7][0] + regions[7][2]])
+        # cv2.imwrite(f"./type1_{i}.png", image[regions[8][1]:regions[8][1] + regions[8][3], regions[8][0]:regions[8][0] + regions[8][2]])
+        # cv2.imwrite(f"./type2_{i}.png", image[regions[9][1]:regions[9][1] + regions[9][3], regions[9][0]:regions[9][0] + regions[9][2]])
+        cv2.imwrite(f"./img_champions/pokeImg{i}.png", image[regions[10][1]:regions[10][1] + regions[10][3], regions[10][0]:regions[10][0] + regions[10][2]])
+
         results = self.ocr_engine.batch_recognize_regions(
             image,
             regions,
@@ -118,7 +129,11 @@ class Pokemon:
                 self._name = 'Rotom-Heat'
             elif any(move == 'Blizzard' for move in self._moves):
                 self._name = 'Rotom-Frost'
-                
+
+        if self._name == 'Basculegion' \
+                or self._name == 'Meowstic':
+            if self._match_gender_female(image[regions[7][1]:regions[7][1] + regions[7][3], regions[7][0]:regions[7][0] + regions[7][2]]):
+                self._name = self._name + '-F'
 
     def process_states_image(self, image):
         regions = [
@@ -141,8 +156,8 @@ class Pokemon:
         ]
         self._evs = results
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        self._stat_up_point = self._match(gray, up=True)
-        self._stat_down_point = self._match(gray, up=False)
+        self._stat_up_point = self._match_stat_modify(gray, up=True)
+        self._stat_down_point = self._match_stat_modify(gray, up=False)
         self._set_nature(self._stat_up_point, self._stat_down_point, regions)
 
     def get_stat_by_point(self, point, regions):
@@ -170,7 +185,14 @@ class Pokemon:
         down = self.get_stat_by_point(down_point, regions)
         self._nature = self._dict.get(f"{up},{down}", self._dict["others"])
 
-    def _match(self, gray, up=True, max_value_threshold=0.8):
+    def _match_gender_female(self, image, max_value_threshold=0.8):
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        match = cv2.matchTemplate(
+            gray, self._gender_female_template, cv2.TM_CCOEFF_NORMED)
+        _, max_val, _, _ = cv2.minMaxLoc(match)
+        return max_val >= max_value_threshold
+
+    def _match_stat_modify(self, gray, up=True, max_value_threshold=0.8):
         if up:
             template = self._stat_up_template
         else:

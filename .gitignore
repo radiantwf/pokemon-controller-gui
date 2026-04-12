@@ -10,3 +10,4 @@ yolo_training/data/images/**/temp
 **/.DS_Store
 runs
 src/tools
+img_champions

@@ -1,4 +1,5 @@
 from recognition.scripts.games.pokemon.champions.teamid.pokemon import Pokemon
+import cv2
 
 
 class Team:
@@ -18,8 +19,10 @@ class Team:
     def process_moves_image(self, image):
         pokes = self.split_pokemon(image)
         for i in range(len(pokes)):
+            cv2.imwrite(f"./img_champions/poke{i}.png", pokes[i])
+
             self._pokemons[i] = Pokemon()
-            self._pokemons[i].process_moves_image(pokes[i])
+            self._pokemons[i].process_moves_image(pokes[i], i)
             if self._pokemons[i].name == None or self._pokemons[i].name.strip() == '':
                 self._pokemons[i] = None
 
