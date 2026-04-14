@@ -31,6 +31,7 @@ class Team:
         for i in range(len(pokes)):
             if self._pokemons[i] is None:
                 break
+            cv2.imwrite(f"./img_champions/poke{i}_stats.png", pokes[i])
             self._pokemons[i].process_states_image(pokes[i])
 
     @property

@@ -1,13 +1,19 @@
 from recognition.ocr.paddle import PaddleOCRWrapper
+from recognition.ocr.easy import EasyOCR
 import cv2
+import re
+from recognition.scripts.games.pokemon.champions.teamid.type_enum import PokemonTypeType
 
 
 class Pokemon:
     def __init__(self):
         self._name = ''
         self._nature = 'Serious'
+        self._ability = ''
+        self._item = ''
+        self._moves = []
         self.ocr_engine = PaddleOCRWrapper(lang='en', use_angle_cls=False)
-        self.ocr_engine_number = self.ocr_engine
+        self.ocr_engine_number = EasyOCR(langs='en')
         self._stat_up_template = cv2.imread(
             "resources/img/recognition/pokemon/champions/stat_up.png", cv2.IMREAD_GRAYSCALE)
         self._stat_down_template = cv2.imread(
@@ -38,6 +44,32 @@ class Pokemon:
             "spe,spd": "Naive",
             "others": "Serious",
         }
+
+    @staticmethod
+    def _normalize_ocr_text(text):
+        normalized = str(text or "").strip()
+        repeated_tail_pattern = re.compile(r"\b([A-Za-z]+)([A-Za-z])\s+([A-Za-z])\s+([A-Z][A-Za-z]*)\b")
+        split_initial_pattern = re.compile(r"\b([A-Za-z]+)\s+([A-Z])\s+([A-Z][A-Za-z]*)\b")
+        previous = None
+        while normalized != previous:
+            previous = normalized
+            normalized = repeated_tail_pattern.sub(
+                lambda match: (
+                    f"{match.group(1)}{match.group(2)} {match.group(4)}"
+                    if match.group(3) == match.group(2)
+                    else match.group(0)
+                ),
+                normalized
+            )
+            normalized = split_initial_pattern.sub(
+                lambda match: (
+                    f"{match.group(1)} {match.group(3)}"
+                    if match.group(3).startswith(match.group(2))
+                    else match.group(0)
+                ),
+                normalized
+            )
+        return normalized
 
     def process_moves_image(self, image, i):
         regions = [
@@ -72,27 +104,13 @@ class Pokemon:
             enable_preprocess=True,
         )
 
-        self._name = results[0]['text'].strip()
-        # if self._name == 'Gvarados' or self._name == 'Garadbs':
-        #     self._name = 'Gyarados'
-        # elif self._name == 'Tvranitar':
-        #     self._name = 'Tyranitar'
-        # elif self._name == 'Svlveon':
-        #     self._name = 'Sylveon'
-        # elif self._name == 'Rhvperior':
-        #     self._name = 'Rhyperior'
-        # elif self._name == 'Kommo-0':
-        #     self._name = 'Kommo-o'
-        # elif self._name == 'Aejodacty':
-        #     self._name = 'Aerodactyl'
-        # elif self._name == 'Kinoamhit':
-        #     self._name = 'Kingambit'
+        self._name = self._normalize_ocr_text(results[0]['text'])
+        self._ability = self._normalize_ocr_text(results[1]['text'])
+        self._item = self._normalize_ocr_text(results[2]['text'])
+        self._moves = [self._normalize_ocr_text(results[i]['text']) for i in range(3, 7)]
 
-        self._ability = results[1]['text'].strip()
-
-        self._item = results[2]['text'].strip()
-
-        self._moves = [results[i]['text'].strip() for i in range(3, 7)]
+        if self._item == 'Beak Sharp':
+            self._item == 'Sharp Beak'
         for i in range(4):
             if self._moves[i].startswith('Psv'):
                 self._moves[i] = self._moves[i].replace('Psv', 'Psy')
@@ -119,21 +137,45 @@ class Pokemon:
             elif self._moves[i].startswith('lron '):
                 self._moves[i] = self._moves[i].replace('lron ', 'Iron ')
 
-        if self._item == 'Beak Sharp':
-            self._item == 'Sharp Beak'
-
+        gender_image = image[regions[7][1]:regions[7][1] + regions[7][3], regions[7][0]:regions[7][0] + regions[7][2]]
+        type1_image = image[regions[8][1]:regions[8][1] + regions[8][3], regions[8][0]:regions[8][0] + regions[8][2]]
+        type2_image = image[regions[9][1]:regions[9][1] + regions[9][3], regions[9][0]:regions[9][0] + regions[9][2]]
         if self._name == 'Rotom':
-            if any(move == 'Hydro Pump' for move in self._moves):
+            if self._match_type(type2_image, PokemonTypeType.Water):
                 self._name = 'Rotom-Wash'
-            elif any(move == 'Overheat' for move in self._moves):
+            elif self._match_type(type2_image, PokemonTypeType.Fire):
                 self._name = 'Rotom-Heat'
-            elif any(move == 'Blizzard' for move in self._moves):
+            elif self._match_type(type2_image, PokemonTypeType.Grass):
+                self._name = 'Rotom-Mow'
+            elif self._match_type(type2_image, PokemonTypeType.Ice):
                 self._name = 'Rotom-Frost'
-
-        if self._name == 'Basculegion' \
+            elif self._match_type(type2_image, PokemonTypeType.Flying):
+                self._name = 'Rotom-Fly'
+        elif self._name == 'Ninetales':
+            if self._match_type(type1_image, PokemonTypeType.Ice):
+                self._name = self._name + '-Alola'
+        elif self._name == 'Zoroark':
+            if self._match_type(type1_image, PokemonTypeType.Normal):
+                self._name = self._name + '-Hisui'
+        elif self._name == 'Arcanine':
+            if self._match_type(type2_image, PokemonTypeType.Rock):
+                self._name = self._name + '-Hisui'
+        elif self._name == 'Typhlosion':
+            if self._match_type(type2_image, PokemonTypeType.Ghost):
+                self._name = self._name + '-Hisui'
+        elif self._name == 'Tauros':
+            if self._match_type(type2_image, PokemonTypeType.Fire):
+                self._name = self._name + '-Paldea-Blaze'
+            elif self._match_type(type2_image, PokemonTypeType.Water):
+                self._name = self._name + '-Paldea-Aqua'
+            elif self._match_type(type1_image, PokemonTypeType.Fighting):
+                self._name = self._name + '-Paldea-Combat'
+        elif self._name == 'Basculegion' \
                 or self._name == 'Meowstic':
-            if self._match_gender_female(image[regions[7][1]:regions[7][1] + regions[7][3], regions[7][0]:regions[7][0] + regions[7][2]]):
+            if self._match_gender_female(gender_image):
                 self._name = self._name + '-F'
+
+        # 肯泰罗 第二属性 水火
 
     def process_states_image(self, image):
         regions = [
@@ -151,7 +193,7 @@ class Pokemon:
         # cv2.imwrite("spd.png", image[regions[4][1]:regions[4][1] + regions[4][3], regions[4][0]:regions[4][0] + regions[4][2]])
         # cv2.imwrite("spe.png", image[regions[5][1]:regions[5][1] + regions[5][3], regions[5][0]:regions[5][0] + regions[5][2]])
         results = [
-            self.ocr_engine_number.recognize_number_roi(image, region)
+            self.ocr_engine_number.recognize_number_roi(image, region, 6)
             for region in regions
         ]
         self._evs = results
@@ -186,9 +228,27 @@ class Pokemon:
         self._nature = self._dict.get(f"{up},{down}", self._dict["others"])
 
     def _match_gender_female(self, image, max_value_threshold=0.8):
+        if self._gender_female_template is None or image.size == 0:
+            return False
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        if gray.shape[0] < self._gender_female_template.shape[0] or gray.shape[1] < self._gender_female_template.shape[1]:
+            return False
         match = cv2.matchTemplate(
             gray, self._gender_female_template, cv2.TM_CCOEFF_NORMED)
+        _, max_val, _, _ = cv2.minMaxLoc(match)
+        return max_val >= max_value_threshold
+
+    def _match_type(self, image, type: PokemonTypeType, max_value_threshold=0.8):
+        if image.size == 0:
+            return False
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        template = cv2.imread(PokemonTypeType.get_template_path(type), cv2.IMREAD_GRAYSCALE)
+        if template is None:
+            return False
+        if gray.shape[0] < template.shape[0] or gray.shape[1] < template.shape[1]:
+            return False
+        match = cv2.matchTemplate(
+            gray, template, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, _ = cv2.minMaxLoc(match)
         return max_val >= max_value_threshold
 
