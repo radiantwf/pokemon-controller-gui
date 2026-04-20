@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 from rapidocr_onnxruntime import RapidOCR as RapidOCREngine
 
 
@@ -54,6 +55,9 @@ class RapidOCR:
 
         # 初始化引擎
         self.engine = RapidOCREngine(**final_kwargs)
+        relaxed_kwargs = final_kwargs.copy()
+        relaxed_kwargs["text_score"] = min(float(relaxed_kwargs.get("text_score", 0.5)), 0.1)
+        self.relaxed_engine = RapidOCREngine(**relaxed_kwargs)
 
     def _preprocess_roi(self, roi):
         """预处理ROI区域（放大、锐化、去噪）"""
@@ -96,6 +100,151 @@ class RapidOCR:
         roi = cv2.addWeighted(roi, 1.6, blurred, -0.6, 0)
 
         return roi
+
+    def _upscale_text_roi(self, roi):
+        """放大小文字区域，提升 OCR 对短文本的稳定性。"""
+        if roi.ndim == 2:
+            roi = cv2.cvtColor(roi, cv2.COLOR_GRAY2BGR)
+
+        h, w = roi.shape[:2]
+        target_min_h = 48
+        if h > 0 and target_min_h and self.upscale and self.upscale > 1:
+            scale = target_min_h / float(h)
+            scale = max(1.0, min(float(self.upscale), scale))
+            new_h = max(1, int(round(h * scale)))
+            new_w = max(1, int(round(w * scale)))
+            roi = cv2.resize(roi, (new_w, new_h), interpolation=cv2.INTER_CUBIC)
+        return roi
+
+    def _crop_text_by_mask(self, roi, text_mask, pad=None):
+        """根据文本掩码裁剪文本区域，减少大面积背景对识别的干扰。"""
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+        text_mask = cv2.morphologyEx(text_mask, cv2.MORPH_CLOSE, kernel, iterations=1)
+        text_mask = cv2.dilate(text_mask, kernel, iterations=1)
+
+        points = cv2.findNonZero(text_mask)
+        if points is not None:
+            x, y, w, h = cv2.boundingRect(points)
+            if pad is None:
+                pad = max(4, min(12, max(w, h) // 10))
+            x0 = max(0, x - pad)
+            y0 = max(0, y - pad)
+            x1 = min(roi.shape[1], x + w + pad)
+            y1 = min(roi.shape[0], y + h + pad)
+            return roi[y0:y1, x0:x1], text_mask[y0:y1, x0:x1]
+        return roi, text_mask
+
+    def _build_masked_text_image(self, roi, text_mask):
+        """根据文本掩码裁剪文字区域，并转成 OCR 更容易识别的白底黑字。"""
+        roi, text_mask = self._crop_text_by_mask(roi, text_mask)
+
+        processed = np.full(text_mask.shape, 255, dtype=np.uint8)
+        processed[text_mask > 0] = 0
+        processed = cv2.copyMakeBorder(
+            processed, 12, 12, 12, 12, cv2.BORDER_CONSTANT, value=255
+        )
+        return cv2.cvtColor(processed, cv2.COLOR_GRAY2BGR)
+
+    def _build_color_text_image(self, roi, text_mask, border=16, scale=4, pad=4):
+        """
+        根据文本掩码裁剪彩色文本区域，并补白边后放大。
+        对蓝字白描边这类 UI 文本，彩色图往往比二值图更容易被 RapidOCR 识别。
+        """
+        roi, _ = self._crop_text_by_mask(roi, text_mask, pad=pad)
+        roi = cv2.copyMakeBorder(
+            roi, border, border, border, border, cv2.BORDER_CONSTANT, value=(255, 255, 255)
+        )
+        return cv2.resize(roi, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
+
+    def _build_green_bg_blue_text_mask(self, roi, include_gray=True, tight=False):
+        """构建绿背景蓝字白描边场景的文本掩码。"""
+        roi = self._upscale_text_roi(roi)
+
+        b, g, _ = cv2.split(roi)
+        hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+        gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+
+        border_pixels = np.concatenate([
+            roi[0, :, :],
+            roi[-1, :, :],
+            roi[:, 0, :],
+            roi[:, -1, :],
+        ], axis=0)
+        bg_color = np.median(border_pixels, axis=0).astype(np.uint8)
+        color_distance = np.max(
+            np.abs(roi.astype(np.int16) - bg_color.astype(np.int16)),
+            axis=2
+        ).astype(np.uint8)
+        _, distance_mask = cv2.threshold(color_distance, 24, 255, cv2.THRESH_BINARY)
+
+        blue_score = cv2.subtract(b, g)
+        _, blue_mask = cv2.threshold(blue_score, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        white_mask = cv2.inRange(hsv, (0, 0, 145), (179, 110, 255))
+
+        if tight:
+            text_mask = cv2.bitwise_or(blue_mask, white_mask)
+        else:
+            text_mask = cv2.bitwise_or(distance_mask, blue_mask)
+            text_mask = cv2.bitwise_or(text_mask, white_mask)
+
+        if include_gray:
+            gray_inv = cv2.bitwise_not(gray)
+            _, gray_mask = cv2.threshold(gray_inv, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+            text_mask = cv2.bitwise_or(text_mask, gray_mask)
+        return roi, text_mask
+
+    def _build_light_bg_blue_text_mask(self, roi, include_gray=True):
+        """构建浅色背景蓝字白描边场景的文本掩码。"""
+        roi = self._upscale_text_roi(roi)
+
+        b, g, r = cv2.split(roi)
+        gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+
+        border_pixels = np.concatenate([
+            roi[0, :, :],
+            roi[-1, :, :],
+            roi[:, 0, :],
+            roi[:, -1, :],
+        ], axis=0)
+        bg_color = np.median(border_pixels, axis=0).astype(np.uint8)
+        bg_gray = int(np.mean(bg_color))
+        color_distance = np.max(
+            np.abs(roi.astype(np.int16) - bg_color.astype(np.int16)),
+            axis=2
+        ).astype(np.uint8)
+        _, distance_mask = cv2.threshold(color_distance, 16, 255, cv2.THRESH_BINARY)
+
+        blue_score = np.clip(
+            b.astype(np.int16) - np.maximum(g, r).astype(np.int16),
+            0,
+            255
+        ).astype(np.uint8)
+        _, blue_mask = cv2.threshold(blue_score, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        dark_mask = cv2.inRange(gray, 0, max(0, bg_gray - 12))
+
+        text_mask = cv2.bitwise_or(distance_mask, blue_mask)
+        text_mask = cv2.bitwise_or(text_mask, dark_mask)
+        if include_gray:
+            gray_inv = cv2.bitwise_not(gray)
+            _, gray_mask = cv2.threshold(gray_inv, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+            text_mask = cv2.bitwise_or(text_mask, gray_mask)
+        return roi, text_mask
+
+    def _preprocess_green_bg_blue_text_roi(self, roi):
+        """
+        针对绿色背景、蓝色文字、白色描边的文字区域做专用预处理。
+        该分支尽量保持绿底识别的稳定性。
+        """
+        roi, text_mask = self._build_green_bg_blue_text_mask(roi)
+        return self._build_masked_text_image(roi, text_mask)
+
+    def _preprocess_light_bg_blue_text_roi(self, roi):
+        """
+        针对白色或浅色背景、蓝色文字、白色描边的文字区域做专用预处理。
+        避免绿底规则对白底样本造成误伤。
+        """
+        roi, text_mask = self._build_light_bg_blue_text_mask(roi)
+        return self._build_masked_text_image(roi, text_mask)
 
     def batch_recognize_regions(self, img, regions, return_details=False):
         """
@@ -221,6 +370,94 @@ class RapidOCR:
             if return_raw:
                 return text, score, raw_text
             return text, score
+
+        if return_raw:
+            return None, 0.0, None
+        return None, 0.0
+
+    def recognize_champions_row_text_roi(self, img, box, return_raw=False):
+        """
+        识别Champions选择行的文本区域。
+
+        Args:
+            img: 输入图像
+            box: (x, y, w, h) 坐标
+            return_raw: 是否返回原始识别结果（用于调试）
+
+        Returns:
+            (text, score) 元组 或 (text, score, raw_text) 元组
+        """
+        if isinstance(img, str):
+            img = cv2.imread(img)
+
+        x, y, w, h = box
+        roi = img[y:y+h, x:x+w].copy()
+
+        green_roi, green_color_mask = self._build_green_bg_blue_text_mask(
+            roi.copy(), include_gray=False, tight=True
+        )
+        light_roi, light_color_mask = self._build_light_bg_blue_text_mask(roi.copy(), include_gray=False)
+
+        candidates = [
+            self._build_color_text_image(green_roi, green_color_mask),
+            self._build_color_text_image(light_roi, light_color_mask),
+            self._preprocess_green_bg_blue_text_roi(roi),
+            self._preprocess_light_bg_blue_text_roi(roi),
+            self._preprocess_roi(roi.copy()),
+            roi,
+        ]
+
+        best_text = None
+        best_score = 0.0
+        best_raw_text = None
+
+        for candidate in candidates:
+            result, _ = self.engine(candidate)
+            if not result or len(result) == 0:
+                continue
+            raw_text = result[0][1]
+            text = raw_text.strip()
+            score = float(result[0][2])
+            if score > best_score:
+                best_text = text
+                best_raw_text = raw_text
+                best_score = score
+
+        if best_text is not None:
+            if return_raw:
+                return best_text, best_score, best_raw_text
+            return best_text, best_score
+
+        # 严格阈值下全部失败时，再启用宽松兜底，避免影响正常样本速度和精度。
+        relaxed_candidates = [
+            self._build_color_text_image(green_roi, green_color_mask, border=12, scale=4, pad=1),
+            self._build_color_text_image(green_roi, green_color_mask, border=12, scale=4, pad=2),
+            self._build_color_text_image(green_roi, green_color_mask),
+            self._build_color_text_image(light_roi, light_color_mask),
+            self._preprocess_green_bg_blue_text_roi(roi),
+            self._preprocess_light_bg_blue_text_roi(roi),
+            self._preprocess_roi(roi.copy()),
+            roi,
+        ]
+
+        for candidate in relaxed_candidates:
+            result, _ = self.relaxed_engine(candidate)
+            if not result or len(result) == 0:
+                continue
+            raw_text = result[0][1]
+            score = float(result[0][2])
+            text = raw_text.strip()
+            if len(text.strip()) < 2:
+                continue
+            if score > best_score:
+                best_text = text.strip()
+                best_raw_text = raw_text
+                best_score = score
+
+        if best_text is not None:
+            if return_raw:
+                return best_text, best_score, best_raw_text
+            return best_text, best_score
 
         if return_raw:
             return None, 0.0, None

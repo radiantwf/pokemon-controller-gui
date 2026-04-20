@@ -12,6 +12,7 @@ class Pokemon:
         self._ability = ''
         self._item = ''
         self._moves = []
+        self._evs = [0, 0, 0, 0, 0, 0]
         self.ocr_engine = PaddleOCRWrapper(lang='en', use_angle_cls=False)
         self.ocr_engine_number = EasyOCR(langs='en')
         self._stat_up_template = cv2.imread(
@@ -193,7 +194,7 @@ class Pokemon:
         # cv2.imwrite("spd.png", image[regions[4][1]:regions[4][1] + regions[4][3], regions[4][0]:regions[4][0] + regions[4][2]])
         # cv2.imwrite("spe.png", image[regions[5][1]:regions[5][1] + regions[5][3], regions[5][0]:regions[5][0] + regions[5][2]])
         results = [
-            self.ocr_engine_number.recognize_number_roi(image, region, 6)
+            int(self.ocr_engine_number.recognize_number_roi(image, region, 6))
             for region in regions
         ]
         self._evs = results
@@ -269,13 +270,12 @@ class Pokemon:
         return self._name
 
     def __str__(self) -> str:
-        str = f"{self._name}"
+        s = f"{self._name}"
         if self._item != '':
-            str += f" @ {self._item}\n"
-        else:
-            str += "\n"
+            s += f" @ {self._item}"
+        s += "\n"
         if self._ability != '':
-            str += f"Ability: {self._ability}\n"
+            s += f"Ability: {self._ability}\n"
         if any([var != 0 for var in self._evs]):
             is_first = True
             for i in range(len(self._evs)):
@@ -283,25 +283,25 @@ class Pokemon:
                     continue
                 if is_first:
                     is_first = False
-                    str += f"EVs: "
+                    s += f"EVs: "
                 else:
-                    str += " / "
-                str += f"{self._evs[i]}"
+                    s += " / "
+                s += f"{self._evs[i]}"
                 if i == 0:
-                    str += " HP"
+                    s += " HP"
                 elif i == 1:
-                    str += " Atk"
+                    s += " Atk"
                 elif i == 2:
-                    str += " Def"
+                    s += " Def"
                 elif i == 3:
-                    str += " SpA"
+                    s += " SpA"
                 elif i == 4:
-                    str += " SpD"
+                    s += " SpD"
                 elif i == 5:
-                    str += " Spe"
-            str += "\n"
-        str += f"{self._nature} Nature\n"
+                    s += " Spe"
+            s += "\n"
+        s += f"{self._nature} Nature\n"
         for move in self._moves:
             if move != '':
-                str += f"- {move}\n"
-        return str
+                s += f"- {move}\n"
+        return s

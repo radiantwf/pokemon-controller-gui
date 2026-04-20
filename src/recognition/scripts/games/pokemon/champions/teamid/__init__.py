@@ -1,16 +1,18 @@
-from enum import Enum
 import multiprocessing
 import time
+import webbrowser
+import urllib.request
+import urllib.parse
 from recognition.scripts.parameter_struct import ScriptParameter
 from recognition.scripts.base.base_script import BaseScript, WorkflowEnum
 import cv2
 from recognition.scripts.games.pokemon.champions.teamid.team import Team
 
 
-class ChampoinsTeamID(BaseScript):
+class ChampionsTeamID(BaseScript):
     def __init__(self, stop_event: multiprocessing.Event, frame_queue: multiprocessing.Queue, controller_input_action_queue: multiprocessing.Queue, paras: dict = None):
-        super().__init__(ChampoinsTeamID.script_name(), stop_event,
-                         frame_queue, controller_input_action_queue, ChampoinsTeamID.script_paras())
+        super().__init__(ChampionsTeamID.script_name(), stop_event,
+                         frame_queue, controller_input_action_queue, ChampionsTeamID.script_paras())
         self._prepare_step_index = -1
         self._cycle_step_index = -1
         self._jump_next_frame = False
@@ -27,7 +29,7 @@ class ChampoinsTeamID(BaseScript):
 
     @staticmethod
     def script_name() -> str:
-        return "宝可梦-Champoins-识别租借队伍"
+        return "宝可梦-Champions-识别租借队伍(英语)"
 
     @staticmethod
     def script_paras() -> dict:
@@ -93,20 +95,20 @@ class ChampoinsTeamID(BaseScript):
     def on_start(self):
         self._prepare_step_index = 0
         self._check_pokemon_index = -1
-        self.send_log(f"开始运行{ChampoinsTeamID.script_name()}脚本")
+        self.send_log(f"开始运行{ChampionsTeamID.script_name()}脚本")
 
     def on_cycle(self):
         if self.cycle_times > 0 and self.cycle_times % 5 == 0:
             run_time_span = self.run_time_span
             log_txt = ""
-            log_txt += f"[{ChampoinsTeamID.script_name()}] 脚本运行中，已运行{self.cycle_times}次，耗时{int(run_time_span/3600)}小时{int((run_time_span %
+            log_txt += f"[{ChampionsTeamID.script_name()}] 脚本运行中，已运行{self.cycle_times}次，耗时{int(run_time_span/3600)}小时{int((run_time_span %
                                                                                                                            3600) / 60)}分{int(run_time_span % 60)}秒"
             self.send_log(log_txt)
         self._check_pokemon_index = -1
 
     def on_stop(self):
         run_time_span = self.run_time_span
-        self.send_log("[{}] 脚本停止，实际运行{}次，耗时{}小时{}分{}秒".format(ChampoinsTeamID.script_name(
+        self.send_log("[{}] 脚本停止，实际运行{}次，耗时{}小时{}分{}秒".format(ChampionsTeamID.script_name(
         ), self.cycle_times, int(run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
 
     def on_error(self):
@@ -135,7 +137,7 @@ class ChampoinsTeamID(BaseScript):
         self.macro_stop(block=True)
         # self.macro_run("common.switch_sleep",
         #                loop=1, paras={"ns1": str(self._ns1)}, block=True, timeout=10)
-        self.send_log("[{}] 脚本完成，已运行{}次，耗时{}小时{}分{}秒".format(ChampoinsTeamID.script_name(), self.cycle_times - 1, int(
+        self.send_log("[{}] 脚本完成，已运行{}次，耗时{}小时{}分{}秒".format(ChampionsTeamID.script_name(), self.cycle_times - 1, int(
             run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
         self.stop_work()
 
@@ -174,8 +176,28 @@ class ChampoinsTeamID(BaseScript):
     def step_3(self):
         current_frame = self.current_frame
         self._team.process_states_image(current_frame)
+        paste_text = str(self._team)
+        
+        # 方案B: 自动上传到 Pokepaste 并获取最终展示链接
+        target_url = None
+        try:
+            data = urllib.parse.urlencode({
+                "paste": paste_text,
+                "title": "OCR Team",
+                "author": "豆汁儿",
+            }).encode("utf-8")
+            req = urllib.request.Request("https://pokepast.es/create", data=data)
+            resp = urllib.request.urlopen(req, timeout=5)
+            target_url = resp.url
+            self.send_log(f"已成功生成 Pokepaste 链接: {target_url}")
+        except Exception as e:
+            self.send_log(f"上传 Pokepaste 失败: {e}")
+
         print('----------------------------------------\n\n')
-        print(str(self._team))
+        print(paste_text)
+        print('\n\n')
+        if target_url:
+            print(target_url)
         print('----------------------------------------\n\n')
         try:
             import pyperclip
@@ -185,6 +207,13 @@ class ChampoinsTeamID(BaseScript):
             self.send_log("未安装 pyperclip，无法复制到剪贴板，请运行 pip install pyperclip")
         except Exception as e:
             self.send_log(f"复制到剪贴板失败: {e}")
+
+        try:
+            if target_url:
+                webbrowser.open(target_url)
+                self.send_log("已在浏览器中打开队伍链接")
+        except Exception as e:
+            self.send_log(f"打开浏览器失败: {e}")
 
         self._cycle_step_index += 1
 

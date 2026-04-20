@@ -7,7 +7,8 @@ from recognition.scripts.games.pokemon.swsh.dynamax_adventures import SwshDynama
 from recognition.scripts.games.pokemon.za.fossil import ZaFossil
 from recognition.scripts.games.pokemon.za.dlc.donut import ZaDlcDonut
 from recognition.scripts.games.pokemon.frlg.deoxys import FrlgDeoxys
-from recognition.scripts.games.pokemon.champions.teamid import ChampoinsTeamID
+from recognition.scripts.games.pokemon.champions.teamid import ChampionsTeamID
+from recognition.scripts.games.pokemon.champions.usage import ChampionsUsage
 
 
 def list_recognition_script():
@@ -20,7 +21,8 @@ def list_recognition_script():
         ZaFossil.script_name(),
         ZaDlcDonut.script_name(),
         FrlgDeoxys.script_name(),
-        ChampoinsTeamID.script_name(),
+        ChampionsTeamID.script_name(),
+        ChampionsUsage.script_name(),
     ]
     return scripts
 
@@ -43,8 +45,10 @@ def get_default_parameters(scritp_name: str) -> dict:
         paras = ZaDlcDonut.script_paras()
     elif scritp_name == FrlgDeoxys.script_name():
         paras = FrlgDeoxys.script_paras()
-    elif scritp_name == ChampoinsTeamID.script_name():
-        paras = ChampoinsTeamID.script_paras()
+    elif scritp_name == ChampionsTeamID.script_name():
+        paras = ChampionsTeamID.script_paras()
+    elif scritp_name == ChampionsUsage.script_name():
+        paras = ChampionsUsage.script_paras()
     else:
         pass
     return paras
@@ -76,9 +80,12 @@ def run(script_name, stop_event: multiprocessing.Event, frame_queue: multiproces
     elif script_name == FrlgDeoxys.script_name():
         script = FrlgDeoxys(stop_event, frame_queue,
                             controller_input_action_queue, paras)
-    elif script_name == ChampoinsTeamID.script_name():
-        script = ChampoinsTeamID(stop_event, frame_queue,
+    elif script_name == ChampionsTeamID.script_name():
+        script = ChampionsTeamID(stop_event, frame_queue,
                                  controller_input_action_queue, paras)
+    elif script_name == ChampionsUsage.script_name():
+        script = ChampionsUsage(stop_event, frame_queue,
+                                controller_input_action_queue, paras)
     else:
         pass
     if script:

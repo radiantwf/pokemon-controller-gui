@@ -39,4 +39,4 @@ class Team:
         return self._pokemons
 
     def __str__(self) -> str:
-        return f"{''.join([str(poke) + '\n' for poke in self._pokemons])}"
+        return "\n".join([str(poke) for poke in self._pokemons if poke is not None and poke.name is not None and poke.name.strip() != ""])

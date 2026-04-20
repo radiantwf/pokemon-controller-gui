@@ -11,3 +11,4 @@ yolo_training/data/images/**/temp
 runs
 src/tools
 img_champions
+outputs/
