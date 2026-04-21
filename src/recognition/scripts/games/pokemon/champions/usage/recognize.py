@@ -1,9 +1,17 @@
+from turtle import width
 from recognition.ocr.easy import EasyOCR
 from recognition.ocr.rapidocr import RapidOCR
 from typing import Tuple
 import cv2
 from recognition.scripts.games.pokemon.champions.usage.pokemon import DetailTagEnum
 from datetime import datetime
+
+pokemons_regions_y = [297, 441, 561, 693, 825]
+pokemons_top_clipped_offset_y = 8
+
+
+details_regions_y = [321, 447, 573, 699, 825]
+details_top_clipped_offset_y = 12
 
 
 class Recognize:
@@ -21,21 +29,190 @@ class Recognize:
             enable_preprocess=True,   # 启用预处理
         )
         self.ocr_engine_number = EasyOCR(langs='en')
+        self._details_clipped_row_segment_template = cv2.imread(
+            "resources/img/recognition/pokemon/champions/usage/details_clipped_row_segment.png", cv2.IMREAD_GRAYSCALE)
 
-    def _check_pokemon_forme(self, image, row, pokemon, isTeammate=False):
-        pokemon_regions = [[1142, 306, 120, 94]  # row1
-                           , [1142, 438, 120, 94]  # row2
-                           , [1142, 570, 120, 94]  # row3
-                           , [1142, 705, 120, 94]  # row4
-                           , [1142, 710, 120, 94]  # row4-2
-                           , [1142, 842, 120, 94]]  # row5
-        if isTeammate:
-            pokemon_regions = [[730, 325, 120, 94]  # row1
-                               , [730, 452, 120, 94]  # row2
-                               , [730, 578, 120, 94]  # row3
-                               , [730, 708, 120, 94]  # row4
-                               , [730, 715, 120, 94]  # row4-2
-                               , [730, 842, 120, 94]]  # row5
+    def check_detail_top_clipped(self, image, max_value_threshold: float = 0.8):
+        region = [556, 286, 786, 28]
+        crop = image[region[1]:region[1]+region[3], region[0]:region[0]+region[2]]
+        gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+        match = cv2.matchTemplate(
+            gray, self._details_clipped_row_segment_template, cv2.TM_CCOEFF_NORMED)
+        _, max_val, _, _ = cv2.minMaxLoc(match)
+        return max_val >= max_value_threshold
+
+    def recognize_pokemon(self, image, cursor_rank: int = 0) -> Tuple[str, bool]:
+        top_clipped = False
+        if cursor_rank > 4:
+            top_clipped = True
+            row = 3
+        else:
+            row = cursor_rank - 1
+
+        top = pokemons_regions_y.copy()
+        for i in range(len(top)):
+            if top_clipped:
+                top[i] += pokemons_top_clipped_offset_y
+        pokemon_x = 1142
+        pokemon_width = 120
+        pokemon_height = 94
+        pokemon_offsets_y = 9
+        pokemon_regions = []
+        for i in range(len(top)):
+            pokemon_regions.append([pokemon_x, top[i] + pokemon_offsets_y, pokemon_width, pokemon_height])
+
+        text_x = 1253
+        text_width = 284
+        text_height = 58
+        text_offsets_y = 30
+        text_regions = []
+        for i in range(len(top)):
+            text_regions.append([text_x, top[i] + text_offsets_y, text_width, text_height])
+
+        text_region = text_regions[row].copy()
+        rank_region = text_regions[row].copy()
+        rank_region[0] = 1005
+        rank_region[2] = 118
+
+        rank = int(self.ocr_engine_number.recognize_champions_row_number_roi(image, rank_region))
+        text, score = self.ocr_engine.recognize_champions_row_text_roi(image, text_region)
+        if text is not None:
+            text = self._fix_error_text(text.strip())
+
+        isLast = False
+
+        if rank == cursor_rank-1:
+            row = 4
+            rank_region = text_region.copy()
+            rank_region[0] = 1105
+            rank_region[2] = 118
+            text, score = self.ocr_engine.recognize_champions_row_text_roi(image, text_region)
+            if text is not None:
+                text = self._fix_error_text(text.strip())
+            isLast = True
+        forme = self._check_pokemon_forme(image, top_clipped, row, text)
+        if forme is not None:
+            text = forme
+
+        if text not in self._pokemon_dict:
+            self._pokemon_dict[text] = rank
+        else:
+            pokemon_region = pokemon_regions[row]
+            cv2.imwrite(f'img_champions/usage/{rank}-{text}.png', image[pokemon_region[1]:pokemon_region[1]+pokemon_region[3], pokemon_region[0]:pokemon_region[0]+pokemon_region[2]])
+
+        return text, isLast
+
+    def recognize_detail_row_rank(self, image, tag: DetailTagEnum, top_clipped: bool, row: int) -> int:
+        top = details_regions_y.copy()
+        for i in range(len(top)):
+            if top_clipped:
+                top[i] += details_top_clipped_offset_y
+        x = 616
+        width = 114
+        height = 40 if tag != DetailTagEnum.Teammate else 98
+        offsets_y = 11 if tag != DetailTagEnum.Teammate else 1
+        regions = []
+        for i in range(len(top)):
+            regions.append([x, top[i] + offsets_y, width, height])
+
+        rank_region = regions[row]
+        rank = int(self.ocr_engine_number.recognize_champions_row_number_roi(image, rank_region))
+        return rank
+
+    def recognize_detail_row(self, image, tag: DetailTagEnum, top_clipped: bool, row: int) -> Tuple[str, float, bool]:
+        top = details_regions_y.copy()
+        for i in range(len(top)):
+            if top_clipped:
+                top[i] += details_top_clipped_offset_y
+        if tag == DetailTagEnum.Move:
+            text_x = 846
+            text_width = 370
+        elif tag == DetailTagEnum.Item:
+            text_x = 852
+            text_width = 460
+        elif tag == DetailTagEnum.Teammate:
+            text_x = 840
+            text_width = 310
+        elif tag == DetailTagEnum.Nature:
+            text_x = 862
+            text_width = 130
+        elif tag == DetailTagEnum.Ability:
+            text_x = 794
+            text_width = 440
+        else:
+            text_x = 0
+            text_width = 100
+        text_height = 56
+        text_offsets_y = 22
+        text_regions = []
+        for i in range(len(top)):
+            text_regions.append([text_x, top[i] + text_offsets_y, text_width, text_height])
+
+        evs_x = 740
+        evs_width = 556
+        evs_height = 48
+        evs_offsets_y = 53
+        evs_regions = []
+        for i in range(len(top)):
+            evs_regions.append([evs_x, top[i] + evs_offsets_y, evs_width, evs_height])
+
+        percent_x = 616
+        percent_width = 114
+        percent_height = 48
+        percent_offsets_y = 51
+        percent_regions = []
+        for i in range(len(top)):
+            percent_regions.append([percent_x, top[i] + percent_offsets_y, percent_width, percent_height])
+
+        percent_region = percent_regions[row]
+
+        text_region = evs_regions[row] if tag == DetailTagEnum.EVs else text_regions[row]
+
+        if tag != DetailTagEnum.Teammate:
+            percent = self.ocr_engine_number.recognize_champions_row_number_roi(image, percent_region)
+            percent_region = percent_regions[row] if tag != DetailTagEnum.Teammate else None
+        else:
+            percent = 0
+
+        if tag != DetailTagEnum.EVs:
+            text, score = self.ocr_engine.recognize_champions_row_text_roi(image, text_region)
+            if text is not None:
+                text = self._fix_error_text(text.strip())
+        else:
+            evs = []
+            for i in range(6):
+                width = evs_regions[row][2] // 6
+                x = evs_regions[row][0] + i * width
+                ev = int(self.ocr_engine_number.recognize_champions_row_number_roi(image, [x, evs_regions[row][1], width, evs_regions[row][3]]))
+                evs.append(ev)
+            text = f"{evs[0]}/{evs[1]}/{evs[2]}/{evs[3]}/{evs[4]}/{evs[5]}"
+            if text == "0/0/0/0/0/0" and percent == 0.0:
+                text = ""
+        if text is None:
+            text = ""
+
+        if tag == DetailTagEnum.Teammate:
+            forme = self._check_pokemon_forme(image, top_clipped, row, text, True)
+            if forme is not None:
+                text = forme
+
+        if text == "":
+            cv2.imwrite(f'img_champions/usage/{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}-{tag.name}-{row}.png', image[text_region[1]:text_region[1]+text_region[3], text_region[0]:text_region[0]+text_region[2]])
+        return text, percent
+
+    def _check_pokemon_forme(self, image, top_clipped: bool, row, pokemon, isTeammate=False):
+        top = details_regions_y.copy() if isTeammate else pokemons_regions_y.copy()
+        for i in range(len(top)):
+            if top_clipped:
+                top[i] += details_top_clipped_offset_y if isTeammate else pokemons_top_clipped_offset_y
+        x = 730 if isTeammate else 1142
+        width = 120
+        height = 94
+        pokemon_offsets_y = 4 if isTeammate else 9
+        pokemon_regions = []
+        for i in range(len(top)):
+            pokemon_regions.append([x, top[i] + pokemon_offsets_y, width, height])
+
         pokemon_region = pokemon_regions[row]
         forme = None
         best_score = float("-inf")
@@ -170,155 +347,6 @@ class Recognize:
         #     cv2.imwrite(f'img_champions/usage/{pokemon}.png', image[pokemon_region[1]:pokemon_region[1]+pokemon_region[3], pokemon_region[0]:pokemon_region[0]+pokemon_region[2]])
         return forme
 
-    def recognize_pokemon(self, image, cursor_rank: int = 0) -> Tuple[str, bool]:
-        regions = [[1253, 327, 284, 58]  # row1
-                   , [1253, 458, 284, 58]  # row2
-                   , [1253, 591, 284, 58]  # row3
-                   , [1253, 723, 284, 58]  # row4
-                   , [1253, 728, 284, 58]  # row4-2
-                   , [1253, 860, 284, 58]]  # row5
-
-        if cursor_rank >= 5:
-            row = 4
-        else:
-            row = cursor_rank - 1
-        rank_region = regions[row].copy()
-        rank_region[0] = 1005
-        rank_region[2] = 118
-
-        rank = int(self.ocr_engine_number.recognize_champions_row_number_roi(image, rank_region))
-        text, score = self.ocr_engine.recognize_champions_row_text_roi(image, regions[row])
-        if text is not None:
-            text = self._fix_error_text(text.strip())
-
-        isLast = False
-
-        if rank == cursor_rank-1:
-            row = 5
-            rank_region = regions[row].copy()
-            rank_region[0] = 1105
-            rank_region[2] = 118
-            text, score = self.ocr_engine.recognize_champions_row_text_roi(image, regions[row])
-            if text is not None:
-                text = self._fix_error_text(text.strip())
-            isLast = True
-        forme = self._check_pokemon_forme(image, row, text)
-        if forme is not None:
-            text = forme
-
-        if text not in self._pokemon_dict:
-            self._pokemon_dict[text] = rank
-        else:
-            pokemon_regions = [[1142, 306, 120, 94]  # row1
-                               , [1142, 438, 120, 94]  # row2
-                               , [1142, 570, 120, 94]  # row3
-                               , [1142, 705, 120, 94]  # row4
-                               , [1142, 710, 120, 94]  # row4-2
-                               , [1142, 842, 120, 94]]  # row5
-            pokemon_region = pokemon_regions[row]
-            cv2.imwrite(f'img_champions/usage/{rank}-{text}.png', image[pokemon_region[1]:pokemon_region[1]+pokemon_region[3], pokemon_region[0]:pokemon_region[0]+pokemon_region[2]])
-
-        return text, isLast
-
-    def recognize_detail(self, image, tag: DetailTagEnum, index: int) -> Tuple[str, float, bool]:
-        isLast = False
-        if index >= 4:
-            row = 4
-        else:
-            row = index
-
-        text, percent, rank = self._recognize_detail_row(image, tag, row)
-        print(rank, text, percent)
-        if rank == 0:
-            isLast = True
-            return text, percent, isLast
-        elif index == rank:
-            isLast = True
-            row = 5
-            text, percent, rank = self._recognize_detail_row(image, tag, row)
-            print(rank, text, percent)
-        return text, percent, isLast
-
-    def _recognize_detail_row(self, image, tag: DetailTagEnum, row: int) -> Tuple[str, float]:
-        text_top = [343, 474, 600, 726, 736, 862]
-        text_height = 56
-        evs_regions = [[740, 374, 556, 48]  # row1
-                       , [740, 498, 556, 48]  # row2
-                       , [740, 627, 556, 48]  # row3
-                       , [740, 750, 556, 48]  # row4
-                       , [740, 760, 556, 48]  # row4-2
-                       , [740, 886, 556, 48]]  # row5
-
-        if tag == DetailTagEnum.Move:
-            text_left = 846
-            text_width = 370
-        elif tag == DetailTagEnum.Item:
-            text_left = 852
-            text_width = 460
-        elif tag == DetailTagEnum.Teammate:
-            text_left = 840
-            text_width = 310
-        elif tag == DetailTagEnum.Nature:
-            text_left = 862
-            text_width = 130
-        elif tag == DetailTagEnum.Ability:
-            text_left = 794
-            text_width = 440
-
-        percent_regions = [[616, 372, 114, 48]  # row1
-                           , [616, 500, 114, 48]  # row2
-                           , [616, 627, 114, 48]  # row3
-                           , [616, 750, 114, 48]  # row4
-                           , [616, 763, 114, 48]  # row4-2
-                           , [616, 890, 114, 48]]  # row5
-
-        if tag == DetailTagEnum.EVs:
-            text_region = evs_regions[row]
-            percent_region = percent_regions[row]
-        else:
-            text_region = [text_left, text_top[row], text_width, text_height]
-            percent_region = percent_regions[row]
-
-        rank_region = percent_region.copy()
-        if tag != DetailTagEnum.Teammate:
-            rank_region[1] = rank_region[1] - 40
-            rank_region[3] = 40
-        else:
-            rank_region[1] = rank_region[1] - 50
-            rank_region[3] = rank_region[3] + 50
-
-        if tag != DetailTagEnum.Teammate:
-            percent = self.ocr_engine_number.recognize_champions_row_number_roi(image, percent_region)
-        else:
-            percent = 0
-
-        if tag != DetailTagEnum.EVs:
-            text, score = self.ocr_engine.recognize_champions_row_text_roi(image, text_region)
-            if text is not None:
-                text = self._fix_error_text(text.strip())
-        else:
-            evs = []
-            for i in range(6):
-                width = evs_regions[row][2] // 6
-                x = evs_regions[row][0] + i * width
-                ev = int(self.ocr_engine_number.recognize_champions_row_number_roi(image, [x, evs_regions[row][1], width, evs_regions[row][3]]))
-                evs.append(ev)
-            text = f"{evs[0]}/{evs[1]}/{evs[2]}/{evs[3]}/{evs[4]}/{evs[5]}"
-            if text == "0/0/0/0/0/0" and percent == 0.0:
-                text = ""
-        if text is None:
-            text = ""
-
-        rank = int(self.ocr_engine_number.recognize_champions_row_number_roi(image, rank_region))
-        if tag == DetailTagEnum.Teammate:
-            forme = self._check_pokemon_forme(image, row, text, True)
-            if forme is not None:
-                text = forme
-
-        if text == "" and rank != 0:
-            cv2.imwrite(f'img_champions/usage/{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}-{tag.name}-{rank}.png', image[text_region[1]:text_region[1]+text_region[3], text_region[0]:text_region[0]+text_region[2]])
-
-        return text, percent, rank
 
     fix_replace_text = {
         "之枢": "之躯",
@@ -385,6 +413,7 @@ class Recognize:
                      "聚岩狼人": "鬃岩狼人",
                      "拔雪": "拨雪",
                      "拔沙": "拨沙",
+                     "海气": "淘气",
                      }
 
     def _fix_error_text(self, text: str) -> str:

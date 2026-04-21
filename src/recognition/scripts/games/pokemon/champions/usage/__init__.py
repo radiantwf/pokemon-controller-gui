@@ -5,6 +5,8 @@ from recognition.scripts.parameter_struct import ScriptParameter
 from recognition.scripts.base.base_script import BaseScript, WorkflowEnum
 from recognition.scripts.games.pokemon.champions.usage.pokemon import Pokemon, DetailTagEnum
 from recognition.scripts.games.pokemon.champions.usage.recognize import Recognize
+import time
+
 
 class ChampionsUsage(BaseScript):
     def __init__(self, stop_event: multiprocessing.Event, frame_queue: multiprocessing.Queue, controller_input_action_queue: multiprocessing.Queue, paras: dict = None):
@@ -19,6 +21,7 @@ class ChampionsUsage(BaseScript):
         self._loop = self.get_para("loop")
         self._durations = self.get_para("durations")
         self._currentPokemonRank = self.get_para("start")
+
         self._output_path = Path("outputs/usage.json.text")
 
         self._recognize = Recognize()
@@ -135,7 +138,9 @@ class ChampionsUsage(BaseScript):
     def _cycle_step_list(self):
         return [
             self.step_0,
-            self.step_1,
+            self.step_1_1,
+            self.step_1_2,
+            self.step_1_3,
             self.step_2,
         ]
 
@@ -159,7 +164,7 @@ class ChampionsUsage(BaseScript):
         name, self._last_pokemon_flg = self._recognize.recognize_pokemon(current_frame, self._currentPokemonRank)
         self._pokemon = Pokemon(self._currentPokemonRank, name)
 
-        self.macro_text_run("1\nA:0.05\n2", loop=1, block=True)
+        self.macro_text_run("1\nA:0.05\n2\nLStick@0,-127:0.05\n0.4\nLStick@0,-127:0.05\n0.4\nLStick@0,-127:0.05\n0.4\nLStick@0,-127:0.05\n0.8", loop=1, block=True)
         self._jump_next_frame = True
         self._detail_tag = DetailTagEnum.Move
         self._detail_index = 0
@@ -172,26 +177,58 @@ class ChampionsUsage(BaseScript):
         # self._jump_next_frame = True
         self._cycle_step_index += 1
 
-    def step_1(self):
+    def step_1_1(self):
+        self._detail_rows = 0
         current_frame = self.current_frame
-        text, percent, isLast = self._recognize.recognize_detail(current_frame, self._detail_tag, self._detail_index)
-        if text != "" or percent != 0.0 or isLast == False:
+        top_clipped = self._recognize.check_detail_top_clipped(current_frame)
+        for i in range(5):
+            rows = self._recognize.recognize_detail_row_rank(current_frame, self._detail_tag, top_clipped, 4-i)
+            if rows > 0:
+                break
+        if rows > 0:
+            self._detail_rows = rows
+            self._left_rows = rows
+            self._detail_tmp_dict = {}
+        else:
+            raise Exception("未识别到有效数据")
+        print(f'总行数:{rows}')
+        self._cycle_step_index += 1
+
+    def step_1_2(self):
+        current_frame = self.current_frame
+
+        top_clipped = self._left_rows == self._detail_rows and self._left_rows > 5
+        length = min(5, self._left_rows)
+        for i in range(length):
+            text, percent = self._recognize.recognize_detail_row(current_frame, self._detail_tag, top_clipped, length-1-i)
+            print(f'识别到第{self._left_rows-i}行数据:{text} {percent}')
+            self._detail_tmp_dict[self._left_rows-i] = text, percent
+
+        self._left_rows -= length
+        up_times = 5 if self._left_rows >= 5 else self._left_rows
+        if up_times > 0:
+            self.macro_text_run("LStick@0,-127:0.05\n0.4", loop=up_times, block=True)
+            time.sleep(0.4)
+            self._jump_next_frame = True
+        else:
+            self._cycle_step_index += 1
+            return
+
+    def step_1_3(self):
+        for k, v in sorted(self._detail_tmp_dict.items()):
+            text, percent = v
             if self._detail_tag == DetailTagEnum.Teammate:
-                self._pokemon.append_row(self._detail_tag, (text, self._detail_index+1))
+                self._pokemon.append_row(self._detail_tag, (text, k))
             else:
                 self._pokemon.append_row(self._detail_tag, (text, percent))
-        if isLast:
-            if self._detail_tag == DetailTagEnum.Ability:
-                self._cycle_step_index += 1
-                return
-            self._detail_tag = DetailTagEnum(self._detail_tag.value + 1)
-            self._detail_index = 0
-            self.macro_text_run("R:0.05\n1", loop=1, block=True)
+        if self._detail_tag == DetailTagEnum.Ability:
+            self._cycle_step_index += 1
         else:
             self._detail_index += 1
-            self.macro_text_run("LStick@0,127:0.05\n0.8", loop=1, block=True)
-
-        self._jump_next_frame = True
+            self.macro_text_run("R:0.05\n1\nLStick@0,-127:0.05\n0.4\nLStick@0,-127:0.05\n0.4\nLStick@0,-127:0.05\n0.4\nLStick@0,-127:0.05\n0.8", loop=1, block=True)
+            self._detail_tag = DetailTagEnum(self._detail_tag.value + 1)
+            self._jump_next_frame = True
+            self._cycle_step_index -= 2
 
     def step_2(self):
         print(str(self._pokemon))
