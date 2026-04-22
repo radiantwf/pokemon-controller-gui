@@ -131,7 +131,7 @@ class Pokemon:
                 self._moves[i] = 'Sunny Day'
             elif self._moves[i] == 'IzonHead':
                 self._moves[i] = 'Iron Head'
-            elif self._moves[i] == "DualVWingbeat":
+            elif self._moves[i] == "Dual V Wingbeat":
                 self._moves[i] = 'Dual Wingbeat'
             elif self._moves[i] == 'Fllare Blitz':
                 self._moves[i] = 'Flare Blitz'

@@ -1,11 +1,28 @@
 import multiprocessing
+import threading
 import json
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from recognition.scripts.parameter_struct import ScriptParameter
 from recognition.scripts.base.base_script import BaseScript, WorkflowEnum
 from recognition.scripts.games.pokemon.champions.usage.pokemon import Pokemon, DetailTagEnum
 from recognition.scripts.games.pokemon.champions.usage.recognize import Recognize
 import time
+
+_detail_worker_local = threading.local()
+
+
+def _get_detail_worker_recognize():
+    recognize = getattr(_detail_worker_local, "recognize", None)
+    if recognize is None:
+        recognize = Recognize()
+        _detail_worker_local.recognize = recognize
+    return recognize
+
+
+def _recognize_detail_row_async(current_frame, detail_tag, top_clipped, row_index):
+    recognize = _get_detail_worker_recognize()
+    return recognize.recognize_detail_row(current_frame, detail_tag, top_clipped, row_index)
 
 
 class ChampionsUsage(BaseScript):
@@ -25,6 +42,7 @@ class ChampionsUsage(BaseScript):
         self._output_path = Path("outputs/usage.json.text")
 
         self._recognize = Recognize()
+        self._detail_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="usage-detail")
         self._pokemon = None
         self._last_pokemon_flg = False
 
@@ -111,6 +129,7 @@ class ChampionsUsage(BaseScript):
         self._check_pokemon_index = -1
 
     def on_stop(self):
+        self._detail_executor.shutdown(wait=True, cancel_futures=False)
         run_time_span = self.run_time_span
         self.send_log("[{}] 脚本停止，实际运行{}次，耗时{}小时{}分{}秒".format(ChampionsUsage.script_name(
         ), self.cycle_times, int(run_time_span/3600), int((run_time_span % 3600) / 60), int(run_time_span % 60)))
@@ -164,7 +183,7 @@ class ChampionsUsage(BaseScript):
         name, self._last_pokemon_flg = self._recognize.recognize_pokemon(current_frame, self._currentPokemonRank)
         self._pokemon = Pokemon(self._currentPokemonRank, name)
 
-        self.macro_text_run("1\nA:0.05\n2\nLStick@0,-127:0.05\n0.4\nLStick@0,-127:0.05\n0.4\nLStick@0,-127:0.05\n0.4\nLStick@0,-127:0.05\n0.8", loop=1, block=True)
+        self.macro_text_run("1\nA:0.1\n2\nLStick@0,-127:0.15\n0.4\nLStick@0,-127:0.15\n0.4\nLStick@0,-127:0.15\n0.4\nLStick@0,-127:0.15\n0.8", loop=1, block=True)
         self._jump_next_frame = True
         self._detail_tag = DetailTagEnum.Move
         self._detail_index = 0
@@ -195,19 +214,33 @@ class ChampionsUsage(BaseScript):
         self._cycle_step_index += 1
 
     def step_1_2(self):
-        current_frame = self.current_frame
+        current_frame = self.current_frame.copy()
 
         top_clipped = self._left_rows == self._detail_rows and self._left_rows > 5
         length = min(5, self._left_rows)
+        futures = {}
         for i in range(length):
-            text, percent = self._recognize.recognize_detail_row(current_frame, self._detail_tag, top_clipped, length-1-i)
-            print(f'识别到第{self._left_rows-i}行数据:{text} {percent}')
-            self._detail_tmp_dict[self._left_rows-i] = text, percent
+            row_index = length - 1 - i
+            display_row = self._left_rows - i
+            future = self._detail_executor.submit(
+                _recognize_detail_row_async,
+                current_frame,
+                self._detail_tag,
+                top_clipped,
+                row_index,
+            )
+            futures[future] = display_row
+
+        for future in as_completed(futures):
+            display_row = futures[future]
+            text, percent = future.result()
+            print(f'识别到第{display_row}行数据:{text} {percent}')
+            self._detail_tmp_dict[display_row] = text, percent
 
         self._left_rows -= length
         up_times = 5 if self._left_rows >= 5 else self._left_rows
         if up_times > 0:
-            self.macro_text_run("LStick@0,-127:0.05\n0.4", loop=up_times, block=True)
+            self.macro_text_run("LStick@0,-127:0.15\n0.4", loop=up_times, block=True)
             time.sleep(0.4)
             self._jump_next_frame = True
         else:
@@ -225,7 +258,7 @@ class ChampionsUsage(BaseScript):
             self._cycle_step_index += 1
         else:
             self._detail_index += 1
-            self.macro_text_run("R:0.05\n1\nLStick@0,-127:0.05\n0.4\nLStick@0,-127:0.05\n0.4\nLStick@0,-127:0.05\n0.4\nLStick@0,-127:0.05\n0.8", loop=1, block=True)
+            self.macro_text_run("R:0.1\n1\nLStick@0,-127:0.15\n0.4\nLStick@0,-127:0.15\n0.4\nLStick@0,-127:0.15\n0.4\nLStick@0,-127:0.15\n0.8", loop=1, block=True)
             self._detail_tag = DetailTagEnum(self._detail_tag.value + 1)
             self._jump_next_frame = True
             self._cycle_step_index -= 2
@@ -240,7 +273,7 @@ class ChampionsUsage(BaseScript):
             self._finished_process()
             return
 
-        self.macro_text_run("B:0.05\n2\nLStick@0,127:0.05\n0.3", loop=1, block=True)
+        self.macro_text_run("B:0.1\n2\nLStick@0,127:0.1\n0.3", loop=1, block=True)
         self._currentPokemonRank += 1
         self._jump_next_frame = True
         self._cycle_step_index += 1
