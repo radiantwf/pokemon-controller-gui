@@ -38,6 +38,7 @@ class ChampionsUsage(BaseScript):
         self._loop = self.get_para("loop")
         self._durations = self.get_para("durations")
         self._currentPokemonRank = self.get_para("start")
+        self._ns1 = self.get_para("ns1") if paras and "ns1" in paras else False
 
         self._output_path = Path("outputs/usage.json.text")
 
@@ -59,6 +60,8 @@ class ChampionsUsage(BaseScript):
             "loop", int, -1, "运行次数")
         paras["durations"] = ScriptParameter(
             "durations", float, -1, "运行时长（分钟）")
+        paras["ns1"] = ScriptParameter(
+            "ns1", bool, False, "是否使用NS1")
         return paras
 
     def _check_durations(self):
