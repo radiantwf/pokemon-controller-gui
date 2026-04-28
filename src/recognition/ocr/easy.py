@@ -1,5 +1,3 @@
-from collections import Counter
-
 import cv2
 import numpy as np
 import easyocr
@@ -81,6 +79,13 @@ class EasyOCR:
         )
 
     @staticmethod
+    def _add_white_border(img: np.ndarray, border: int = 12):
+        value = 255 if img.ndim == 2 else (255, 255, 255)
+        return cv2.copyMakeBorder(
+            img, border, border, border, border, cv2.BORDER_CONSTANT, value=value
+        )
+
+    @staticmethod
     def _crop_text_by_mask(roi: np.ndarray, text_mask: np.ndarray, pad=None):
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
         text_mask = cv2.morphologyEx(text_mask, cv2.MORPH_CLOSE, kernel, iterations=1)
@@ -102,37 +107,65 @@ class EasyOCR:
         roi, text_mask = self._crop_text_by_mask(roi, text_mask)
         processed = np.full(text_mask.shape, 255, dtype=np.uint8)
         processed[text_mask > 0] = 0
-        processed = cv2.copyMakeBorder(
-            processed, 12, 12, 12, 12, cv2.BORDER_CONSTANT, value=255
-        )
-        return processed
+        return self._add_white_border(processed, border=12)
 
     def _build_color_number_image(self, roi: np.ndarray, text_mask: np.ndarray,
                                   border: int = 16) -> np.ndarray:
         roi, _ = self._crop_text_by_mask(roi, text_mask, pad=4)
-        return cv2.copyMakeBorder(
-            roi, border, border, border, border, cv2.BORDER_CONSTANT, value=(255, 255, 255)
-        )
+        return self._add_white_border(roi, border=border)
 
-    def _preprocess_number(self, gray: np.ndarray, scale: int = 5) -> np.ndarray:
+    def _build_binary_number_image(self, binary: np.ndarray, border: int = 12) -> np.ndarray:
+        return self._add_white_border(cv2.bitwise_not(binary), border=border)
+
+    def _build_number_vote_candidates(self, gray: np.ndarray, scale: int = 3):
         """
-        针对白色数字+深色/彩色背景的预处理。
-        核心思路：直接高阈值提取亮字，再做轻度膨胀。
+        为单数字/短数字 ROI 构建轻量多路候选。
+        核心遵循：放大 + 轻模糊 + 二值化，不做强膨胀，尽量保留数字 1 的原始结构。
         """
-        h, w = gray.shape[:2]
-        scaled = cv2.resize(
-            gray,
-            (max(1, w * scale), max(1, h * scale)),
-            interpolation=cv2.INTER_CUBIC
+        scaled = self._resize_roi(gray, scale)
+        blurred = cv2.GaussianBlur(scaled, (3, 3), 0)
+
+        _, otsu = cv2.threshold(
+            scaled, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
         )
+        _, otsu_blur = cv2.threshold(
+            blurred, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
+        )
+        otsu_inv = cv2.bitwise_not(otsu)
+        otsu_blur_inv = cv2.bitwise_not(otsu_blur)
 
-        _, binary = cv2.threshold(scaled, 180, 255, cv2.THRESH_BINARY)
-
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
-        binary = cv2.dilate(binary, kernel, iterations=1)
-
-        inverted = cv2.bitwise_not(binary)  # 黑底白字 -> 白底黑字
-        return inverted
+        return [
+            {
+                "name": "scaled_gray",
+                "image": self._add_white_border(scaled, border=12),
+                "weight": 0.0,
+            },
+            {
+                "name": "blurred_gray",
+                "image": self._add_white_border(blurred, border=12),
+                "weight": 0.05,
+            },
+            {
+                "name": "otsu",
+                "image": self._add_white_border(otsu, border=12),
+                "weight": 0.18,
+            },
+            {
+                "name": "otsu_inv",
+                "image": self._add_white_border(otsu_inv, border=12),
+                "weight": 0.18,
+            },
+            {
+                "name": "otsu_blur",
+                "image": self._add_white_border(otsu_blur, border=12),
+                "weight": 0.22,
+            },
+            {
+                "name": "otsu_blur_inv",
+                "image": self._add_white_border(otsu_blur_inv, border=12),
+                "weight": 0.22,
+            },
+        ]
 
     def _build_champions_row_number_mask(self, roi: np.ndarray, tight: bool = False):
         """
@@ -182,52 +215,79 @@ class EasyOCR:
 
         return roi, text_mask
 
-    def _recognize_number_text(self, gray: np.ndarray, scale: int) -> str:
-        processed = self._preprocess_number(gray, scale=scale)
-        results = self._reader.readtext(
-            processed,
-            allowlist='0123456789.%',
-            detail=0,
-            paragraph=False,
-        )
-        return "".join(results).strip()
-
-    def _read_number_text(self, img: np.ndarray) -> str:
+    def _read_number_text(self, img: np.ndarray):
         results = self._reader.readtext(
             img,
             allowlist='0123456789.%',
-            detail=0,
+            decoder='beamsearch',
+            beamWidth=10,
+            detail=1,
             paragraph=False,
+            contrast_ths=0.05,
+            adjust_contrast=0.7,
         )
-        return "".join(results).strip()
+        if not results:
+            return "", 0.0
+
+        texts = []
+        scores = []
+        for item in results:
+            if len(item) < 3:
+                continue
+            texts.append(str(item[1]).strip())
+            try:
+                scores.append(float(item[2]))
+            except (TypeError, ValueError):
+                continue
+
+        return "".join(texts).strip(), (float(np.mean(scores)) if scores else 0.0)
 
     def _recognize_champions_row_number_candidates(self, roi: np.ndarray, scale: int,
                                                    include_fallback: bool = False):
         """
         champions_row 数字候选图生成。
-        默认只保留最快且效果最稳定的彩色紧裁图和亮字二值图，
-        在快速路径失败时再补充掩码图与原图兜底。
+        先做颜色掩码紧裁，再对裁切结果走轻量数字多路预处理投票。
         """
         scaled_roi = self._resize_roi(roi, scale)
         color_roi, tight_mask = self._build_champions_row_number_mask(
             scaled_roi, tight=True
         )
-        gray = cv2.cvtColor(scaled_roi, cv2.COLOR_BGR2GRAY)
-        binary = self._preprocess_number(gray, scale=1)
+        tight_crop, _ = self._crop_text_by_mask(color_roi, tight_mask, pad=2)
+        tight_gray = cv2.cvtColor(tight_crop, cv2.COLOR_BGR2GRAY)
 
         candidates = [
-            self._build_color_number_image(color_roi, tight_mask),
-            binary,
+            {
+                "name": "tight_color",
+                "image": self._add_white_border(tight_crop, border=16),
+                "weight": 0.28,
+            },
         ]
+        candidates.extend(self._build_number_vote_candidates(tight_gray, scale=1))
 
         if include_fallback:
             _, full_mask = self._build_champions_row_number_mask(
                 scaled_roi, tight=False
             )
+            full_crop, _ = self._crop_text_by_mask(scaled_roi, full_mask, pad=2)
+            full_gray = cv2.cvtColor(full_crop, cv2.COLOR_BGR2GRAY)
             candidates.extend([
-                self._build_masked_number_image(scaled_roi, full_mask),
-                scaled_roi,
+                {
+                    "name": "full_mask",
+                    "image": self._build_masked_number_image(scaled_roi, full_mask),
+                    "weight": 0.1,
+                },
+                {
+                    "name": "full_color",
+                    "image": self._add_white_border(full_crop, border=16),
+                    "weight": 0.08,
+                },
+                {
+                    "name": "raw_roi",
+                    "image": self._add_white_border(scaled_roi, border=12),
+                    "weight": 0.02,
+                },
             ])
+            candidates.extend(self._build_number_vote_candidates(full_gray, scale=1))
 
         return candidates
 
@@ -252,29 +312,61 @@ class EasyOCR:
         if not recognized:
             return 0.0
 
-        counts = Counter(value for value, _, _ in recognized)
-        best_count = max(counts.values())
-        best_values = [value for value, count in counts.items() if count == best_count]
+        grouped = {}
+        for item in recognized:
+            grouped.setdefault(item["value"], []).append(item)
 
-        if len(best_values) == 1:
-            return best_values[0]
-
-        center_value = next(
-            (value for value, _, is_center in recognized if is_center and value in best_values),
-            None
-        )
-        if center_value is not None:
-            return center_value
-
-        return min(
-            best_values,
-            key=lambda value: (
-                min(offset for candidate, offset, _ in recognized if candidate == value),
-                abs(value - scale),
-                len(str(value)),
-                value,
+        def ranking(value):
+            items = grouped[value]
+            count = len(items)
+            total_score = sum(candidate["score"] for candidate in items)
+            total_confidence = sum(candidate["confidence"] for candidate in items)
+            best_confidence = max(candidate["confidence"] for candidate in items)
+            center_hits = sum(1 for candidate in items if candidate["is_center"])
+            min_offset = min(candidate["offset"] for candidate in items)
+            return (
+                count,
+                total_score,
+                total_confidence,
+                center_hits,
+                best_confidence,
+                -min_offset,
+                -len(str(value)),
+                -abs(value - scale),
+                -value,
             )
-        )
+
+        return max(grouped, key=ranking)
+
+    def _collect_number_candidates(self, candidates, offset: int, is_center: bool):
+        recognized = []
+        for candidate in candidates:
+            raw_text, confidence = self._read_number_text(candidate["image"])
+            text = self._normalize_number_text(raw_text)
+            if not text:
+                continue
+
+            try:
+                value = float(text)
+            except ValueError:
+                continue
+
+            score = (
+                candidate.get("weight", 0.0)
+                + confidence
+                - offset * 0.08
+                + (0.05 if is_center else 0.0)
+            )
+            recognized.append({
+                "value": value,
+                "text": text,
+                "score": score,
+                "confidence": confidence,
+                "offset": offset,
+                "is_center": is_center,
+                "source": candidate.get("name", "unknown"),
+            })
+        return recognized
 
     def recognize_number_roi(self, img, region=None, scale: int = 5) -> float:
         """
@@ -289,15 +381,13 @@ class EasyOCR:
         recognized = []
 
         for current_scale in scales:
-            text = self._normalize_number_text(
-                self._recognize_number_text(gray, scale=current_scale)
+            recognized.extend(
+                self._collect_number_candidates(
+                    self._build_number_vote_candidates(gray, scale=current_scale),
+                    offset=abs(current_scale - scale),
+                    is_center=current_scale == scale,
+                )
             )
-            if not text:
-                continue
-            try:
-                recognized.append((float(text), abs(current_scale - scale), current_scale == scale))
-            except ValueError:
-                continue
 
         return self._select_number_value(recognized, scale)
 
@@ -310,19 +400,15 @@ class EasyOCR:
         recognized = []
 
         # 快速路径：优先只试中心 scale 的两个高价值候选，显著减少 EasyOCR 调用次数。
-        primary_texts = []
-        for candidate in self._recognize_champions_row_number_candidates(
-            roi, scale, include_fallback=False
-        ):
-            text = self._normalize_number_text(self._read_number_text(candidate))
-            if not text:
-                continue
-            try:
-                value = float(text)
-            except ValueError:
-                continue
-            recognized.append((value, 0, True))
-            primary_texts.append(value)
+        primary_results = self._collect_number_candidates(
+            self._recognize_champions_row_number_candidates(
+                roi, scale, include_fallback=False
+            ),
+            offset=0,
+            is_center=True,
+        )
+        recognized.extend(primary_results)
+        primary_texts = [item["value"] for item in primary_results]
 
         if len(primary_texts) >= 2 and len(set(primary_texts)) == 1:
             return primary_texts[0]
@@ -334,17 +420,14 @@ class EasyOCR:
         fallback_scales.append(scale + 1)
 
         for current_scale in fallback_scales:
-            for candidate in self._recognize_champions_row_number_candidates(
-                roi, current_scale, include_fallback=True
-            ):
-                text = self._normalize_number_text(self._read_number_text(candidate))
-                if not text:
-                    continue
-                try:
-                    recognized.append(
-                        (float(text), abs(current_scale - scale), False)
-                    )
-                except ValueError:
-                    continue
+            recognized.extend(
+                self._collect_number_candidates(
+                    self._recognize_champions_row_number_candidates(
+                        roi, current_scale, include_fallback=True
+                    ),
+                    offset=abs(current_scale - scale),
+                    is_center=False,
+                )
+            )
 
         return self._select_number_value(recognized, scale)
