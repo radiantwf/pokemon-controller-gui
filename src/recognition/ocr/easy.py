@@ -117,6 +117,18 @@ class EasyOCR:
     def _build_binary_number_image(self, binary: np.ndarray, border: int = 12) -> np.ndarray:
         return self._add_white_border(cv2.bitwise_not(binary), border=border)
 
+    def _build_fast_number_image(self, gray: np.ndarray, scale: int = 1) -> np.ndarray:
+        """
+        champions_row 使用的旧版快速数字预处理。
+        仅保留轻量放大、轻模糊、二值化和极弱膨胀，控制 EasyOCR 调用前的准备成本。
+        """
+        scaled = self._resize_roi(gray, scale)
+        blurred = cv2.GaussianBlur(scaled, (3, 3), 0)
+        _, binary = cv2.threshold(blurred, 180, 255, cv2.THRESH_BINARY)
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
+        binary = cv2.dilate(binary, kernel, iterations=1)
+        return self._build_binary_number_image(binary, border=12)
+
     def _build_number_vote_candidates(self, gray: np.ndarray, scale: int = 3):
         """
         为单数字/短数字 ROI 构建轻量多路候选。
@@ -246,7 +258,7 @@ class EasyOCR:
                                                    include_fallback: bool = False):
         """
         champions_row 数字候选图生成。
-        先做颜色掩码紧裁，再对裁切结果走轻量数字多路预处理投票。
+        恢复为多路投票改造前的快速路径，只保留少量高价值候选。
         """
         scaled_roi = self._resize_roi(roi, scale)
         color_roi, tight_mask = self._build_champions_row_number_mask(
@@ -261,15 +273,17 @@ class EasyOCR:
                 "image": self._add_white_border(tight_crop, border=16),
                 "weight": 0.28,
             },
+            {
+                "name": "tight_binary",
+                "image": self._build_fast_number_image(tight_gray, scale=1),
+                "weight": 0.2,
+            },
         ]
-        candidates.extend(self._build_number_vote_candidates(tight_gray, scale=1))
 
         if include_fallback:
             _, full_mask = self._build_champions_row_number_mask(
                 scaled_roi, tight=False
             )
-            full_crop, _ = self._crop_text_by_mask(scaled_roi, full_mask, pad=2)
-            full_gray = cv2.cvtColor(full_crop, cv2.COLOR_BGR2GRAY)
             candidates.extend([
                 {
                     "name": "full_mask",
@@ -277,17 +291,11 @@ class EasyOCR:
                     "weight": 0.1,
                 },
                 {
-                    "name": "full_color",
-                    "image": self._add_white_border(full_crop, border=16),
-                    "weight": 0.08,
-                },
-                {
                     "name": "raw_roi",
                     "image": self._add_white_border(scaled_roi, border=12),
                     "weight": 0.02,
                 },
             ])
-            candidates.extend(self._build_number_vote_candidates(full_gray, scale=1))
 
         return candidates
 
@@ -368,6 +376,90 @@ class EasyOCR:
             })
         return recognized
 
+    @staticmethod
+    def _extract_digit_foreground_mask(gray: np.ndarray) -> np.ndarray:
+        """
+        从小数字 ROI 中提取前景笔画。
+        数字背景通常比较统一，用边框灰度估计背景，再取与背景差异明显的像素。
+        """
+        if gray.size == 0:
+            return np.zeros_like(gray, dtype=np.uint8)
+
+        scaled = cv2.resize(gray, None, fx=3, fy=3, interpolation=cv2.INTER_CUBIC)
+        blurred = cv2.GaussianBlur(scaled, (3, 3), 0)
+
+        border_pixels = np.concatenate([
+            blurred[0, :],
+            blurred[-1, :],
+            blurred[:, 0],
+            blurred[:, -1],
+        ], axis=0)
+        bg_gray = int(np.median(border_pixels))
+        diff = cv2.absdiff(blurred, np.full_like(blurred, bg_gray))
+
+        _, otsu_mask = cv2.threshold(
+            diff, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
+        )
+        fixed_threshold = 16
+        _, fixed_mask = cv2.threshold(diff, fixed_threshold, 255, cv2.THRESH_BINARY)
+        mask = cv2.bitwise_and(otsu_mask, fixed_mask)
+
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel, iterations=1)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=1)
+
+        num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(mask, 8)
+        if num_labels <= 1:
+            return mask
+
+        cleaned = np.zeros_like(mask)
+        min_area = max(8, int(mask.shape[0] * mask.shape[1] * 0.003))
+        for label in range(1, num_labels):
+            if stats[label, cv2.CC_STAT_AREA] >= min_area:
+                cleaned[labels == label] = 255
+        return cleaned
+
+    @staticmethod
+    def _looks_like_single_one(gray: np.ndarray) -> bool:
+        """
+        判断单个数字 ROI 是否更像 1。
+        该规则只用于修正 OCR 将单独的 1 误判为 4 的情况，要求非常保守：
+        前景必须是窄高结构，并且中部不能有明显横杠。
+        """
+        mask = EasyOCR._extract_digit_foreground_mask(gray)
+        points = cv2.findNonZero(mask)
+        if points is None:
+            return False
+
+        x, y, w, h = cv2.boundingRect(points)
+        roi_h = mask.shape[0]
+        if h < roi_h * 0.35 or w < 2:
+            return False
+
+        cropped = mask[y:y + h, x:x + w]
+        aspect = w / float(h)
+        density = cv2.countNonZero(cropped) / float(w * h)
+
+        middle = cropped[int(h * 0.38):max(int(h * 0.62), int(h * 0.38) + 1), :]
+        middle_columns = np.count_nonzero(np.any(middle > 0, axis=0)) / float(w)
+        middle_row_peak = np.max(np.count_nonzero(middle > 0, axis=1)) / float(w)
+
+        upper_left = cropped[:max(1, int(h * 0.55)), :max(1, int(w * 0.45))]
+        upper_left_ratio = cv2.countNonZero(upper_left) / max(1, cv2.countNonZero(cropped))
+
+        # 4 的中部横杠会带来较宽的横向覆盖；1 通常是窄竖线，最多带短衬线。
+        if aspect <= 0.42 and middle_columns <= 0.62 and middle_row_peak <= 0.70:
+            return True
+
+        # 对带描边/抗锯齿导致稍宽的 1 留一点余量，但限制左上区域，避免把 4 改成 1。
+        return (
+            aspect <= 0.50
+            and density <= 0.48
+            and middle_columns <= 0.54
+            and middle_row_peak <= 0.62
+            and upper_left_ratio <= 0.28
+        )
+
     def recognize_number_roi(self, img, region=None, scale: int = 5) -> float:
         """
         识别数字 ROI。
@@ -389,12 +481,15 @@ class EasyOCR:
                 )
             )
 
-        return self._select_number_value(recognized, scale)
+        value = self._select_number_value(recognized, scale)
+        if value == 4.0 and self._looks_like_single_one(gray):
+            return 1.0
+        return value
 
     def recognize_champions_row_number_roi(self, img, region=None, scale: int = 5) -> float:
         """
         champions_row 专用数字识别。
-        复用文本识别里的颜色裁切思路，同时保留原有亮字二值化兜底。
+        为了比对速度，恢复为修改多路投票前的快速识别路径。
         """
         roi = self._load_color_roi(img, region=region)
         recognized = []

@@ -1,3 +1,6 @@
+from dataclasses import dataclass
+from enum import Enum, auto
+
 from recognition.ocr.paddle import PaddleOCRWrapper
 from recognition.ocr.easy import EasyOCR
 import cv2
@@ -5,7 +8,74 @@ import re
 from recognition.scripts.games.pokemon.champions.teamid.type_enum import PokemonTypeType
 
 
+class PokemonFormSource(Enum):
+    TYPE1 = auto()
+    TYPE2 = auto()
+    GENDER = auto()
+
+
+@dataclass(frozen=True)
+class PokemonFormRule:
+    name: str
+    source: PokemonFormSource
+    matcher: object
+    suffix: str
+
+
 class Pokemon:
+    _FORM_RULES = (
+        PokemonFormRule("Rotom", PokemonFormSource.TYPE2, PokemonTypeType.Water, "-Wash"),
+        PokemonFormRule("Rotom", PokemonFormSource.TYPE2, PokemonTypeType.Fire, "-Heat"),
+        PokemonFormRule("Rotom", PokemonFormSource.TYPE2, PokemonTypeType.Grass, "-Mow"),
+        PokemonFormRule("Rotom", PokemonFormSource.TYPE2, PokemonTypeType.Ice, "-Frost"),
+        PokemonFormRule("Rotom", PokemonFormSource.TYPE2, PokemonTypeType.Flying, "-Fly"),
+        
+        # 阿罗拉地区
+        PokemonFormRule("Raticate", PokemonFormSource.TYPE1, PokemonTypeType.Dark, "-Alola"),
+        PokemonFormRule("Ninetales", PokemonFormSource.TYPE1, PokemonTypeType.Ice, "-Alola"),
+        PokemonFormRule("Raichu", PokemonFormSource.TYPE2, PokemonTypeType.Psychic, "-Alola"),
+        PokemonFormRule("Sandslash", PokemonFormSource.TYPE1, PokemonTypeType.Ice, "-Alola"),
+        PokemonFormRule("Dugtrio", PokemonFormSource.TYPE2, PokemonTypeType.Steel, "-Alola"),
+        PokemonFormRule("Persian", PokemonFormSource.TYPE1, PokemonTypeType.Dark, "-Alola"),
+        PokemonFormRule("Golem", PokemonFormSource.TYPE2, PokemonTypeType.Electric, "-Alola"),
+        PokemonFormRule("Muk", PokemonFormSource.TYPE2, PokemonTypeType.Dark, "-Alola"),
+        PokemonFormRule("Marowak", PokemonFormSource.TYPE1, PokemonTypeType.Fire, "-Alola"),
+        PokemonFormRule("Exeggutor", PokemonFormSource.TYPE2, PokemonTypeType.Dragon, "-Alola"),
+        
+        # 洗翠地区
+        PokemonFormRule("Zoroark", PokemonFormSource.TYPE1, PokemonTypeType.Normal, "-Hisui"),
+        PokemonFormRule("Arcanine", PokemonFormSource.TYPE2, PokemonTypeType.Rock, "-Hisui"),
+        PokemonFormRule("Typhlosion", PokemonFormSource.TYPE2, PokemonTypeType.Ghost, "-Hisui"),
+        PokemonFormRule("Samurott", PokemonFormSource.TYPE2, PokemonTypeType.Dark, "-Hisui"),
+        PokemonFormRule("Goodra", PokemonFormSource.TYPE1, PokemonTypeType.Steel, "-Hisui"),
+        PokemonFormRule("Avalugg", PokemonFormSource.TYPE2, PokemonTypeType.Rock, "-Hisui"),
+        PokemonFormRule("Decidueye", PokemonFormSource.TYPE2, PokemonTypeType.Fighting, "-Hisui"),
+        PokemonFormRule("Electrode", PokemonFormSource.TYPE2, PokemonTypeType.Grass, "-Hisui"),
+        PokemonFormRule("Lilligant", PokemonFormSource.TYPE2, PokemonTypeType.Fighting, "-Hisui"),
+        PokemonFormRule("Braviary", PokemonFormSource.TYPE1, PokemonTypeType.Psychic, "-Hisui"),
+        
+        # 帕底亚地区
+        PokemonFormRule("Tauros", PokemonFormSource.TYPE2, PokemonTypeType.Fire, "-Paldea-Blaze"),
+        PokemonFormRule("Tauros", PokemonFormSource.TYPE2, PokemonTypeType.Water, "-Paldea-Aqua"),
+        PokemonFormRule("Tauros", PokemonFormSource.TYPE1, PokemonTypeType.Fighting, "-Paldea-Combat"),
+        
+        # 伽勒尔地区
+        PokemonFormRule("Slowbro", PokemonFormSource.TYPE1, PokemonTypeType.Poison, "-Galar"),
+        PokemonFormRule("Slowking", PokemonFormSource.TYPE1, PokemonTypeType.Poison, "-Galar"),
+        PokemonFormRule("Stunfisk", PokemonFormSource.TYPE2, PokemonTypeType.Electric, "-Galar"),
+        PokemonFormRule("Rapidash", PokemonFormSource.TYPE1, PokemonTypeType.Psychic, "-Galar"),
+        PokemonFormRule("Weezing", PokemonFormSource.TYPE2, PokemonTypeType.Fairy, "-Galar"),
+        PokemonFormRule("Articuno", PokemonFormSource.TYPE1, PokemonTypeType.Psychic, "-Galar"),
+        PokemonFormRule("Zapdos", PokemonFormSource.TYPE1, PokemonTypeType.Fighting, "-Galar"),
+        PokemonFormRule("Moltres", PokemonFormSource.TYPE1, PokemonTypeType.Dark, "-Galar"),
+        PokemonFormRule("Darmanitan", PokemonFormSource.TYPE1, PokemonTypeType.Ice, "-Galar"),
+        
+        PokemonFormRule("Oinkologne", PokemonFormSource.GENDER, "F", "-F"),
+        PokemonFormRule("Indeedee", PokemonFormSource.GENDER, "F", "-F"),
+        PokemonFormRule("Basculegion", PokemonFormSource.GENDER, "F", "-F"),
+        PokemonFormRule("Meowstic", PokemonFormSource.GENDER, "F", "-F"),
+    )
+
     def __init__(self):
         self._name = ''
         self._nature = 'Serious'
@@ -110,8 +180,11 @@ class Pokemon:
         self._item = self._normalize_ocr_text(results[2]['text'])
         self._moves = [self._normalize_ocr_text(results[i]['text']) for i in range(3, 7)]
 
+        if self._name == 'Floette':
+            self._name = 'Floette-Eternal'
+
         if self._item == 'Beak Sharp':
-            self._item == 'Sharp Beak'
+            self._item = 'Sharp Beak'
         for i in range(4):
             if self._moves[i].startswith('Psv'):
                 self._moves[i] = self._moves[i].replace('Psv', 'Psy')
@@ -145,42 +218,28 @@ class Pokemon:
         gender_image = image[regions[7][1]:regions[7][1] + regions[7][3], regions[7][0]:regions[7][0] + regions[7][2]]
         type1_image = image[regions[8][1]:regions[8][1] + regions[8][3], regions[8][0]:regions[8][0] + regions[8][2]]
         type2_image = image[regions[9][1]:regions[9][1] + regions[9][3], regions[9][0]:regions[9][0] + regions[9][2]]
-        if self._name == 'Rotom':
-            if self._match_type(type2_image, PokemonTypeType.Water):
-                self._name = 'Rotom-Wash'
-            elif self._match_type(type2_image, PokemonTypeType.Fire):
-                self._name = 'Rotom-Heat'
-            elif self._match_type(type2_image, PokemonTypeType.Grass):
-                self._name = 'Rotom-Mow'
-            elif self._match_type(type2_image, PokemonTypeType.Ice):
-                self._name = 'Rotom-Frost'
-            elif self._match_type(type2_image, PokemonTypeType.Flying):
-                self._name = 'Rotom-Fly'
-        elif self._name == 'Ninetales':
-            if self._match_type(type1_image, PokemonTypeType.Ice):
-                self._name = self._name + '-Alola'
-        elif self._name == 'Zoroark':
-            if self._match_type(type1_image, PokemonTypeType.Normal):
-                self._name = self._name + '-Hisui'
-        elif self._name == 'Arcanine':
-            if self._match_type(type2_image, PokemonTypeType.Rock):
-                self._name = self._name + '-Hisui'
-        elif self._name == 'Typhlosion':
-            if self._match_type(type2_image, PokemonTypeType.Ghost):
-                self._name = self._name + '-Hisui'
-        elif self._name == 'Tauros':
-            if self._match_type(type2_image, PokemonTypeType.Fire):
-                self._name = self._name + '-Paldea-Blaze'
-            elif self._match_type(type2_image, PokemonTypeType.Water):
-                self._name = self._name + '-Paldea-Aqua'
-            elif self._match_type(type1_image, PokemonTypeType.Fighting):
-                self._name = self._name + '-Paldea-Combat'
-        elif self._name == 'Basculegion' \
-                or self._name == 'Meowstic':
-            if self._match_gender_female(gender_image):
-                self._name = self._name + '-F'
+        self._apply_form_rule(gender_image, type1_image, type2_image)
 
-        # 肯泰罗 第二属性 水火
+    def _apply_form_rule(self, gender_image, type1_image, type2_image):
+        for rule in self._FORM_RULES:
+            if self._name != rule.name:
+                continue
+            if self._match_form_rule(rule, gender_image, type1_image, type2_image):
+                self._name += rule.suffix
+                return
+
+    def _match_form_rule(self, rule: PokemonFormRule, gender_image, type1_image, type2_image):
+        if rule.source == PokemonFormSource.GENDER:
+            return rule.matcher == "F" and self._match_gender_female(gender_image)
+
+        images = {
+            PokemonFormSource.TYPE1: type1_image,
+            PokemonFormSource.TYPE2: type2_image,
+        }
+        image = images.get(rule.source)
+        if image is None:
+            return False
+        return self._match_type(image, rule.matcher)
 
     def process_states_image(self, image):
         regions = [
@@ -202,6 +261,12 @@ class Pokemon:
             for region in regions
         ]
         self._evs = results
+        total = sum(self._evs)
+        if total != 66:
+            print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n')
+            print(f"Warning: {self._name} has {total} EVs, expected 66\n\n")
+            print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n')
+
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         self._stat_up_point = self._match_stat_modify(gray, up=True)
         self._stat_down_point = self._match_stat_modify(gray, up=False)

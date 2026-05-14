@@ -352,6 +352,7 @@ class Recognize:
         "之驱": "之躯",
         "组射": "狙射",
         "树案": "树枭",
+        "十方": "十万",
         "：": "",
         "、": "",
         "，": "",
@@ -392,6 +393,7 @@ class Recognize:
                      "食士": "食土",
                      "追计": "诡计",
                      "造计": "诡计",
+                     "谢计": "诡计",
                      "追异咒语": "诡异咒语",
                      "追异光语": "诡异咒语",
                      "花石翼龙": "化石翼龙",
@@ -401,6 +403,7 @@ class Recognize:
                      "拦路": "挡路",
                      "反邹": "反刍",
                      "反鱼": "反刍",
+                     "反与": "反刍",
                      "反多": "反刍",
                      "伴攻": "佯攻",
                      "踩脚": "跺脚",
@@ -430,17 +433,30 @@ class Recognize:
                      "锐利乌嘴": "锐利鸟嘴",
                      "挑畔": "挑衅",
                      "抗胖": "挑衅",
+                     "挑胖": "挑衅",
                      "草蛋果": "草蚕果",
                      "十万马边": "十万马力",
                      "最当": "反刍",
                      "逾计": "诡计",
                      "热水電": "热水",
+                     "万有引": "万有引力",
+                     "不酸冰": "不融冰",
+                     "异咒语": "诡异咒语",
+                     "水流喷": "水流喷射",
+                     "喷火龙进化石": "喷火龙进化石Y",
+                     "射树": "狙射树枭",
+                     "反竿": "反刍",
+                     "仆刃": "仆刀",
+                     "端珊": "蹒跚",
+                     "术之符": "咒术之符",
                      "": "",
                      }
 
     def _fix_error_text(self, text: str) -> str:
+        if text.endswith("·"):
+            text = text[:-1]
         if text in self.fix_text_dict:
-            return self.fix_text_dict[text]
+            text = self.fix_text_dict[text]
         for key in self.fix_replace_text:
             text = text.replace(key, self.fix_replace_text[key])
         return text

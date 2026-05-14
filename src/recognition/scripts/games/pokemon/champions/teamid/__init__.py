@@ -193,12 +193,12 @@ class ChampionsTeamID(BaseScript):
         except Exception as e:
             self.send_log(f"上传 Pokepaste 失败: {e}")
 
-        print('----------------------------------------\n\n')
-        print(paste_text)
-        print('\n\n')
-        if target_url:
-            print(target_url)
-        print('----------------------------------------\n\n')
+        # print('----------------------------------------\n\n')
+        # print(paste_text)
+        # print('\n\n')
+        # if target_url:
+        #     print(target_url)
+        # print('----------------------------------------\n\n')
         try:
             import pyperclip
             pyperclip.copy(str(self._team))
