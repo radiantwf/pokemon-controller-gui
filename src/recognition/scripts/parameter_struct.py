@@ -1,7 +1,7 @@
 
 
 class ScriptParameter(object):
-    def __init__(self, name: str, value_type: type, default_value, description: str, items: list = None):
+    def __init__(self, name: str, value_type: type, default_value, description: str, items: list = None, multiline: bool = False):
         if not isinstance(name, str):
             raise TypeError("name must be str")
         if not isinstance(description, str):
@@ -16,6 +16,7 @@ class ScriptParameter(object):
         self._value = default_value
         self._description = description
         self._items = items
+        self._multiline = multiline
 
     def set_value(self, value):
         if self._value_type == list:
@@ -52,6 +53,10 @@ class ScriptParameter(object):
     @property
     def items(self):
         return self._items
+
+    @property
+    def multiline(self):
+        return self._multiline
 
     def __eq__(self, o: object) -> bool:
         if isinstance(o, ScriptParameter):

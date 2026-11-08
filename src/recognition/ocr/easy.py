@@ -6,14 +6,15 @@ import easyocr
 class EasyOCR:
     _instance = None
 
-    def __new__(cls, langs='en', gpu=True, verbose=False, **kwargs):
-        if cls._instance is None:
+    def __new__(cls, langs='en', gpu=True, verbose=False, shared=True, **kwargs):
+        if shared and cls._instance is None:
             cls._instance = super(EasyOCR, cls).__new__(cls)
+        instance = cls._instance if shared else super(EasyOCR, cls).__new__(cls)
         lang = langs.split(',')
         for l in lang:
             l = l.strip()
-        cls._instance._reader = easyocr.Reader(lang, gpu=gpu, verbose=verbose)
-        return cls._instance
+        instance._reader = easyocr.Reader(lang, gpu=gpu, verbose=verbose, **kwargs)
+        return instance
 
     @staticmethod
     def _load_gray_roi(img, region=None) -> np.ndarray:
@@ -484,6 +485,17 @@ class EasyOCR:
         value = self._select_number_value(recognized, scale)
         if value == 4.0 and self._looks_like_single_one(gray):
             return 1.0
+        return value
+
+    @staticmethod
+    def _should_correct_stats_one(value: int, gray: np.ndarray) -> bool:
+        return value in {3, 4, 7} and EasyOCR._looks_like_single_one(gray)
+
+    def recognize_stats_number_roi(self, img, region=None, scale: int = 6) -> int:
+        """识别 stats/EV 数字，修正单独的 1 被误识别为 3/4/7 的情况。"""
+        value = int(self.recognize_number_roi(img, region=region, scale=scale))
+        if self._should_correct_stats_one(value, self._load_gray_roi(img, region=region)):
+            return 1
         return value
 
     def recognize_champions_row_number_roi(self, img, region=None, scale: int = 5) -> float:

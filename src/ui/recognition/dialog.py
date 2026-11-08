@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QGridLayout, QDialogButtonBox, QHBoxLayout, QComboBox, QListWidget
+from PySide6.QtWidgets import QDialog, QLabel, QLineEdit, QPlainTextEdit, QGridLayout, QDialogButtonBox, QHBoxLayout, QComboBox, QListWidget
 from PySide6.QtGui import QIntValidator, QDoubleValidator, QRegularExpressionValidator, QValidator, QFont
 from PySide6.QtCore import QRegularExpression
 from PySide6.QtWidgets import QSpacerItem, QSizePolicy
@@ -31,6 +31,8 @@ class LaunchRecognitionParasDialog(QDialog):
                 continue
             if isinstance(edit_widgets, QLineEdit):
                 text = edit_widgets.text()
+            elif isinstance(edit_widgets, QPlainTextEdit):
+                text = edit_widgets.toPlainText()
             elif isinstance(edit_widgets, QComboBox):
                 text = edit_widgets.currentText()
             elif isinstance(edit_widgets, QListWidget):
@@ -86,9 +88,13 @@ class LaunchRecognitionParasDialog(QDialog):
                 para_edit = QComboBox()
                 para_edit.addItems([str(item) for item in para.items])
                 para_edit.setCurrentText(str(para_default))
+            elif para.value_type == str and para.multiline:
+                para_edit = QPlainTextEdit(str(para.value))
+                para_edit.setMinimumWidth(320)
+                para_edit.setFixedHeight(140)
             else:
                 para_edit = QLineEdit(str(para_default))
-            if not isinstance(para_edit, QListWidget):
+            if isinstance(para_edit, QLineEdit):
                 self._set_lineEdit_validator(para_edit, para.value_type)
             self.layout.addWidget(para_label, row, 0, 1, 2)
             self.layout.addWidget(para_edit, row, 2, 1, 2)

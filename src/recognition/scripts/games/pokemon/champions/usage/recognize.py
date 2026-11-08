@@ -83,7 +83,9 @@ class Recognize:
 
         if rank == cursor_rank-1:
             row = 4
-            rank_region = text_region.copy()
+            text_region = text_regions[row].copy()
+            rank_region = text_regions[row].copy()
+            # rank_region = text_region.copy()
             rank_region[0] = 1105
             rank_region[2] = 118
             text, score = self.ocr_engine.recognize_champions_row_text_roi(image, text_region)
@@ -353,6 +355,9 @@ class Recognize:
         "组射": "狙射",
         "树案": "树枭",
         "十方": "十万",
+        "伊市": "伊布",
+        "蜈王": "蜈蚣王",
+        # "": "",
         "：": "",
         "、": "",
         "，": "",
@@ -449,6 +454,30 @@ class Recognize:
                      "仆刃": "仆刀",
                      "端珊": "蹒跚",
                      "术之符": "咒术之符",
+                     "术之": "咒术之躯",
+                     "查力": "蛮力",
+                     "誓星拳": "彗星拳",
+                     "沙螺": "沙螺蟒",
+                     "选失糖": "迭失棺",
+                     "喷火龙进化石丫": "喷火龙进化石Y",
+                     "木糖": "木槌",
+                     "砂闹": "吵闹",
+                     "角鹿": "诡角鹿",
+                     "星拳": "彗星拳",
+                     "岩狼人": "鬃岩狼人",
+                     "糖瓜果": "棱瓜果",
+                     "先制之瓜": "先制之爪",
+                     "光之贴士": "光之黏土",
+                     "光之黏士": "光之黏土",
+                     "毒干针": "毒千针",
+                     "神磷水滴": "神秘水滴",
+                     "干针鱼": "千针鱼",
+                     "长啄": "长嚎",
+                     "本程": "木槌",
+                     "拔些": "反刍",
+                     "快手逛击": "快手还击",
+                     "雷丘进化石": "雷丘进化石Y",
+                     "雷丘进化石丫": "雷丘进化石Y",
                      "": "",
                      }
 

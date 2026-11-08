@@ -1,11 +1,14 @@
 from dataclasses import dataclass
 from enum import Enum, auto
+from pathlib import Path
 
-from recognition.ocr.paddle import PaddleOCRWrapper
-from recognition.ocr.easy import EasyOCR
 import cv2
 import re
+import os
 from recognition.scripts.games.pokemon.champions.teamid.type_enum import PokemonTypeType
+from recognition.ocr.easy import EasyOCR
+from recognition.scripts.games.pokemon.champions.teamid.ocr import RapidOCR
+from recognition.scripts.games.pokemon.champions.teamid.locale import Dict, DictTag
 
 
 class PokemonFormSource(Enum):
@@ -29,7 +32,7 @@ class Pokemon:
         PokemonFormRule("Rotom", PokemonFormSource.TYPE2, PokemonTypeType.Grass, "-Mow"),
         PokemonFormRule("Rotom", PokemonFormSource.TYPE2, PokemonTypeType.Ice, "-Frost"),
         PokemonFormRule("Rotom", PokemonFormSource.TYPE2, PokemonTypeType.Flying, "-Fly"),
-        
+
         # 阿罗拉地区
         PokemonFormRule("Raticate", PokemonFormSource.TYPE1, PokemonTypeType.Dark, "-Alola"),
         PokemonFormRule("Ninetales", PokemonFormSource.TYPE1, PokemonTypeType.Ice, "-Alola"),
@@ -41,7 +44,7 @@ class Pokemon:
         PokemonFormRule("Muk", PokemonFormSource.TYPE2, PokemonTypeType.Dark, "-Alola"),
         PokemonFormRule("Marowak", PokemonFormSource.TYPE1, PokemonTypeType.Fire, "-Alola"),
         PokemonFormRule("Exeggutor", PokemonFormSource.TYPE2, PokemonTypeType.Dragon, "-Alola"),
-        
+
         # 洗翠地区
         PokemonFormRule("Zoroark", PokemonFormSource.TYPE1, PokemonTypeType.Normal, "-Hisui"),
         PokemonFormRule("Arcanine", PokemonFormSource.TYPE2, PokemonTypeType.Rock, "-Hisui"),
@@ -53,12 +56,12 @@ class Pokemon:
         PokemonFormRule("Electrode", PokemonFormSource.TYPE2, PokemonTypeType.Grass, "-Hisui"),
         PokemonFormRule("Lilligant", PokemonFormSource.TYPE2, PokemonTypeType.Fighting, "-Hisui"),
         PokemonFormRule("Braviary", PokemonFormSource.TYPE1, PokemonTypeType.Psychic, "-Hisui"),
-        
+
         # 帕底亚地区
         PokemonFormRule("Tauros", PokemonFormSource.TYPE2, PokemonTypeType.Fire, "-Paldea-Blaze"),
         PokemonFormRule("Tauros", PokemonFormSource.TYPE2, PokemonTypeType.Water, "-Paldea-Aqua"),
         PokemonFormRule("Tauros", PokemonFormSource.TYPE1, PokemonTypeType.Fighting, "-Paldea-Combat"),
-        
+
         # 伽勒尔地区
         PokemonFormRule("Slowbro", PokemonFormSource.TYPE1, PokemonTypeType.Poison, "-Galar"),
         PokemonFormRule("Slowking", PokemonFormSource.TYPE1, PokemonTypeType.Poison, "-Galar"),
@@ -69,22 +72,31 @@ class Pokemon:
         PokemonFormRule("Zapdos", PokemonFormSource.TYPE1, PokemonTypeType.Fighting, "-Galar"),
         PokemonFormRule("Moltres", PokemonFormSource.TYPE1, PokemonTypeType.Dark, "-Galar"),
         PokemonFormRule("Darmanitan", PokemonFormSource.TYPE1, PokemonTypeType.Ice, "-Galar"),
-        
+
         PokemonFormRule("Oinkologne", PokemonFormSource.GENDER, "F", "-F"),
         PokemonFormRule("Indeedee", PokemonFormSource.GENDER, "F", "-F"),
         PokemonFormRule("Basculegion", PokemonFormSource.GENDER, "F", "-F"),
         PokemonFormRule("Meowstic", PokemonFormSource.GENDER, "F", "-F"),
     )
 
-    def __init__(self):
+    def __init__(self, number_ocr_engine=None):
         self._name = ''
         self._nature = 'Serious'
         self._ability = ''
         self._item = ''
         self._moves = []
         self._evs = [0, 0, 0, 0, 0, 0]
-        self.ocr_engine = PaddleOCRWrapper(lang='en', use_angle_cls=False)
-        self.ocr_engine_number = EasyOCR(langs='en')
+        self._ocr_errors = []
+        self._conversion_errors = []
+        self._ev_errors = []
+        self.ocr_engine = RapidOCR(
+            upscale=1,              # 放大倍数
+            enable_preprocess=True,   # 启用预处理
+        )
+        self.ocr_engine_number = (
+            number_ocr_engine if number_ocr_engine is not None
+            else EasyOCR(langs='en', shared=False)
+        )
         self._stat_up_template = cv2.imread(
             "resources/img/recognition/pokemon/champions/stat_up.png", cv2.IMREAD_GRAYSCALE)
         self._stat_down_template = cv2.imread(
@@ -142,7 +154,35 @@ class Pokemon:
             )
         return normalized
 
-    def process_moves_image(self, image, i):
+    def _lookup_english_or_original(self, tag: DictTag, text: str, pokemon_index: int, pokemon_name: str, field_name: str) -> str:
+        if text is None or str(text).strip() == "":
+            return text
+        try:
+            return Dict.lookup_zh_english_text(tag, text)
+        except KeyError as e:
+            log = (
+                f"宝可梦序号 {pokemon_index} ({pokemon_name}) "
+                f"{field_name} 中英文转换失败，保留原值: {text}. {e}"
+            )
+            self._conversion_errors.append(log)
+            print(f"[OCR Dict] {log}")
+            return text
+
+    def _record_empty_ocr_results(self, results, field_names, pokemon_index: int, pokemon_name: str):
+        for result, field_name in zip(results, field_names):
+            text = self._normalize_ocr_text(result.get("text") if isinstance(result, dict) else None)
+            if text:
+                continue
+            log = (
+                f"宝可梦序号 {pokemon_index} ({pokemon_name}) "
+                f"{field_name} OCR 识别为空，score={float((result or {}).get('score') or 0.0):.3f}"
+            )
+            if isinstance(result, dict) and result.get("error"):
+                log += f"，error={result['error']}"
+            self._ocr_errors.append(log)
+            print(f"[OCR Empty] {log}")
+
+    def process_moves_image(self, image, i, output_dir="./img_champions", save_images: bool = True):
         regions = [
             (80, 32, 230, 40)  # name
             , (90, 82, 226, 32)  # ability
@@ -156,77 +196,75 @@ class Pokemon:
             , (395, 35, 32, 32)  # type2
             , (10, 2, 72, 72)  # pokemon
         ]
-        # cv2.imwrite(f"./name{i}.png", image[regions[0][1]:regions[0][1] + regions[0][3], regions[0][0]:regions[0][0] + regions[0][2]])
-        # cv2.imwrite(f"./ability{i}.png", image[regions[1][1]:regions[1][1] + regions[1][3], regions[1][0]:regions[1][0] + regions[1][2]])
-        # cv2.imwrite(f"./item{i}.png", image[regions[2][1]:regions[2][1] + regions[2][3], regions[2][0]:regions[2][0] + regions[2][2]])
-        # cv2.imwrite(f"./move1{i}.png", image[regions[3][1]:regions[3][1] + regions[3][3], regions[3][0]:regions[3][0] + regions[3][2]])
-        # cv2.imwrite(f"./move2{i}.png", image[regions[4][1]:regions[4][1] + regions[4][3], regions[4][0]:regions[4][0] + regions[4][2]])
-        # cv2.imwrite(f"./move3{i}.png", image[regions[5][1]:regions[5][1] + regions[5][3], regions[5][0]:regions[5][0] + regions[5][2]])
-        # cv2.imwrite(f"./move4{i}.png", image[regions[6][1]:regions[6][1] + regions[6][3], regions[6][0]:regions[6][0] + regions[6][2]])
-        # cv2.imwrite(f"./gender{i}.png", image[regions[7][1]:regions[7][1] + regions[7][3], regions[7][0]:regions[7][0] + regions[7][2]])
-        # cv2.imwrite(f"./type1_{i}.png", image[regions[8][1]:regions[8][1] + regions[8][3], regions[8][0]:regions[8][0] + regions[8][2]])
-        # cv2.imwrite(f"./type2_{i}.png", image[regions[9][1]:regions[9][1] + regions[9][3], regions[9][0]:regions[9][0] + regions[9][2]])
-        cv2.imwrite(f"./img_champions/pokeImg{i}.png", image[regions[10][1]:regions[10][1] + regions[10][3], regions[10][0]:regions[10][0] + regions[10][2]])
-
+        poke_output_dir = Path(output_dir) / f"poke{i}"
+        if save_images:
+            os.makedirs(poke_output_dir, exist_ok=True)
+            cv2.imwrite(str(poke_output_dir / "name.png"), image[regions[0][1]:regions[0][1] + regions[0][3], regions[0][0]:regions[0][0] + regions[0][2]])
+            cv2.imwrite(str(poke_output_dir / "ability.png"), image[regions[1][1]:regions[1][1] + regions[1][3], regions[1][0]:regions[1][0] + regions[1][2]])
+            cv2.imwrite(str(poke_output_dir / "item.png"), image[regions[2][1]:regions[2][1] + regions[2][3], regions[2][0]:regions[2][0] + regions[2][2]])
+            cv2.imwrite(str(poke_output_dir / "move1.png"), image[regions[3][1]:regions[3][1] + regions[3][3], regions[3][0]:regions[3][0] + regions[3][2]])
+            cv2.imwrite(str(poke_output_dir / "move2.png"), image[regions[4][1]:regions[4][1] + regions[4][3], regions[4][0]:regions[4][0] + regions[4][2]])
+            cv2.imwrite(str(poke_output_dir / "move3.png"), image[regions[5][1]:regions[5][1] + regions[5][3], regions[5][0]:regions[5][0] + regions[5][2]])
+            cv2.imwrite(str(poke_output_dir / "move4.png"), image[regions[6][1]:regions[6][1] + regions[6][3], regions[6][0]:regions[6][0] + regions[6][2]])
+            cv2.imwrite(str(poke_output_dir / "gender.png"), image[regions[7][1]:regions[7][1] + regions[7][3], regions[7][0]:regions[7][0] + regions[7][2]])
+            cv2.imwrite(str(poke_output_dir / "type1.png"), image[regions[8][1]:regions[8][1] + regions[8][3], regions[8][0]:regions[8][0] + regions[8][2]])
+            cv2.imwrite(str(poke_output_dir / "type2.png"), image[regions[9][1]:regions[9][1] + regions[9][3], regions[9][0]:regions[9][0] + regions[9][2]])
+        pokemon_image = image[regions[10][1]:regions[10][1] + regions[10][3], regions[10][0]:regions[10][0] + regions[10][2]]
+        if save_images:
+            cv2.imwrite(str(poke_output_dir / "poke.png"), pokemon_image)
+            cv2.imwrite(str(Path(output_dir) / f"pokeImg{i}.png"), pokemon_image)
         results = self.ocr_engine.batch_recognize_regions(
             image,
-            regions,
-            upscale=2.5,
-            enable_preprocess=True,
+            regions
         )
+        field_names = ("name", "ability", "item", "move1", "move2", "move3", "move4")
 
-        self._name = self._normalize_ocr_text(results[0]['text'])
-        self._ability = self._normalize_ocr_text(results[1]['text'])
-        self._item = self._normalize_ocr_text(results[2]['text'])
-        self._moves = [self._normalize_ocr_text(results[i]['text']) for i in range(3, 7)]
+        name = self._normalize_ocr_text(results[0]['text'])
+        ability = self._normalize_ocr_text(results[1]['text'])
+        item = self._normalize_ocr_text(results[2]['text'])
+        moves = [self._normalize_ocr_text(results[i]['text']) for i in range(3, 7)]
 
-        if self._name == 'Floette':
-            self._name = 'Floette-Eternal'
-
-        if self._item == 'Beak Sharp':
-            self._item = 'Sharp Beak'
-        for i in range(4):
-            if self._moves[i].startswith('Psv'):
-                self._moves[i] = self._moves[i].replace('Psv', 'Psy')
-            elif self._moves[i] == 'Jet Aqua':
-                self._moves[i] = 'Aqua Jet'
-            elif self._moves[i] == 'Rough Play':
-                self._moves[i] = 'Play Rough'
-            elif self._moves[i] == 'Sphere Aura':
-                self._moves[i] = 'Aura Sphere'
-            elif self._moves[i] == 'Bellv Drum':
-                self._moves[i] = 'Belly Drum'
-            elif self._moves[i] == 'Icv Wind':
-                self._moves[i] = 'Icy Wind'
-            elif self._moves[i] == 'Bite Bug':
-                self._moves[i] = 'Bug Bite'
-            elif self._moves[i] == 'Sunn Day':
-                self._moves[i] = 'Sunny Day'
-            elif self._moves[i] == 'IzonHead':
-                self._moves[i] = 'Iron Head'
-            elif self._moves[i] == "Dual V Wingbeat":
-                self._moves[i] = 'Dual Wingbeat'
-            elif self._moves[i] == "Strength n Sap":
-                self._moves[i] = 'Strength Sap'
-            elif self._moves[i] == 'Fllare Blitz':
-                self._moves[i] = 'Flare Blitz'
-            elif self._moves[i].startswith('lce '):
-                self._moves[i] = self._moves[i].replace('lce ', 'Ice ')
-            elif self._moves[i].startswith('lron '):
-                self._moves[i] = self._moves[i].replace('lron ', 'Iron ')
+        pokemon_log_name = name or f"poke{i}"
+        self._record_empty_ocr_results(results[:7], field_names, i, pokemon_log_name)
+        self._name = self._lookup_english_or_original(DictTag.POKEMON, name, i, pokemon_log_name, "name")
+        pokemon_log_name = self._name or pokemon_log_name
+        self._ability = self._lookup_english_or_original(DictTag.ABILITY, ability, i, pokemon_log_name, "ability")
+        self._item = self._lookup_english_or_original(DictTag.ITEM, item, i, pokemon_log_name, "item")
+        self._moves = [
+            self._lookup_english_or_original(DictTag.MOVE, move, i, pokemon_log_name, f"move{move_index + 1}")
+            for move_index, move in enumerate(moves)
+        ]
 
         gender_image = image[regions[7][1]:regions[7][1] + regions[7][3], regions[7][0]:regions[7][0] + regions[7][2]]
         type1_image = image[regions[8][1]:regions[8][1] + regions[8][3], regions[8][0]:regions[8][0] + regions[8][2]]
         type2_image = image[regions[9][1]:regions[9][1] + regions[9][3], regions[9][0]:regions[9][0] + regions[9][2]]
-        self._apply_form_rule(gender_image, type1_image, type2_image)
+        self._confirm_pokemon_form(pokemon_image, gender_image, type1_image, type2_image)
 
-    def _apply_form_rule(self, gender_image, type1_image, type2_image):
+    def _confirm_pokemon_form(self, pokemon_image, gender_image, type1_image, type2_image):
         for rule in self._FORM_RULES:
             if self._name != rule.name:
                 continue
             if self._match_form_rule(rule, gender_image, type1_image, type2_image):
                 self._name += rule.suffix
                 return
+
+        pokemon_dir = Path("resources/img/recognition/pokemon/champions/team_id/pokemon") / self._name
+        if not pokemon_dir.exists() or not pokemon_dir.is_dir():
+            return
+
+        best_name = None
+        best_score = None
+        for template_path in sorted(pokemon_dir.glob("*.png")):
+            template = cv2.imread(str(template_path), cv2.IMREAD_GRAYSCALE)
+            score = self._compare_pokemon_image(pokemon_image, template)
+            if score is None or score < 0.8:
+                continue
+            if best_score is None or score > best_score:
+                best_score = score
+                best_name = template_path.stem
+
+        if best_name is not None:
+            self._name = best_name
 
     def _match_form_rule(self, rule: PokemonFormRule, gender_image, type1_image, type2_image):
         if rule.source == PokemonFormSource.GENDER:
@@ -241,36 +279,56 @@ class Pokemon:
             return False
         return self._match_type(image, rule.matcher)
 
-    def process_states_image(self, image):
+    @staticmethod
+    def _compare_pokemon_image(image, template):
+        if template is None or image.size == 0:
+            return None
+
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        if gray.shape[0] < template.shape[0] or gray.shape[1] < template.shape[1]:
+            template = cv2.resize(template, (gray.shape[1], gray.shape[0]), interpolation=cv2.INTER_AREA)
+
+        match = cv2.matchTemplate(gray, template, cv2.TM_CCOEFF_NORMED)
+        _, max_val, _, _ = cv2.minMaxLoc(match)
+        return max_val
+
+    def process_states_image(self, image, i=0, output_dir="./img_champions", save_images: bool = True):
         regions = [
-            (322, 83, 32, 28),  # evs hp
-            (322, 127, 32, 29),  # atk
-            (322, 172, 32, 29),  # def
-            (672, 83, 32, 28),  # spa
-            (672, 127, 32, 29),  # spd
-            (672, 172, 32, 29),  # spe
+            (322, 83, 34, 28),  # evs hp
+            (322, 127, 34, 29),  # atk
+            (322, 172, 34, 29),  # def
+            (672, 83, 34, 28),  # spa
+            (672, 127, 34, 29),  # spd
+            (672, 172, 34, 29),  # spe
         ]
-        # cv2.imwrite("hp.png", image[regions[0][1]:regions[0][1] + regions[0][3], regions[0][0]:regions[0][0] + regions[0][2]])
-        # cv2.imwrite("atk.png", image[regions[1][1]:regions[1][1] + regions[1][3], regions[1][0]:regions[1][0] + regions[1][2]])
-        # cv2.imwrite("def.png", image[regions[2][1]:regions[2][1] + regions[2][3], regions[2][0]:regions[2][0] + regions[2][2]])
-        # cv2.imwrite("spa.png", image[regions[3][1]:regions[3][1] + regions[3][3], regions[3][0]:regions[3][0] + regions[3][2]])
-        # cv2.imwrite("spd.png", image[regions[4][1]:regions[4][1] + regions[4][3], regions[4][0]:regions[4][0] + regions[4][2]])
-        # cv2.imwrite("spe.png", image[regions[5][1]:regions[5][1] + regions[5][3], regions[5][0]:regions[5][0] + regions[5][2]])
+        poke_output_dir = Path(output_dir) / f"poke{i}"
+        if save_images:
+            os.makedirs(poke_output_dir, exist_ok=True)
+            cv2.imwrite(str(poke_output_dir / "stat_hp.png"), image[regions[0][1]:regions[0][1] + regions[0][3], regions[0][0]:regions[0][0] + regions[0][2]])
+            cv2.imwrite(str(poke_output_dir / "stat_atk.png"), image[regions[1][1]:regions[1][1] + regions[1][3], regions[1][0]:regions[1][0] + regions[1][2]])
+            cv2.imwrite(str(poke_output_dir / "stat_def.png"), image[regions[2][1]:regions[2][1] + regions[2][3], regions[2][0]:regions[2][0] + regions[2][2]])
+            cv2.imwrite(str(poke_output_dir / "stat_spa.png"), image[regions[3][1]:regions[3][1] + regions[3][3], regions[3][0]:regions[3][0] + regions[3][2]])
+            cv2.imwrite(str(poke_output_dir / "stat_spd.png"), image[regions[4][1]:regions[4][1] + regions[4][3], regions[4][0]:regions[4][0] + regions[4][2]])
+            cv2.imwrite(str(poke_output_dir / "stat_spe.png"), image[regions[5][1]:regions[5][1] + regions[5][3], regions[5][0]:regions[5][0] + regions[5][2]])
+
+        stat_regions = regions
         results = [
-            int(self.ocr_engine_number.recognize_number_roi(image, region, 6))
-            for region in regions
+            int(self.ocr_engine_number.recognize_stats_number_roi(image, region, 6))
+            for region in stat_regions
         ]
         self._evs = results
         total = sum(self._evs)
         if total != 66:
+            warning_msg = f"宝可梦序号 {i} ({self._name}) 努力值合计错误: {total}，期望 66，识别值 {self._evs}"
+            self._ev_errors.append(warning_msg)
             print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n')
-            print(f"Warning: {self._name} has {total} EVs, expected 66\n\n")
+            print(f"{warning_msg}\n\n")
             print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n')
 
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         self._stat_up_point = self._match_stat_modify(gray, up=True)
         self._stat_down_point = self._match_stat_modify(gray, up=False)
-        self._set_nature(self._stat_up_point, self._stat_down_point, regions)
+        self._set_nature(self._stat_up_point, self._stat_down_point, stat_regions)
 
     def get_stat_by_point(self, point, regions):
         if point is None:
@@ -337,6 +395,18 @@ class Pokemon:
     @property
     def name(self):
         return self._name
+
+    @property
+    def ocr_errors(self):
+        return list(self._ocr_errors)
+
+    @property
+    def conversion_errors(self):
+        return list(self._conversion_errors)
+
+    @property
+    def ev_errors(self):
+        return list(self._ev_errors)
 
     def __str__(self) -> str:
         s = f"{self._name}"

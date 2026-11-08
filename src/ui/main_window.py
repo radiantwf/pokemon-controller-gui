@@ -611,7 +611,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             if not isinstance(p, ScriptParameter):
                 continue
             para = ScriptParameter(p.name, p.value_type, p.default_value,
-                                   p.description, p.items)
+                                   p.description, p.items, multiline=p.multiline)
             para.set_value(p.value)
             cloned[name] = para
         return cloned
